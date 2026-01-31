@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { PostHeader } from "@/components/PostHeader";
+import { HashAnchor } from "@/components/HashAnchor";
 import { getPostBySlug, getPostSlugs, getPostModuleBySlug } from "@/lib/posts";
 import type { PostMetadata } from "@/lib/types";
 import { siteConfig } from "@/site.config";
@@ -72,6 +73,7 @@ export default async function BlogPostPage({ params }: PageProps) {
 
   return (
     <article>
+      <HashAnchor />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

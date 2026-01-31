@@ -25,3 +25,40 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
 }
+
+.heading-anchor {
+  color: inherit;
+  text-decoration: none;
+  position: relative;
+}
+
+.heading-anchor::before {
+  content: "Link to this heading";
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+.heading-anchor::after {
+  content: "#";
+  margin-left: 0.5rem;
+  opacity: 0;
+  color: currentColor;
+  font-weight: 400;
+  transition: opacity 150ms ease;
+}
+
+.heading-anchor:focus-visible::after,
+.heading-anchor:hover::after {
+  opacity: 0.5;
+}
+
+.heading-anchor:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}

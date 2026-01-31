@@ -2,28 +2,37 @@ import type { MDXComponents } from "mdx/types";
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
-    h1: ({ children }) => (
-      <h1 className="mt-8 mb-4 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+    h1: ({ children, ...props }) => (
+      <h1
+        {...props}
+        className={`mt-8 mb-4 scroll-mt-24 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
+      >
         {children}
       </h1>
     ),
-    h2: ({ children }) => (
-      <h2 className="mt-8 mb-4 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+    h2: ({ children, ...props }) => (
+      <h2
+        {...props}
+        className={`mt-8 mb-4 scroll-mt-24 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
+      >
         {children}
       </h2>
     ),
-    h3: ({ children }) => (
-      <h3 className="mt-6 mb-3 text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
+    h3: ({ children, ...props }) => (
+      <h3
+        {...props}
+        className={`mt-6 mb-3 scroll-mt-24 text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
+      >
         {children}
       </h3>
     ),
     p: ({ children }) => (
       <p className="my-4 leading-7 text-zinc-700 dark:text-zinc-300">{children}</p>
     ),
-    a: ({ href, children }) => (
+    a: ({ href, children, className }) => (
       <a
         href={href}
-        className="font-medium text-zinc-900 underline decoration-zinc-400 underline-offset-4 transition-colors hover:decoration-zinc-600 dark:text-zinc-100 dark:decoration-zinc-500 dark:hover:decoration-zinc-300"
+        className={`font-medium text-zinc-900 underline decoration-zinc-400 underline-offset-4 transition-colors hover:decoration-zinc-600 dark:text-zinc-100 dark:decoration-zinc-500 dark:hover:decoration-zinc-300 ${className ?? ""}`.trim()}
       >
         {children}
       </a>

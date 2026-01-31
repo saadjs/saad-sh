@@ -11,7 +11,18 @@ const withMDX = createMDX({
     // because JavaScript functions can't be passed to Rust.
     // See: https://nextjs.org/docs/app/guides/mdx#remark-and-rehype-plugins
     remarkPlugins: ["remark-gfm"],
-    rehypePlugins: [],
+    rehypePlugins: [
+      "rehype-slug",
+      [
+        "rehype-autolink-headings",
+        {
+          behavior: "wrap",
+          properties: {
+            className: ["heading-anchor"],
+          },
+        },
+      ],
+    ],
   },
 });
 
