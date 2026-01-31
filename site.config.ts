@@ -10,10 +10,7 @@ export const siteConfig = {
     name: "Saad",
     url: "https://saad.sh",
   },
-  nav: [
-    { label: "Posts", href: "/" },
-    { label: "Tags", href: "/tags" },
-  ],
+  nav: [{ label: "Tags", href: "/tags" }],
   routes: {
     posts: "/",
     tags: "/tags",
