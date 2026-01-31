@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Header, Footer, SearchCommand } from "@/components";
+import { Footer } from "@/components/Footer";
+import { Header } from "@/components/Header";
+import { SearchCommandClient } from "@/components/SearchCommandClient";
 import { siteConfig } from "@/site.config";
 import "./globals.css";
 
@@ -65,7 +67,7 @@ export default function RootLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
-          <SearchCommand />
+          <SearchCommandClient />
         </div>
       </body>
     </html>

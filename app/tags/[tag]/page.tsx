@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { PostCard } from "@/components";
+import { PostCard } from "@/components/PostCard";
 import { getAllTags, getPostsByTag } from "@/lib/posts";
 import { siteConfig } from "@/site.config";
 
@@ -26,13 +26,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function TagPage({ params }: PageProps) {
   const { tag } = await params;
-  const tags = await getAllTags();
+  const [tags, posts] = await Promise.all([getAllTags(), getPostsByTag(tag)]);
   const tagEntry = tags.get(tag);
   if (!tagEntry) {
     notFound();
   }
-
-  const posts = await getPostsByTag(tag);
 
   if (posts.length === 0) {
     notFound();

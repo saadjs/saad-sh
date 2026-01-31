@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { PostHeader } from "@/components";
-import { getPostBySlug, getPostSlugs } from "@/lib/posts";
+import { PostHeader } from "@/components/PostHeader";
+import { getPostBySlug, getPostSlugs, getPostModuleBySlug } from "@/lib/posts";
 import type { PostMetadata } from "@/lib/types";
 import { siteConfig } from "@/site.config";
 
@@ -46,13 +46,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function BlogPostPage({ params }: PageProps) {
   const { slug } = await params;
-  const post = await getPostBySlug(slug);
-
-  if (!post || !post.metadata.published) {
+  const postModule = await getPostModuleBySlug(slug);
+  if (!postModule?.metadata?.published) {
     notFound();
   }
-
-  const { default: Content, metadata } = (await import(`@/content/posts/${slug}.mdx`)) as {
+  const { default: Content, metadata } = postModule as {
     default: React.ComponentType;
     metadata: PostMetadata;
   };

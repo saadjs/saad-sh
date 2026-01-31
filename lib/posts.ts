@@ -1,11 +1,32 @@
 import fs from "fs";
 import path from "path";
+import { cache } from "react";
+import type { ComponentType } from "react";
 import type { Post, PostMetadata } from "./types";
 import { slugifyTag } from "./utils";
 
 const postsDirectory = path.join(process.cwd(), "content/posts");
 
-export async function getAllPosts(): Promise<Post[]> {
+const getPostModule = cache(async (slug: string) => {
+  const filePath = path.join(postsDirectory, `${slug}.mdx`);
+
+  if (!fs.existsSync(filePath)) {
+    return null;
+  }
+
+  const postModule = (await import(`@/content/posts/${slug}.mdx`)) as {
+    default?: ComponentType;
+    metadata: PostMetadata;
+  };
+
+  return postModule;
+});
+
+export async function getPostModuleBySlug(slug: string) {
+  return getPostModule(slug);
+}
+
+export const getAllPosts = cache(async (): Promise<Post[]> => {
   if (!fs.existsSync(postsDirectory)) {
     return [];
   }
@@ -20,22 +41,20 @@ export async function getAllPosts(): Promise<Post[]> {
   return posts.sort(
     (a, b) => new Date(b.metadata.date).getTime() - new Date(a.metadata.date).getTime(),
   );
-}
+});
 
-export async function getPostBySlug(slug: string): Promise<Post | null> {
-  const filePath = path.join(postsDirectory, `${slug}.mdx`);
-
-  if (!fs.existsSync(filePath)) {
+export const getPostBySlug = cache(async (slug: string): Promise<Post | null> => {
+  const postModule = await getPostModule(slug);
+  if (!postModule) {
     return null;
   }
-
-  const { metadata } = (await import(`@/content/posts/${slug}.mdx`)) as { metadata: PostMetadata };
+  const { metadata } = postModule;
 
   return {
     slug,
     metadata,
   };
-}
+});
 
 export function getPostSlugs(): string[] {
   if (!fs.existsSync(postsDirectory)) {
@@ -48,28 +67,30 @@ export function getPostSlugs(): string[] {
     .map((file) => file.replace(/\.mdx$/, ""));
 }
 
-export async function getAllTags(): Promise<Map<string, { label: string; count: number }>> {
-  const posts = await getAllPosts();
-  const tagCounts = new Map<string, { label: string; count: number }>();
+export const getAllTags = cache(
+  async (): Promise<Map<string, { label: string; count: number }>> => {
+    const posts = await getAllPosts();
+    const tagCounts = new Map<string, { label: string; count: number }>();
 
-  for (const post of posts) {
-    for (const tag of post.metadata.tags) {
-      const slug = slugifyTag(tag);
-      if (!slug) continue;
-      const existing = tagCounts.get(slug);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        tagCounts.set(slug, { label: tag.toUpperCase(), count: 1 });
+    for (const post of posts) {
+      for (const tag of post.metadata.tags) {
+        const slug = slugifyTag(tag);
+        if (!slug) continue;
+        const existing = tagCounts.get(slug);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          tagCounts.set(slug, { label: tag.toUpperCase(), count: 1 });
+        }
       }
     }
-  }
 
-  return tagCounts;
-}
+    return tagCounts;
+  },
+);
 
-export async function getPostsByTag(tag: string): Promise<Post[]> {
+export const getPostsByTag = cache(async (tag: string): Promise<Post[]> => {
   const posts = await getAllPosts();
   const normalizedTag = slugifyTag(tag);
   return posts.filter((post) => post.metadata.tags.some((t) => slugifyTag(t) === normalizedTag));
-}
+});
