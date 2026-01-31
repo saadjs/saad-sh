@@ -45,6 +45,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: siteConfig.sitemap.priority.home,
     },
     {
+      url: `${siteConfig.url}${siteConfig.routes.about}`,
+      lastModified: latestPostDate,
+      changeFrequency: siteConfig.sitemap.changeFrequency.about,
+      priority: siteConfig.sitemap.priority.about,
+    },
+    {
       url: `${siteConfig.url}${siteConfig.routes.tags}`,
       lastModified: latestPostDate,
       changeFrequency: siteConfig.sitemap.changeFrequency.tagsIndex,
