@@ -48,7 +48,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       </code>
     ),
     pre: ({ children }) => (
-      <pre className="my-6 overflow-x-auto rounded-lg bg-zinc-100 p-4 font-mono text-sm dark:bg-zinc-800">
+      <pre className="my-6 overflow-x-auto rounded-lg bg-zinc-100 p-4 font-mono text-sm dark:bg-zinc-800 [&_code]:bg-transparent [&_code]:p-0">
         {children}
       </pre>
     ),
@@ -57,6 +57,26 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <strong className="font-semibold text-zinc-900 dark:text-zinc-100">{children}</strong>
     ),
     em: ({ children }) => <em className="italic">{children}</em>,
+    table: ({ children }) => (
+      <div className="my-6 overflow-x-auto">
+        <table className="w-full border-collapse text-sm">{children}</table>
+      </div>
+    ),
+    thead: ({ children }) => (
+      <thead className="border-b border-zinc-200 dark:border-zinc-700">{children}</thead>
+    ),
+    tbody: ({ children }) => <tbody>{children}</tbody>,
+    tr: ({ children }) => (
+      <tr className="border-b border-zinc-100 dark:border-zinc-800">{children}</tr>
+    ),
+    th: ({ children }) => (
+      <th className="px-4 py-3 text-left font-semibold text-zinc-900 dark:text-zinc-100">
+        {children}
+      </th>
+    ),
+    td: ({ children }) => (
+      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{children}</td>
+    ),
     ...components,
   };
 }

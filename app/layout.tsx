@@ -20,6 +20,22 @@ export const metadata: Metadata = {
     template: siteConfig.titleTemplate,
   },
   description: siteConfig.description,
+  icons: {
+    icon: [
+      { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
+      { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
+    ],
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+    other: [
+      {
+        rel: "mask-icon",
+        url: "/safari-pinned-tab.svg",
+        color: "#ff6341",
+      },
+    ],
+  },
+  manifest: "/site.webmanifest",
   openGraph: {
     title: siteConfig.name,
     description: siteConfig.description,
