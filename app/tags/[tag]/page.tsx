@@ -15,17 +15,24 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { tag } = await params;
-  const normalizedTag = tag.toUpperCase();
+  const tags = await getAllTags();
+  const tagEntry = tags.get(tag);
+  const label = tagEntry?.label ?? tag;
   return {
-    title: siteConfig.tagPage.title(normalizedTag),
-    description: siteConfig.tagPage.description(normalizedTag),
+    title: siteConfig.tagPage.title(label),
+    description: siteConfig.tagPage.description(label),
   };
 }
 
 export default async function TagPage({ params }: PageProps) {
   const { tag } = await params;
-  const normalizedTag = tag.toUpperCase();
-  const posts = await getPostsByTag(normalizedTag);
+  const tags = await getAllTags();
+  const tagEntry = tags.get(tag);
+  if (!tagEntry) {
+    notFound();
+  }
+
+  const posts = await getPostsByTag(tag);
 
   if (posts.length === 0) {
     notFound();
@@ -34,7 +41,8 @@ export default async function TagPage({ params }: PageProps) {
   return (
     <div>
       <h1 className="mb-8 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
-        {siteConfig.tagPage.heading(normalizedTag)}
+        <span className="text-zinc-900 dark:text-zinc-100">Posts tagged</span>{" "}
+        <span className="text-tag">#{tagEntry.label}</span>
       </h1>
       <div className="space-y-12">
         {posts.map((post) => (

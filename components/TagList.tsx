@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { slugifyTag } from "@/lib/utils";
 
 interface TagListProps {
   tags: string[];
@@ -7,15 +8,19 @@ interface TagListProps {
 export function TagList({ tags }: TagListProps) {
   return (
     <div className="flex flex-wrap gap-2">
-      {tags.map((tag) => (
-        <Link
-          key={tag}
-          href={`/tags/${tag.toUpperCase()}`}
-          className="text-sm text-tag transition-opacity hover:opacity-80"
-        >
-          #{tag.toUpperCase()}
-        </Link>
-      ))}
+      {tags.map((tag) => {
+        const slug = slugifyTag(tag);
+        if (!slug) return null;
+        return (
+          <Link
+            key={tag}
+            href={`/tags/${slug}`}
+            className="text-sm text-tag transition-opacity hover:opacity-80"
+          >
+            #{tag.toUpperCase()}
+          </Link>
+        );
+      })}
     </div>
   );
 }

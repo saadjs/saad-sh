@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
 import type { Post, PostMetadata } from "./types";
+import { slugifyTag } from "./utils";
 
 const postsDirectory = path.join(process.cwd(), "content/posts");
 
@@ -10,18 +11,11 @@ export async function getAllPosts(): Promise<Post[]> {
   }
 
   const fileNames = fs.readdirSync(postsDirectory);
-  const posts: Post[] = [];
-
-  for (const fileName of fileNames) {
-    if (!fileName.endsWith(".mdx")) continue;
-
-    const slug = fileName.replace(/\.mdx$/, "");
-    const post = await getPostBySlug(slug);
-
-    if (post && post.metadata.published) {
-      posts.push(post);
-    }
-  }
+  const slugs = fileNames
+    .filter((fileName) => fileName.endsWith(".mdx"))
+    .map((file) => file.replace(/\.mdx$/, ""));
+  const allPosts = await Promise.all(slugs.map((slug) => getPostBySlug(slug)));
+  const posts = allPosts.filter((post): post is Post => Boolean(post && post.metadata.published));
 
   return posts.sort(
     (a, b) => new Date(b.metadata.date).getTime() - new Date(a.metadata.date).getTime(),
@@ -54,14 +48,20 @@ export function getPostSlugs(): string[] {
     .map((file) => file.replace(/\.mdx$/, ""));
 }
 
-export async function getAllTags(): Promise<Map<string, number>> {
+export async function getAllTags(): Promise<Map<string, { label: string; count: number }>> {
   const posts = await getAllPosts();
-  const tagCounts = new Map<string, number>();
+  const tagCounts = new Map<string, { label: string; count: number }>();
 
   for (const post of posts) {
     for (const tag of post.metadata.tags) {
-      const normalizedTag = tag.toUpperCase();
-      tagCounts.set(normalizedTag, (tagCounts.get(normalizedTag) || 0) + 1);
+      const slug = slugifyTag(tag);
+      if (!slug) continue;
+      const existing = tagCounts.get(slug);
+      if (existing) {
+        existing.count += 1;
+      } else {
+        tagCounts.set(slug, { label: tag.toUpperCase(), count: 1 });
+      }
     }
   }
 
@@ -70,6 +70,6 @@ export async function getAllTags(): Promise<Map<string, number>> {
 
 export async function getPostsByTag(tag: string): Promise<Post[]> {
   const posts = await getAllPosts();
-  const normalizedTag = tag.toUpperCase();
-  return posts.filter((post) => post.metadata.tags.some((t) => t.toUpperCase() === normalizedTag));
+  const normalizedTag = slugifyTag(tag);
+  return posts.filter((post) => post.metadata.tags.some((t) => slugifyTag(t) === normalizedTag));
 }

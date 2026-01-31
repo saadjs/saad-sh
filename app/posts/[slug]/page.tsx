@@ -79,9 +79,7 @@ export default async function BlogPostPage({ params }: PageProps) {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PostHeader metadata={metadata} />
-      <div className="prose-custom">
-        <Content />
-      </div>
+      <Content />
     </article>
   );
 }
