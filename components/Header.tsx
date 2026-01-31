@@ -1,6 +1,7 @@
 import Image from "next/image";
 import Link from "next/link";
 import { siteConfig } from "@/site.config";
+import { SearchButton } from "./SearchButton";
 
 export function Header() {
   return (
@@ -13,7 +14,8 @@ export function Header() {
           <Image src="/logo.svg" alt="" width={24} height={24} />
           {siteConfig.name}
         </Link>
-        <div className="flex gap-6 text-sm">
+        <div className="flex items-center gap-4 text-sm">
+          <SearchButton />
           {siteConfig.nav.map((item) => (
             <Link
               key={item.href}

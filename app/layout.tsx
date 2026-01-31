@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import { Header, Footer } from "@/components";
+import { Header, Footer, SearchCommand } from "@/components";
 import { siteConfig } from "@/site.config";
 import "./globals.css";
 
@@ -19,6 +19,7 @@ export const metadata: Metadata = {
     default: siteConfig.name,
     template: siteConfig.titleTemplate,
   },
+  metadataBase: new URL(siteConfig.url),
   description: siteConfig.description,
   icons: {
     icon: [
@@ -64,6 +65,7 @@ export default function RootLayout({
           <Header />
           <main className="flex-1">{children}</main>
           <Footer />
+          <SearchCommand />
         </div>
       </body>
     </html>

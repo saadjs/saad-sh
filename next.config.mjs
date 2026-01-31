@@ -1,5 +1,4 @@
 import createMDX from "@next/mdx";
-import remarkGfm from "remark-gfm";
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
@@ -7,9 +6,11 @@ const nextConfig = {
 };
 
 const withMDX = createMDX({
-  extension: /\.mdx?$/,
   options: {
-    remarkPlugins: [remarkGfm],
+    // remark and rehype plugins without serializable options cannot be used yet with Turbopack
+    // because JavaScript functions can't be passed to Rust.
+    // See: https://nextjs.org/docs/app/guides/mdx#remark-and-rehype-plugins
+    remarkPlugins: ["remark-gfm"],
     rehypePlugins: [],
   },
 });
