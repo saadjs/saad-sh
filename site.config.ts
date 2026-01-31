@@ -7,12 +7,21 @@ export const siteConfig = {
   titleTemplate: "%s | saad.sh",
   twitterCard: "summary_large_image",
   author: {
-    name: "Saad",
+    name: "Saad Bash",
     url: "https://saad.sh",
+    occupation: "Software Engineer",
+    email: "saadbashdev@gmail.com",
+    linkedin: "https://www.linkedin.com/in/saadbash",
+    github: "https://github.com/saadjs",
+    avatar: "/static/images/avatar.png",
   },
-  nav: [{ label: "Tags", href: "/tags" }],
+  nav: [
+    { label: "Tags", href: "/tags" },
+    { label: "About", href: "/about" },
+  ],
   routes: {
     posts: "/",
+    about: "/about",
     tags: "/tags",
     feed: "/feed.xml",
     sitemap: "/sitemap.xml",
@@ -31,6 +40,11 @@ export const siteConfig = {
     heading: "Tags",
     emptyMessage: "No tags yet.",
   },
+  aboutPage: {
+    title: "About",
+    description: "Learn more about Saad Bash.",
+    kicker: "About the author",
+  },
   tagPage: {
     title: (tag: string) => `Posts tagged "${tag}"`,
     description: (tag: string) => `All posts tagged with ${tag}`,
@@ -38,12 +52,14 @@ export const siteConfig = {
   },
   sitemap: {
     changeFrequency: {
+      about: "monthly",
       home: "weekly",
       tagsIndex: "weekly",
       tag: "weekly",
       post: "monthly",
     },
     priority: {
+      about: 0.7,
       home: 1,
       tagsIndex: 0.6,
       tag: 0.5,
