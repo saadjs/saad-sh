@@ -1,0 +1,56 @@
+export const metadata = {
+  title: "How to extend AuthJS User type in NextJS using TypeScript",
+  description:
+    "Extend the User type of AuthJS using TypeScript's Module Augmentation to add custom fields like role, firstName, and lastName.",
+  date: "2024-09-29",
+  tags: ["AuthJS", "Typescript", "NextJS"],
+  published: true,
+};
+
+Extend `User` type of [AuthJS](https://authjs.dev) using TypeScript's Module Augmentation.
+
+```ts
+// File: auth.d.ts or auth.ts file
+import "next-auth";
+
+declare module "next-auth" {
+  interface User {
+    role?: string;
+    firstName?: string;
+    lastName?: string;
+    // Add any other fields you want
+  }
+}
+```
+
+Modify your AuthJS configuration to include these new fields:
+
+```ts
+export const { auth, handlers } = NextAuth({
+  // ... other configuration options
+  async jwt({ token, user }) {
+    if (user) {
+      // This will only be executed at login. Each next invocation will skip this part.
+      token.role = user.role;
+      token.firstName = user.firstName;
+      token.lastName = user.lastName;
+    }
+    // Important: return the modified token
+    return token;
+  },
+  callbacks: {
+    async session({ session, user }) {
+      if (session.user) {
+        session.user.role = user.role;
+        session.user.firstName = user.firstName;
+        session.user.lastName = user.lastName;
+      }
+      return session;
+    },
+  },
+});
+```
+
+In above example, we're using the `session` callback to add our custom fields to the session object.
+
+Read more about TypeScript's [Module Augmentation](https://www.typescriptlang.org/docs/handbook/declaration-merging.html#module-augmentation).

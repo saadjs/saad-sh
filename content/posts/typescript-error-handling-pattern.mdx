@@ -1,0 +1,144 @@
+export const metadata = {
+  title: "The [err, data] Pattern: A Cleaner Approach to Error Handling in TypeScript",
+  description:
+    "Learn the [err, data] pattern inspired by Go's error handling for cleaner async error handling in TypeScript with better type safety.",
+  date: "2025-08-20",
+  tags: ["Typescript"],
+  published: true,
+};
+
+Error handling in TypeScript can be messy with traditional try...catch, especially when dealing with multiple async operations. The `[err, data]` pattern, inspired by Go's error handling, offers a much cleaner approach.
+
+## Traditional Try-Catch
+
+Commonly seen:
+
+```ts
+// Problematic approach - variables must live outside try-catch
+async function setupUserDashboard(userId: string) {
+  // These MUST be declared outside because they are needed after try...catch
+  let userProfile;
+  let notifications;
+  let preferences;
+
+  try {
+    const profileResponse = await fetch(`/api/users/${userId}/profile`);
+    userProfile = await profileResponse.json();
+
+    const notifResponse = await fetch(`/api/users/${userId}/notifications`);
+    notifications = await notifResponse.json();
+
+    const prefsResponse = await fetch(`/api/users/${userId}/preferences`);
+    preferences = await prefsResponse.json();
+  } catch (error) {
+    console.error("Failed to load some data:", error);
+    // Can't return here - dashboard still needs to render with defaults
+  }
+
+  // Problem: It's unclear which vars are undefined!
+  // All of them might be undefined, or just some of them
+
+  // Set up dashboard state - this code MUST run regardless of errors
+  const dashboardState = {
+    user: userProfile || { name: "Guest", avatar: "/default-avatar.png" },
+    notifications: notifications || [],
+    theme: preferences?.theme || "light",
+    language: preferences?.language || "en",
+  };
+
+  // Initialize dashboard components
+  initializeNotifications(dashboardState.notifications);
+  applyTheme(dashboardState.theme);
+  setLanguage(dashboardState.language);
+
+  return dashboardState;
+}
+```
+
+### Issues with this approach:
+
+1. **Variable hoisting**: Variables must be declared outside the try block
+2. **Unclear error context**: The specific operation that failed is unknown
+3. **Type safety concerns**: Variables might be `undefined` after the catch
+4. **Nested try-catch complexity**: Multiple operations require nested or repetitive blocks
+
+## [err, data] Pattern
+
+```ts
+// Clean error handling utility
+function safeAsync<T>(promise: Promise<T>): Promise<[Error | null, T | null]> {
+  return promise
+    .then<[null, T]>((data: T) => [null, data])
+    .catch<[Error, null]>((error: Error) => [error, null]);
+}
+
+async function setupUserDashboard(userId: string) {
+  // Each operation is handled independently with clear error context
+  const [profileError, userProfile] = await safeAsync(
+    fetch(`/api/users/${userId}/profile`).then((res) => res.json()),
+  );
+
+  const [notifError, notifications] = await safeAsync(
+    fetch(`/api/users/${userId}/notifications`).then((res) => res.json()),
+  );
+
+  const [prefsError, preferences] = await safeAsync(
+    fetch(`/api/users/${userId}/preferences`).then((res) => res.json()),
+  );
+
+  // Handle each error specifically and provide appropriate defaults
+  if (profileError) {
+    console.error("Failed to load user profile:", profileError);
+  }
+
+  if (notifError) {
+    console.error("Failed to load notifications:", notifError);
+  }
+
+  if (prefsError) {
+    console.error("Failed to load user preferences:", prefsError);
+  }
+
+  // Variables are properly typed
+  const dashboardState = {
+    user: userProfile || { name: "Guest", avatar: "/default-avatar.png" },
+    notifications: notifications || [],
+    theme: preferences?.theme || "light",
+    language: preferences?.language || "en",
+  };
+
+  // Initialize dashboard components with confidence
+  initializeNotifications(dashboardState.notifications);
+  applyTheme(dashboardState.theme);
+  setLanguage(dashboardState.language);
+
+  return dashboardState;
+}
+```
+
+## Why This Pattern is better
+
+### 1. **Explicit Error Handling**
+
+Every operation's success or failure is explicitly checked, making code more predictable.
+
+### 2. **No Variable Hoisting**
+
+Variables are declared exactly where they're needed, improving readability and type safety.
+
+## When to Use Each Pattern
+
+**Use try-catch when:**
+
+- All errors should be handled the same way
+- Working with synchronous code
+- Errors from multiple operations need to be caught together
+
+**Use [err, data] when:**
+
+- Granular error handling is required
+- Working with async operations
+- Explicit control over error flow is needed
+- Type safety is crucial
+
+The `[err, data]` pattern isn't always the right choice, but for complex async operations where you need precise error handling and type safety, it's a game-changer that will make your TypeScript code more maintainable and reliable.

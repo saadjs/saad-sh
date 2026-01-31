@@ -1,0 +1,24 @@
+export const metadata = {
+  title: "How to add background image to a container in Flutter?",
+  description:
+    "Use decoration property of container with BoxDecoration and ImageProvider to add background images in Flutter.",
+  date: "2022-11-23",
+  tags: ["Flutter"],
+  published: true,
+};
+
+Use `decoration` property of container -> `BoxDecoration` with `ImageProvider`.
+
+```dart
+Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage("assets/bg.png"),
+            // To add network image
+            // image: NetworkImage(_imageURL),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Text('Container with background image!'),
+      ),
+```

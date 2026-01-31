@@ -1,0 +1,84 @@
+export const metadata = {
+  title: "JavaScript's Defaults: || vs. ??",
+  description:
+    "Understanding the difference between Logical OR (||) and Nullish Coalescing (??) operators in JavaScript for setting default values.",
+  date: "2024-05-13",
+  tags: ["Javascript"],
+  published: true,
+};
+
+When checking out JavaScript code, we will see lots of `||` (Logical OR) but not so many `??` (Nullish Coalescing) operators for setting default values. So what's the real difference between them?
+
+# Logical OR (`||`)
+
+The OR operator uses the right value if the left is `falsy`.
+
+So what are the `falsy` values in JavaScript?
+
+There are a few but most common ones we come across include `null`, `undefined`, `false`, `NaN`, `0`, and `""`. ([Full list](https://developer.mozilla.org/en-US/docs/Glossary/Falsy))
+
+So what's the problem?
+
+Let's look at few examples:
+
+Example 1:
+
+```js
+let result = false || true; // result = true
+```
+
+No real advantage here, so far so good!
+
+Example 2:
+
+```js
+let result = "" || "default"; // result = ?
+```
+
+Since an empty string is `falsy`, `result = "default"` which may not be intended!
+
+Example 3:
+
+```js
+const item = {
+  price: 10,
+  discountedPrice: 4.99,
+};
+const price = item.discountedPrice || item.price; // price = 4.99
+```
+
+But
+
+```js
+const item2 = {
+  price: 10,
+  discountedPrice: 0,
+};
+const price2 = item2.discountedPrice || item2.price; // price2 = 10
+```
+
+Item2's price should be `0`, item2 should be FREE, why is it `10`?
+
+Since `0` is a falsy value, default price becomes `10`!
+
+Need a better alternative! Enter ??
+
+# Nullish Coalescing (`??`)
+
+The nullish coalescing operator uses the right value ONLY when left is `null` or `undefined`, and does not consider any other falsy values (i.e. `0`, `-0`, `""`, etc).
+
+So all of the weird things from above examples are automatically taken care of.
+
+```js
+let result = "" ?? "default"; // result = ""
+
+const item2 = {
+  price: 10,
+  discountedPrice: 0,
+};
+const price2 = item2.discountedPrice ?? item2.price; // price = 0
+```
+
+In the world of JavaScript, mastering the little things can make a big difference. While understanding the nuances between `||` (Logical OR) and `??` (Nullish Coalescing) operators may not change your life, it can certainly help minimize bugs.
+
+Happy Coding!

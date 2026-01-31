@@ -1,0 +1,66 @@
+export const metadata = {
+  title: "Share pages and technical docs with ChatGPT, Claude, and v0 using URL queries",
+  description:
+    "Share the current page with AI assistants like ChatGPT, Claude, and v0 using simple URL query strings for a single-click hand-off experience.",
+  date: "2025-09-25",
+  tags: ["ai", "javascript"],
+  published: true,
+};
+
+Handing the current page to an AI assistant is straightforward. Each tool accepts a simple URL with a query string describing what to open. Once the page address is encoded, even a regular link or button is sufficient.
+
+## Base links to remember
+
+- **ChatGPT**: `https://chatgpt.com?q=`
+- **Claude**: `https://claude.ai/new?q=`
+- **v0**: `https://v0.dev?q=`
+
+Providers tweak these paths from time to time, so inspect their "share" or "new chat" buttons in DevTools if something changes. The workflow stays the same: append the target page as the query value.
+
+## Build the URL in one line
+
+```ts
+const chatgpt = `https://chatgpt.com?q=${encodeURIComponent(window.location.href)}`;
+```
+
+That is the core idea. Swap the base and reuse the same `encodeURIComponent` call for Claude or v0. No extra scripts are required.
+
+## Hook it up to any button
+
+```tsx
+<a href={chatgpt} target="_blank" rel="noreferrer">
+  Open in ChatGPT
+</a>
+```
+
+For multiple buttons, store the encoded page once and interpolate it into each URL.
+
+```ts
+const page = encodeURIComponent(window.location.href);
+
+const links = {
+  chatgpt: `https://chatgpt.com?q=${page}`,
+  claude: `https://claude.ai/new?q=${page}`,
+  v0: `https://v0.dev?q=${page}`,
+};
+```
+
+## Add guidance for the assistant
+
+Link targets can include lightweight instructions so the assistant knows what to do with the shared page.
+
+```ts
+function getPromptUrl(base: string, pageUrl: string) {
+  const message = `I'm reviewing this page: ${pageUrl}.
+Help explain the concepts, propose examples, and assist with debugging based on it.`;
+  return `${base}${encodeURIComponent(message)}`;
+}
+
+const prompts = {
+  chatgpt: getPromptUrl("https://chatgpt.com?q=", window.location.href),
+  claude: getPromptUrl("https://claude.ai/new?q=", window.location.href),
+  v0: getPromptUrl("https://v0.dev?q=", window.location.href),
+};
+```
+
+Drop those into any UI and the LLM receives the exact page, along with guidance about the expected assistance, via the query string for a single-click hand-off experience.

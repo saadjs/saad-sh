@@ -1,0 +1,51 @@
+export const metadata = {
+  title: "How to create a private fork of a public repo on GitHub?",
+  description:
+    "Step-by-step guide to creating a private fork of a public GitHub repository using git clone --bare and git push --mirror.",
+  date: "2022-11-14",
+  tags: ["Git", "GitHub"],
+  published: true,
+};
+
+1. Clone the public bare repo locally:
+
+```
+git clone --bare git@github.com:Username/cool-public-repo.git
+cd cool-public-repo.git
+```
+
+2. Push newly cloned public repo to your own **_Private_** GitHub repo:
+
+```
+git push --mirror git@github.com:saadjs/private-repo.git
+```
+
+3. Delete the old clone
+
+```
+cd ..
+rm -rf cool-public-repo.git
+```
+
+4. Clone the private repo to work on locally:
+
+```
+git clone git@github.com:saadjs/private-repo.git && cd $_
+```
+
+**Optional:**
+
+- To pull new changes made to the original public repo:
+
+  ```
+  git remote add public git@github.com:Username/cool-public-repo.git
+  ```
+
+  Create a new branch to pull the changes
+
+  ```
+  git checkout -b new-changes-from-public
+  git pull public main
+  git push --set-upstream origin new-changes-from-public
+  # or merge into to main & push to origin main
+  ```

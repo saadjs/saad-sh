@@ -1,0 +1,126 @@
+export const metadata = {
+  title: "List of Useful Python Tricks for Solving Coding Questions",
+  description:
+    "Useful Python tricks for coding interviews including Counter, reversed, defaultdict, deque, and enumerate with examples.",
+  date: "2023-10-04",
+  tags: ["Python"],
+  published: true,
+};
+
+## `collections.Counter()`
+
+- Elements as keys, and their counts are stored as values.
+
+```python
+nums = [1,1,2,3,4,5,3,2,3,4,2,1,2,3]
+
+counter = collections.Counter(nums)
+print(counter)
+# Output: Counter({2: 4, 3: 4, 1: 3, 4: 2, 5: 1})
+```
+
+## `reversed(range)`
+
+```python
+for i in reversed(range(5)):
+    print(i)
+# Output
+# 4
+# 3
+# 2
+# 1
+# 0
+
+# Iterate list in reversed order
+my_list = [1, 2, 3]
+for i in reversed(range(len(my_list))):
+    print(my_list[i])
+# Output
+# 3
+# 2
+# 1
+```
+
+## `defaultdict(set)` and `defaultdict(list)`
+
+`defaultdict` is a subclass of the built-in `dict` class in Python.
+The functionality of both dictionaries and defaultdict are almost same except for the fact that **defaultdict never raises a KeyError**.
+
+Examples:
+
+```python
+from collections import defaultdict
+
+# Create a defaultdict with a set as the default factory function
+d = defaultdict(set)
+
+# Add some values to the defaultdict
+d['key1'].add('value1')
+d['key1'].add('value2')
+d['key2'].add('value3')
+
+# Access a key that doesn't exist yet => No KeyError
+print(d['key3'])  # Output: set()
+
+# Access an existing key
+print(d['key1'])  # Output: {'value1', 'value2'}
+```
+
+```python
+from collections import defaultdict
+
+# Create a defaultdict with a list as the default factory function
+d = defaultdict(list)
+
+# Add some values to the defaultdict
+d['key1'].append('value1')
+d['key1'].append('value2')
+d['key2'].append('value3')
+
+# Access a key that doesn't exist yet
+print(d['key3'])  # Output: []
+
+# Access an existing key
+print(d['key1'])  # Output: ['value1', 'value2']
+```
+
+## Create empty list of certain size
+
+1. Creating an empty list
+
+   `l = [None] * 10`
+
+2. With zeros
+
+   `x = [0] * 5`
+
+## `collections.deque([iterable, [maxlen]])` - Doubly Ended Queue
+
+- For faster `O(1)` append and pop operations on both ends
+
+```python
+queue = collections.deque([1, 2, 3])
+
+## Operations
+queue.append(4)
+queue.appendleft(0)
+
+queue.pop() # Returns 4
+queue.popleft() # Returns 0
+```
+
+## `enumerate` with optional `start` argument
+
+Specify the starting index for the keys (indexes) in the enumerate object
+
+```python
+name="saad"
+for i, c in enumerate(name,start=1):
+    print(f'{i}->{c}')
+
+# Output
+# 1->s
+# 2->a
+# 3->a
+# 4->d
+```

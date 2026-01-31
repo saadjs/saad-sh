@@ -1,0 +1,25 @@
+export const metadata = {
+  title: "How to write http response to a file",
+  description: "Write or append HTTP response text to a file in Python using the requests library.",
+  date: "2022-12-29",
+  tags: ["Python"],
+  published: true,
+};
+
+## For text response: use `response.text`
+
+```python
+response = requests.get("https://api.github.com/users/saadjs")
+
+with open("response.txt", "w") as f: # 'w' for write file permission
+    f.write(response.text)
+```
+
+## To append to a file:
+
+```python
+response = requests.get("https://api.github.com/users/saadjs")
+
+with open("response.txt", "a") as f: # 'a' for append file permission
+    f.write(response.text)
+```

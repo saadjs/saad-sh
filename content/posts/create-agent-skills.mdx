@@ -1,0 +1,193 @@
+export const metadata = {
+  title: "Create Agent Skills in Simple Steps",
+  description:
+    "Agent skills extend Claude Code and Codex with custom capabilities through simple markdown files and scripts.",
+  date: "2026-01-11",
+  tags: ["ai"],
+  published: true,
+};
+
+Agent skills extend Claude Code and Codex with custom capabilities through simple markdown files and scripts.
+
+## Claude Code
+
+### Install the skills marketplace
+
+```bash
+/plugin marketplace add anthropics/skills
+```
+
+### Install skill-creator
+
+```bash
+/plugin install skill-creator@anthropic-agent-skills
+```
+
+### Create a new skill
+
+Ask Claude to create a skill:
+
+```
+Create a new skill called "slug-generator" that converts text to URL-friendly slugs
+```
+
+Or manually initialize:
+
+```bash
+python scripts/init_skill.py my-skill --path ./skills
+```
+
+### Skill structure
+
+```
+my-skill/
+├── SKILL.md (required)
+├── scripts/ (optional)
+├── references/ (optional)
+└── assets/ (optional)
+```
+
+### SKILL.md format
+
+```markdown
+---
+name: slug-generator
+description: |
+  Convert text to URL-friendly slugs with customizable
+  separators. Use when you need to: (1) Generate URL
+  slugs from titles, (2) Create file-safe names.
+---
+
+# Slug Generator
+
+## Usage
+
+Input: "My Blog Post Title!"
+Output: "my-blog-post-title"
+
+## Implementation
+
+See [slug_transform.py](scripts/slug_transform.py)
+```
+
+### Example script
+
+**scripts/slug_transform.py:**
+
+```python
+import re
+
+def generate_slug(text: str, separator: str = '-') -> str:
+    slug = text.lower().strip()
+    slug = re.sub(r'[^a-z0-9]+', separator, slug)
+    slug = re.sub(f'{separator}+', separator, slug)
+    return slug.strip(separator)
+
+if __name__ == '__main__':
+    import sys
+    text = sys.argv[1] if len(sys.argv) > 1 else "Example Text"
+    print(generate_slug(text))
+```
+
+### Package the skill
+
+```bash
+python scripts/package_skill.py ./skills/my-skill
+```
+
+Creates `my-skill.skill` file.
+
+### Install your skill
+
+```bash
+/plugin install ./my-skill.skill
+```
+
+### Use your skill
+
+```
+Use the slug-generator skill to convert: "My Amazing Title"
+```
+
+## Codex (OpenAI)
+
+### Create skill with skill-creator
+
+```bash
+$skill-creator
+```
+
+With context:
+
+```bash
+$skill-creator
+Create a skill that generates commit messages from git diff.
+```
+
+### Manual creation
+
+Create in either location:
+
+```bash
+# User-scoped
+~/.codex/skills/my-skill/
+
+# Repo-scoped
+.codex/skills/my-skill/
+```
+
+### Codex SKILL.md format
+
+```markdown
+---
+name: commit-msg-generator
+description: Generate conventional commit messages from git diff. Use when committing changes.
+---
+
+# Commit Message Generator
+
+Review git diff and generate a conventional commit message.
+
+## Steps
+
+1. Run `git diff --staged`
+2. Analyze changes
+3. Generate message with format: `type(scope): subject`
+4. Suggest conventional types: feat, fix, refactor, docs
+```
+
+### Restart Codex
+
+```bash
+# Restart to load new skills
+codex restart
+```
+
+### Activation
+
+Skills activate automatically when mentioned or via:
+
+```bash
+/skills
+```
+
+Or explicitly:
+
+```bash
+$my-skill
+```
+
+## Key Differences
+
+| Aspect          | Claude Code                            | Codex                       |
+| --------------- | -------------------------------------- | --------------------------- |
+| Install command | `/plugin install`                      | Files in `~/.codex/skills/` |
+| Skill creator   | `skill-creator@anthropic-agent-skills` | `$skill-creator`            |
+| Activation      | Mention skill name                     | `$skill-name` or auto       |
+| Packaging       | `.skill` zip file                      | Directory structure         |
+
+## Resources
+
+- [Claude Skills Repository](https://github.com/anthropics/skills)
+- [Codex Skills Documentation](https://developers.openai.com/codex/skills)
+- [Creating Custom Skills](https://support.claude.com/en/articles/12512198-creating-custom-skills)

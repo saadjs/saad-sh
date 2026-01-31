@@ -1,0 +1,97 @@
+export const metadata = {
+  title: "Microservices and Custom exception filter in NestJS",
+  description:
+    "Create custom exception filters in NestJS to handle RpcException errors thrown by microservices with better control and customization.",
+  date: "2023-03-25",
+  tags: ["NestJS", "Typescript"],
+  published: true,
+};
+
+- Nest offers a default exceptions layer to handle unhandled exceptions in an application. Global microservice exception filters aren't enabled by default when using a hybrid application.
+- In the case of an error occurring on a microservice, it is recommended to use `RpcException` instead of `HttpException`.
+- To catch RpcException on the client side, implementing "Exception filters" is a good practice. These filters offer greater control over the flow of the application and allow customization of the response returned to the client from the microservice.
+
+To create a custom exception filter, extend the `RpcException`:
+
+```typescript
+import { ArgumentsHost, Catch, ExceptionFilter } from "@nestjs/common";
+import { RpcException } from "@nestjs/microservices";
+
+@Catch(RpcException)
+export class IIRpcExceptionFilter implements ExceptionFilter {
+  catch(exception: RpcException, host: ArgumentsHost) {
+    const ctx = host.switchToHttp();
+    const error: any = exception.getError();
+    const response = ctx.getResponse();
+    const message = exception.message;
+
+    // Customize the error response as desired
+    response.status(error.status).json({
+      status: error.status,
+      message: message,
+      error: "CustomException",
+    });
+  }
+}
+```
+
+Use the `@UseFilters()` decorator to apply the filter to the controller or method you want to handle the RpcException error:
+
+```typescript
+import { Controller, Get, UseFilters } from "@nestjs/common";
+import { IRpcExceptionFilter } from "./rpc-exception.filter";
+import { AppService } from "./app.service";
+
+@Controller()
+export class AppController {
+  constructor(private readonly appService: AppService) {}
+
+  @Get()
+  @UseFilters(IRpcExceptionFilter)
+  async getHello(): Promise<string> {
+    return this.appService.getHello();
+  }
+}
+```
+
+- **_To use the `RpcException` filter globally:_ main.ts**
+
+        ```typescript
+        import { NestFactory } from '@nestjs/core'
+        import { AppModule } from './app.module'
+        import { IRpcExceptionFilter } from './rpc-exception.filter'
+
+        async function bootstrap() {
+            const app = await NestFactory.create(AppModule)
+
+            // Add Global Filter in main.ts
+            app.useGlobalFilters(new IRpcExceptionFilter())
+
+            await app.listen(3000)
+        }
+        bootstrap()
+        ```
+
+In the microservice client, throw an `RpcException` with the appropriate status code and message when an error occurs:
+
+```typescript
+import { Controller } from "@nestjs/common";
+import { MessagePattern, RpcException } from "@nestjs/microservices";
+
+@Controller()
+export class AppController {
+  @MessagePattern({ cmd: "getHello" })
+  async getHello(): Promise<string> {
+    try {
+      // ... some code that might throw an error
+    } catch (error) {
+      throw new RpcException({
+        message: error,
+        status: HttpStatus.BAD_REQUEST,
+      });
+    }
+  }
+}
+```
+
+With these steps, we have created a custom exception filter that handles RpcException errors thrown by a microservice in NestJS.

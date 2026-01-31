@@ -1,0 +1,396 @@
+export const metadata = {
+  title: "Building First Chrome Extension",
+  description:
+    "A comprehensive guide to building your first Chrome extension, covering manifest.json, content scripts, background scripts, popup scripts, and more.",
+  date: "2025-08-28",
+  tags: ["Chrome", "Typescript"],
+  published: true,
+};
+
+## The Foundation: Understanding manifest.json
+
+Every Chrome extension needs just one required file: `manifest.json`.
+
+This file is the blueprint of the extension. It tells Chrome what extension can do, what permissions it needs, and how it should behave.
+
+Example `manifest.json` structure covering the most common extension patterns:
+
+```json
+{
+  "manifest_version": 3,
+  "name": "First Extension",
+  "description": "A simple Chrome extension to get started",
+  "version": "1.0.0",
+  "permissions": ["storage", "activeTab"],
+  "host_permissions": ["https://*/*"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Extension"
+  },
+  "options_page": "options.html",
+  "commands": {
+    "toggle-feature": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K",
+        "mac": "Command+Shift+K"
+      },
+      "description": "Toggle extension feature"
+    }
+  },
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  }
+}
+```
+
+## Essential Scripts and Their Purposes
+
+### 1. Content Scripts: Interacting with Web Pages
+
+Content scripts run in the context of web pages and can read and modify the DOM. Used for:
+
+- Modifying page content
+- Adding new elements to pages
+- Highlighting text or images
+- Detecting specific content patterns
+
+**content.js example:**
+
+```javascript
+// This script runs on web pages matching manifest patterns
+console.log("Content script loaded!");
+
+// Example: Add a banner to the top of every page
+const banner = document.createElement("div");
+banner.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #007bff;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    z-index: 10000;
+`;
+banner.textContent = "My Extension is Active!";
+document.body.appendChild(banner);
+
+// Listen for messages from other parts of the extension
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "GET_PAGE_INFO") {
+    sendResponse({
+      title: document.title,
+      url: window.location.href,
+    });
+  }
+});
+```
+
+### 2. Background Scripts (Service Workers): Extension Logic Hub
+
+Background scripts manage extension's lifecycle and handle events. Used for:
+
+- Responding to browser events
+- Managing extension state
+- Handling keyboard shortcuts
+- Processing data between different parts of extension
+
+**background.js example:**
+
+```javascript
+// Service worker for Manifest V3
+console.log("Background script loaded!");
+
+// Handle extension installation
+chrome.runtime.onInstalled.addListener(() => {
+  console.log("Extension installed!");
+
+  // Set default settings
+  chrome.storage.sync.set({
+    enabled: true,
+    theme: "dark",
+  });
+});
+
+// Handle keyboard commands
+chrome.commands.onCommand.addListener((command) => {
+  if (command === "toggle-feature") {
+    // Send message to active tab
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      chrome.tabs.sendMessage(tabs[0].id, {
+        type: "TOGGLE_FEATURE",
+      });
+    });
+  }
+});
+
+// Handle browser action clicks
+chrome.action.onClicked.addListener((tab) => {
+  // Execute action when extension icon is clicked
+  chrome.tabs.sendMessage(tab.id, {
+    type: "ICON_CLICKED",
+  });
+});
+```
+
+### 3. Popup Scripts: Quick Actions Interface
+
+Popup scripts power the small window that appears when users click on extension icon. Used for:
+
+- Quick settings toggles
+- Status displays
+- Action buttons
+- Mini-interfaces
+
+**popup.js example:**
+
+```javascript
+// popup.js - Controls the extension popup
+document.addEventListener("DOMContentLoaded", () => {
+  const toggleButton = document.getElementById("toggle");
+  const statusDiv = document.getElementById("status");
+
+  // Load current state
+  chrome.storage.sync.get(["enabled"], (result) => {
+    const enabled = result.enabled || false;
+    toggleButton.textContent = enabled ? "Disable" : "Enable";
+    statusDiv.textContent = enabled ? "Active" : "Inactive";
+  });
+
+  // Handle toggle button click
+  toggleButton.addEventListener("click", () => {
+    chrome.storage.sync.get(["enabled"], (result) => {
+      const newState = !result.enabled;
+
+      chrome.storage.sync.set({ enabled: newState }, () => {
+        toggleButton.textContent = newState ? "Disable" : "Enable";
+        statusDiv.textContent = newState ? "Active" : "Inactive";
+
+        // Notify content scripts
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          chrome.tabs.sendMessage(tabs[0].id, {
+            type: "STATE_CHANGED",
+            enabled: newState,
+          });
+        });
+      });
+    });
+  });
+});
+```
+
+**popup.html:**
+
+```html
+<!doctype html>
+<html>
+  <head>
+    <style>
+      body {
+        width: 200px;
+        padding: 10px;
+      }
+      button {
+        width: 100%;
+        padding: 8px;
+        margin: 5px 0;
+      }
+      #status {
+        text-align: center;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="status">Loading...</div>
+    <button id="toggle">Toggle</button>
+    <script src="popup.js"></script>
+  </body>
+</html>
+```
+
+### 4. Options Scripts: Settings and Configuration
+
+Options scripts create a dedicated settings page for extension. Used for:
+
+- User preferences
+- Configuration options
+- Advanced settings
+- Theme customization
+
+**options.js example:**
+
+```javascript
+// options.js - Manages the extension settings page
+document.addEventListener("DOMContentLoaded", () => {
+  const themeSelect = document.getElementById("theme");
+  const saveButton = document.getElementById("save");
+  const status = document.getElementById("status");
+
+  // Load saved settings
+  chrome.storage.sync.get(["theme"], (result) => {
+    themeSelect.value = result.theme || "light";
+  });
+
+  // Save settings
+  saveButton.addEventListener("click", () => {
+    const theme = themeSelect.value;
+
+    chrome.storage.sync.set({ theme: theme }, () => {
+      status.textContent = "Settings saved!";
+      setTimeout(() => {
+        status.textContent = "";
+      }, 2000);
+    });
+  });
+});
+```
+
+## Understanding Manifest.json Sections
+
+### Required Fields
+
+```json
+{
+  "manifest_version": 3, // Always use version 3 (latest)
+  "name": "Extension Name",
+  "version": "1.0.0"
+}
+```
+
+### Permissions and Access
+
+```json
+{
+  "permissions": [
+    "storage", // Save user preferences
+    "activeTab", // Access current tab
+    "contextMenus", // Add right-click menu items
+    "notifications" // Show browser notifications
+  ],
+  "host_permissions": [
+    "https://*/*", // Access HTTPS sites
+    "*://example.com/*" // Specific site access
+  ]
+}
+```
+
+### Script Definitions
+
+```json
+{
+  "background": {
+    "service_worker": "background.js",
+    "type": "module" // Enables ES6 imports
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*/*"], // Which sites to run on
+      "js": ["content.js"], // Scripts to inject
+      "css": ["styles.css"], // Styles to inject
+      "run_at": "document_end" // When to run
+    }
+  ]
+}
+```
+
+### User Interface Elements
+
+```json
+{
+  "action": {
+    "default_popup": "popup.html", // Popup when icon clicked
+    "default_title": "Extension Name",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "options_page": "options.html", // Settings page
+  "commands": {
+    "shortcut-name": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+K"
+      },
+      "description": "What this shortcut does"
+    }
+  }
+}
+```
+
+### Match Patterns
+
+Control where content scripts run:
+
+```json
+"matches": [
+    "https://*/*",           // All HTTPS sites
+    "*://example.com/*",     // Specific domain
+    "https://*/api/*",       // Specific paths
+    "<all_urls>"             // Every site (use carefully)
+]
+```
+
+### Permissions Strategy
+
+Follow the principle of least privilege:
+
+- **`activeTab`**: Access current tab only when user clicks extension
+- **`storage`**: Save user preferences locally
+- **`contextMenus`**: Add right-click menu options
+- **`notifications`**: Show browser notifications
+- **`host_permissions`**: Access specific websites
+
+### Communication Between Scripts
+
+Scripts communicate using Chrome's messaging API:
+
+```javascript
+// Send message from popup to content script
+chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+  chrome.tabs.sendMessage(tabs[0].id, { type: "ACTION_TYPE" });
+});
+
+// Listen for messages in content script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.type === "ACTION_TYPE") {
+    // Do something
+    sendResponse({ success: true });
+  }
+});
+```
+
+## Essential Resources
+
+### Official Documentation
+
+- [Chrome Extension Developer Guide](https://developer.chrome.com/docs/extensions/develop)
+- [Manifest.json Reference](https://developer.chrome.com/docs/extensions/reference/manifest)
+- [Chrome APIs Documentation](https://developer.chrome.com/docs/extensions/reference/api)
+- [Getting Started Tutorial](https://developer.chrome.com/docs/extensions/get-started/tutorial/hello-world)
+
+### Learning Resources
+
+- [Extension Samples on GitHub](https://github.com/GoogleChrome/chrome-extensions-samples)
+- [Manifest V3 Migration Guide](https://developer.chrome.com/docs/extensions/develop/migrate)
+
+### Development Tools
+
+- [Chrome Extensions CLI](https://github.com/dutiyesh/chrome-extension-cli)
+- [@types/chrome](https://www.npmjs.com/package/@types/chrome) for TypeScript support
+- [Extension Reloader](https://chrome.google.com/webstore/detail/extensions-reloader/fimgfedafeadlieiabdeeaodndnlbhid) for faster development

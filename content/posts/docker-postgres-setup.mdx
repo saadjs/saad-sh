@@ -1,0 +1,86 @@
+export const metadata = {
+  title: "Setup Postgres Database in Docker Container for Development",
+  description:
+    "Quick guide to setting up a PostgreSQL database in a Docker container for local development with docker-compose.",
+  date: "2025-10-10",
+  tags: ["docker", "postgres"],
+  published: true,
+};
+
+## `docker-compose.yml` for Postgres
+
+```yaml
+services:
+  db:
+    image: postgres:17.0
+    hostname: ${DB_HOST}
+    ports:
+      - "5432:${DB_PORT}"
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+volumes:
+  pgdata:
+```
+
+## `.env` file
+
+```env
+DATABASE_URL=postgresql://postgres:password@localhost:5432/main
+DB_HOST=localhost
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=password
+DB_NAME=main
+```
+
+## Commands to run
+
+```bash
+docker-compose up -d
+```
+
+### Connect to Postgres
+
+```bash
+psql -h localhost -p 5432 -U postgres -d postgres
+```
+
+### Example JavaScript file to test connection
+
+```javascript
+// file: index.mjs
+import { Client } from "pg";
+const client = new Client({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
+});
+
+client
+  .connect()
+  .then(() => console.log("Connected to Postgres"))
+  .catch((err) => console.error("Connection error:", err.stack))
+  .finally(() => client.end());
+```
+
+To run the file, use:
+
+```bash
+node --env-file .env index.mjs
+```
+
+### Stop and remove container
+
+```bash
+docker-compose down -v
+```
+
+## Notes
+
+- The `-v` flag in the `docker-compose down` command removes the named volume `pgdata`, which deletes all the data stored in the Postgres database. Use this with caution if you want to keep your data.

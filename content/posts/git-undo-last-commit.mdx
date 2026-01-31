@@ -1,0 +1,20 @@
+export const metadata = {
+  title: "How to undo last commit message in Git",
+  description:
+    "Amend the most recent commit message in Git and push the changes to a remote branch.",
+  date: "2022-11-07",
+  tags: ["Git"],
+  published: true,
+};
+
+## Amend the most recent commit message:
+
+```shell
+git commit --amend -m "New message"
+```
+
+## Changes already pushed to remote branch
+
+```shell
+git push <remote> <branch> -f
+```

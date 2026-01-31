@@ -1,0 +1,26 @@
+export const metadata = {
+  title: "Avoid bugs when using Array fill()",
+  description:
+    "Array.fill in JavaScript passes objects by reference, not by value. Learn how to avoid common bugs when using this method.",
+  date: "2023-02-04",
+  tags: ["Javascript"],
+  published: true,
+};
+
+Array.fill in JavaScript is a handy method for filling an array with a single value, but it can lead to bugs if not used with caution. The reason is that the method passes objects by reference, rather than by value.
+
+This means that if you call Array.prototype.fill(value) and value is an object, then all elements of the array will refer to the same object in memory. Any changes made to that object will be reflected in all elements of the array.
+
+For example, consider the following code:
+
+```js
+let arr = new Array(5).fill([]);
+
+console.log(arr); // [ [], [], [], [], [] ]
+
+arr[0].push(1);
+
+console.log(arr); // [ [ 1 ], [ 1 ], [ 1 ], [ 1 ], [ 1 ] ]
+```
+
+This can be a source of bugs if you are not aware of the behavior of Array.fill with objects.

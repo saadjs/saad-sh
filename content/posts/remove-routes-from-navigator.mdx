@@ -1,0 +1,17 @@
+export const metadata = {
+  title: "How to remove all routes from the Navigator in Flutter",
+  description:
+    "Remove all routes from the Navigator stack in Flutter, useful for implementing logout functionality.",
+  date: "2022-11-10",
+  tags: ["Flutter"],
+  published: true,
+};
+
+### Helpful for designing functionality of a Logout button
+
+```dart
+Navigator.of(context).pushNamedAndRemoveUntil(
+    '/desiredNamedRoute',
+    (Route<dynamic> route) => false,
+  );
+```

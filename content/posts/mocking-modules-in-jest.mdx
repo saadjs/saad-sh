@@ -1,0 +1,152 @@
+export const metadata = {
+  title: "Mocking modules in Jest.js",
+  description:
+    "Complete guide to mocking modules in Jest for both CommonJS and ES Module syntax, including named imports, default exports, and partial mocks.",
+  date: "2023-04-01",
+  tags: ["Jest", "Javascript"],
+  published: true,
+};
+
+Mocking modules in Jest is important because it allows us to isolate and test specific parts of code without depending on external modules.
+
+And when we are writing unit tests, we want to test only the code that we have written, not the external dependencies because we want to ensure that the code is working correctly and not impacted by external factors.
+
+Mocking allows us to simulate the behavior of the module and control its responses to input & output.
+
+**_First things first_**
+
+When we require module in tests, calling `jest.mock('./moduleName')` is **required**.
+
+# CommonJS
+
+## Mocking a named import
+
+```js
+// sum.js
+module.exports = {
+  sum: (a, b) => a + b,
+};
+
+// sum.test.js
+const { sum } = require("./Module");
+
+jest.mock("./Module", () => ({
+  sum: () => "mocked implementation",
+}));
+
+test("should use the mocked implementation", () => {
+  expect(sum()).toEqual("mocked implementation");
+});
+```
+
+```shell
+Result when the test is run:
+ PASS  ./Module.test.js
+  ✓ should use mocked implementation (2 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.163 s, estimated 1 s
+Ran all test suites.
+```
+
+In the above example, the sum function from `Module.js` is getting mocked inside the test file by passing a callback to `jest.mock`.
+
+For default export, `jest.mock` syntax will look slightly different.
+
+## Default Export: `Sum.js`
+
+```js
+// sum.js
+const sum = (a, b) => a + b;
+module.exports = sum;
+
+// sum.test.js
+const sum = require("./Sum");
+
+jest.mock("./Sum", () => () => "mocked implementation");
+
+test("should use the mocked implementation", () => {
+  expect(sum()).toEqual("mocked implementation");
+});
+```
+
+And will get the same result in the terminal:
+
+```shell
+ PASS  ./Sum.test.js
+  ✓ should used the mocked implementation (1 ms)
+
+Test Suites: 1 passed, 1 total
+Tests:       1 passed, 1 total
+Snapshots:   0 total
+Time:        0.11 s, estimated 1 s
+Ran all test suites matching /Sum.test.js/i.
+```
+
+# ES Module syntax
+
+## Mocking a named import
+
+```js
+// hello.js
+export function sayHello(name) {
+  return `Hello, ${name}!`;
+}
+
+// hello.test.js
+import { sayHello } from "./hello";
+
+jest.mock("./hello", () => ({
+  sayHello: (name) => `mocked`,
+}));
+
+test("Mock implementation test", () => {
+  expect(sayHello()).toBe(`mocked`);
+});
+
+/*
+PASS ./sum.test.js
+✓ Mock implementation test
+
+Test Suites: 1 passed, 1 total
+Tests: 1 passed, 1 total
+Snapshots: 0 total
+Time: 0.307 s, estimated 1 s
+*/
+```
+
+## Mocking default import
+
+```js
+import getWeather from "./weather";
+
+// weather.test.js
+jest.mock("./weather", () => () => "Sunny 47F");
+```
+
+## Mocking only the named import (and leaving other imports unmocked)
+
+```js
+import { getWeather, getTemperature, getWindSpeed } from "./weather";
+
+// weather.test.js
+jest.mock("./weather", () => ({
+  ...jest.requireActual("./weather"),
+  getTemperature: () => 25,
+  // getWeather and getWindSpeed will return their true values
+}));
+```
+
+## Mocking a default and named imports
+
+```js
+import getCityName, { getPopulation } from "./city";
+
+jest.mock("./city", () => ({
+  __esModule: true,
+  default: () => "New York City",
+  getPopulation: () => 8_550_405,
+}));
+```
