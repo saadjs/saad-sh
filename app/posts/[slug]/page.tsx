@@ -5,6 +5,7 @@ import { HashAnchor } from "@/components/HashAnchor";
 import { getPostBySlug, getPostSlugs, getPostModuleBySlug } from "@/lib/posts";
 import type { PostMetadata } from "@/lib/types";
 import { siteConfig } from "@/site.config";
+import { getPostImageUrl } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const { metadata } = post;
+  const imageUrl = getPostImageUrl(slug, metadata.image, siteConfig.url);
 
   return {
     title: metadata.title,
@@ -34,13 +36,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       type: "article",
       publishedTime: metadata.date,
       url: `${siteConfig.url}${siteConfig.routes.posts}/${slug}`,
-      images: metadata.image ? [{ url: metadata.image }] : undefined,
+      images: [
+        {
+          url: imageUrl,
+          width: 1200,
+          height: 630,
+          alt: metadata.title,
+        },
+      ],
     },
     twitter: {
       card: siteConfig.twitterCard,
       title: metadata.title,
       description: metadata.description,
-      images: metadata.image ? [metadata.image] : undefined,
+      images: [imageUrl],
     },
   };
 }
@@ -55,6 +64,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     default: React.ComponentType;
     metadata: PostMetadata;
   };
+  const imageUrl = getPostImageUrl(slug, metadata.image, siteConfig.url);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -68,7 +78,7 @@ export default async function BlogPostPage({ params }: PageProps) {
       url: siteConfig.author.url,
     },
     url: `${siteConfig.url}${siteConfig.routes.posts}/${slug}`,
-    image: metadata.image,
+    image: imageUrl,
   };
 
   return (

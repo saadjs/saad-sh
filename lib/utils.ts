@@ -15,3 +15,12 @@ export function slugifyTag(tag: string): string {
     .replace(/\s+/g, "-")
     .replace(/-+/g, "-");
 }
+
+export function getPostImageUrl(
+  slug: string,
+  customImage: string | undefined,
+  siteUrl: string,
+): string {
+  const fallbackImage = new URL(`/posts/${slug}/opengraph-image`, siteUrl).toString();
+  return customImage ? new URL(customImage, siteUrl).toString() : fallbackImage;
+}

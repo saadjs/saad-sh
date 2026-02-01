@@ -48,11 +48,20 @@ export const metadata: Metadata = {
     siteName: siteConfig.name,
     locale: siteConfig.locale,
     type: "website",
+    images: [
+      {
+        url: new URL("/opengraph-image", siteConfig.url).toString(),
+        width: 1200,
+        height: 630,
+        alt: siteConfig.name,
+      },
+    ],
   },
   twitter: {
     card: siteConfig.twitterCard,
     title: siteConfig.name,
     description: siteConfig.description,
+    images: [new URL("/opengraph-image", siteConfig.url).toString()],
   },
   robots: siteConfig.robots,
 };
