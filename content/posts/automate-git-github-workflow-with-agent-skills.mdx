@@ -1,0 +1,101 @@
+export const metadata = {
+  title: "My Git + GitHub Workflow with Agent Skills",
+  description:
+    "How I use three small skills to turn commits, PR creation, and PR feedback into a repeatable workflow.",
+  date: "2026-02-15",
+  tags: ["Git", "GitHub", "AI"],
+  published: true,
+};
+
+I built these 3 skills to speed up and automate my Git and GitHub workflow which saves me a lot of time every day.
+
+## Skills Source
+
+https://github.com/saadjs/agent-skills/tree/main/skills
+
+This is the loop I run daily:
+
+- `git-incremental-commits`: split messy working trees into clean commits
+- `gh-pr-create`: push + open a PR with a consistent body
+- `gh-address-pr-comments`: fetch feedback, add regressions, fix, push, reply
+
+### 1) `git-incremental-commits`
+
+Goal: turn “a pile of changes” into small Conventional Commits, ending with a clean `git status`.
+
+What it automates (for me): deciding commit boundaries, staging strategy, and commit messages.
+
+Typical command pattern:
+
+```bash
+git status -sb
+git diff --stat
+
+git add -p
+git commit -m "feat(scope): …"
+
+# repeat until clean
+```
+
+Built-in guardrails I like:
+
+- Won’t commit on `main`/`master` (branch safety gate)
+- Encourages lockfiles to be committed with dependency changes
+- Prefers single-purpose commits (uses `git add -p` when needed)
+
+### 2) `gh-pr-create`
+
+Goal: after the branch is clean, push and open a PR with a predictable structure.
+
+Preconditions:
+
+```bash
+git status -sb
+gh auth status
+```
+
+Workflow:
+
+```bash
+# first push sets upstream
+git push -u origin HEAD
+
+# next pushes are just
+git push
+```
+
+The value is the PR body format. I keep it the same every time:
+
+- `## Summary`
+- `## Major changes`
+- Optional: `## Screenshots`, `## Tests`, `## Additional info`
+
+That consistency makes PRs easier to scan and review.
+
+After the PR is created, the skill asks who to request review from and applies the right action.
+
+### 3) `gh-address-pr-comments`
+
+Goal: turn PR feedback into an evidence-based checklist and ship the fixes end-to-end.
+
+Required input: a PR number.
+
+Core flow:
+
+```bash
+# checkout PR branch
+gh pr checkout "$PR_NUMBER"
+
+# fetch PR + comments (inline + issue comments)
+gh pr view "$PR_NUMBER" --json number,title,url,headRefName,baseRefName,comments,reviews
+```
+
+What it enforces:
+
+- Classify feedback (meaningful vs subjective/unclear)
+- Add regression tests before fixes (when testable)
+- Run the full test suite before pushing
+- Reply to threads with what changed + commit SHA(s)
+- Re-request review only after everything is pushed
+
+I usually use `$<skill>` to invoke the skill in Codex CLI or app.
