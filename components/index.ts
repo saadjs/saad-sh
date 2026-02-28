@@ -5,3 +5,5 @@ export { PostHeader } from "./PostHeader";
 export { TagList } from "./TagList";
 export { SearchCommand } from "./SearchCommand";
 export { SearchButton } from "./SearchButton";
+export { HashAnchor } from "./HashAnchor";
+export { EditIcon } from "./icons/EditIcon";
