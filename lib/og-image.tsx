@@ -53,6 +53,7 @@ export async function generateOgImage({
           fontWeight: 500,
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={logoDataUrl} width={40} height={40} alt="Logo" />
         {siteConfig.name}
       </div>

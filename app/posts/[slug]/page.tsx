@@ -1,7 +1,6 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { PostHeader } from "@/components/PostHeader";
-import { HashAnchor } from "@/components/HashAnchor";
+import { PostHeader, HashAnchor, EditIcon } from "@/components";
 import { getPostBySlug, getPostSlugs, getPostModuleBySlug } from "@/lib/posts";
 import type { PostMetadata } from "@/lib/types";
 import { siteConfig } from "@/site.config";
@@ -65,6 +64,7 @@ export default async function BlogPostPage({ params }: PageProps) {
     metadata: PostMetadata;
   };
   const imageUrl = getPostImageUrl(slug, metadata.image, siteConfig.url);
+  const editUrl = `${siteConfig.github.editPostBaseUrl}/${slug}.mdx`;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -90,6 +90,17 @@ export default async function BlogPostPage({ params }: PageProps) {
       />
       <PostHeader metadata={metadata} />
       <Content />
+      <div className="mt-8">
+        <a
+          href={editUrl}
+          rel="noreferrer"
+          target="_blank"
+          className="inline-flex items-center gap-1.5 text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+        >
+          <EditIcon className="h-4 w-4" />
+          Edit on GitHub
+        </a>
+      </div>
     </article>
   );
 }
