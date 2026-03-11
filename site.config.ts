@@ -63,7 +63,7 @@ export const siteConfig = {
     emptyMessage: "No tags yet.",
     eyebrow: "Tag index",
     intro: "Explore posts by topic.",
-    countLabel: (count: number) => `${count} posts`,
+    countLabel: (count: number) => `${count} ${count === 1 ? "post" : "posts"}`,
   },
   aboutPage: {
     title: "About",

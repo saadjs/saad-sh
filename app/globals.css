@@ -3,6 +3,11 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --surface: rgba(255, 255, 255, 0.78);
+  --surface-strong: rgba(255, 255, 255, 0.92);
+  --border-subtle: rgba(24, 24, 27, 0.08);
+  --grid-line: rgba(24, 24, 27, 0.045);
+  --glow-accent: rgba(249, 115, 22, 0.14);
   --code-bg: #101114;
   --code-fg: #e7e5e4;
   --code-border: rgba(17, 24, 39, 0.18);
@@ -23,6 +28,9 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-strong: var(--surface-strong);
+  --color-border-subtle: var(--border-subtle);
   --color-tag: #f97316;
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
@@ -32,6 +40,11 @@
   :root {
     --background: #0a0a0a;
     --foreground: #ededed;
+    --surface: rgba(17, 17, 19, 0.78);
+    --surface-strong: rgba(17, 17, 19, 0.9);
+    --border-subtle: rgba(255, 255, 255, 0.08);
+    --grid-line: rgba(255, 255, 255, 0.05);
+    --glow-accent: rgba(251, 146, 60, 0.16);
     --code-bg: #111315;
     --code-fg: #f1f5f9;
     --code-border: rgba(255, 255, 255, 0.1);
@@ -55,6 +68,58 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
   line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(circle at top right, var(--glow-accent), transparent 28%),
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size:
+    auto,
+    32px 32px,
+    32px 32px;
+  background-position:
+    0 0,
+    -1px -1px,
+    -1px -1px;
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.9), transparent 92%);
+  z-index: -1;
+}
+
+::selection {
+  background: color-mix(in srgb, #f97316 24%, transparent);
+}
+
+.surface-panel {
+  background: var(--surface);
+  border: 1px solid var(--border-subtle);
+  box-shadow: 0 24px 60px -44px rgba(15, 23, 42, 0.38);
+  backdrop-filter: blur(14px);
+}
+
+.eyebrow {
+  font-family:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: #f97316;
+}
+
+.section-title {
+  font-family:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    "Liberation Mono", "Courier New", monospace;
+  letter-spacing: -0.04em;
 }
 
 pre[class*="language-"] {
