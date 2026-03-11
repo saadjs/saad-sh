@@ -5,7 +5,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h1: ({ children, ...props }) => (
       <h1
         {...props}
-        className={`mt-8 mb-4 scroll-mt-24 text-3xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
+        className={`mt-8 mb-4 scroll-mt-24 font-mono text-3xl font-semibold tracking-[-0.04em] text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
       >
         {children}
       </h1>
@@ -13,7 +13,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h2: ({ children, ...props }) => (
       <h2
         {...props}
-        className={`mt-8 mb-4 scroll-mt-24 text-2xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
+        className={`mt-8 mb-4 scroll-mt-24 font-mono text-2xl font-semibold tracking-[-0.035em] text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
       >
         {children}
       </h2>
@@ -21,13 +21,13 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h3: ({ children, ...props }) => (
       <h3
         {...props}
-        className={`mt-6 mb-3 scroll-mt-24 text-xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
+        className={`mt-6 mb-3 scroll-mt-24 font-mono text-xl font-semibold tracking-[-0.03em] text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
       >
         {children}
       </h3>
     ),
     p: ({ children }) => (
-      <p className="my-4 leading-7 text-zinc-700 dark:text-zinc-300">{children}</p>
+      <p className="my-4 text-[1.02rem] leading-8 text-zinc-700 dark:text-zinc-300">{children}</p>
     ),
     a: ({ href, children, className }) => (
       <a
@@ -47,17 +47,31 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     ),
     li: ({ children }) => <li className="leading-7">{children}</li>,
     blockquote: ({ children }) => (
-      <blockquote className="my-6 border-l-2 border-zinc-300 pl-6 italic text-zinc-600 dark:border-zinc-600 dark:text-zinc-400">
+      <blockquote className="my-6 border-l-2 border-zinc-300 pl-6 font-mono text-[0.95rem] leading-7 text-zinc-600 dark:border-zinc-600 dark:text-zinc-400">
         {children}
       </blockquote>
     ),
-    code: ({ children }) => (
-      <code className="rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200">
-        {children}
-      </code>
-    ),
-    pre: ({ children }) => (
-      <pre className="my-6 overflow-x-auto rounded-lg bg-zinc-100 p-4 font-mono text-sm dark:bg-zinc-800 [&_code]:bg-transparent [&_code]:p-0">
+    code: ({ children, className, ...props }) => {
+      const isBlockCode = className?.includes("language-");
+
+      return (
+        <code
+          {...props}
+          className={
+            isBlockCode
+              ? `font-mono text-sm ${className ?? ""}`.trim()
+              : `rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200 ${className ?? ""}`.trim()
+          }
+        >
+          {children}
+        </code>
+      );
+    },
+    pre: ({ children, className, ...props }) => (
+      <pre
+        {...props}
+        className={`my-6 overflow-x-auto rounded-lg bg-zinc-100 p-4 font-mono text-sm dark:bg-zinc-800 [&_code]:bg-transparent [&_code]:p-0 ${className ?? ""}`.trim()}
+      >
         {children}
       </pre>
     ),
@@ -79,7 +93,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       <tr className="border-b border-zinc-100 dark:border-zinc-800">{children}</tr>
     ),
     th: ({ children }) => (
-      <th className="px-4 py-3 text-left font-semibold text-zinc-900 dark:text-zinc-100">
+      <th className="px-4 py-3 text-left font-mono font-semibold text-zinc-900 dark:text-zinc-100">
         {children}
       </th>
     ),
