@@ -1,7 +1,8 @@
 export const siteConfig = {
   name: "saad.sh",
   url: "https://saad.sh",
-  description: "Personal blog, snippets and thoughts on software development.",
+  description:
+    "Personal blog on tools and techs I am using, programming tips & tricks, and some notes.",
   locale: "en_US",
   language: "en-US",
   titleTemplate: "%s | saad.sh",
@@ -22,6 +23,9 @@ export const siteConfig = {
     { label: "Tags", href: "/tags" },
     { label: "About", href: "/about" },
   ],
+  header: {
+    tagline: "",
+  },
   routes: {
     posts: "/",
     about: "/about",
@@ -34,24 +38,49 @@ export const siteConfig = {
     follow: true,
   },
   footer: {
+    eyebrow: "saad.sh",
+    description: "Personal blog for software notes, patterns, and experiments.",
+    links: {
+      feed: "RSS",
+      github: "GitHub",
+      linkedin: "LinkedIn",
+    },
     copyrightOwner: "saad.sh",
     copyrightSuffix: "All rights reserved.",
+  },
+  homePage: {
+    eyebrow: "Personal blog",
+    heading: "Notes on software development",
+    emptyMessage: "No posts yet.",
+    postsEyebrow: "Recent posts",
+    postsHeading: "Latest writing",
+    postsCountLabel: (count: number) => `${count} published`,
   },
   tagsPage: {
     title: "Tags",
     description: "Browse all tags",
     heading: "Tags",
     emptyMessage: "No tags yet.",
+    eyebrow: "Tag index",
+    intro: "Explore posts by topic.",
+    countLabel: (count: number) => `${count} ${count === 1 ? "post" : "posts"}`,
   },
   aboutPage: {
     title: "About",
     description: "Learn more about Saad Bash.",
     kicker: "About the author",
   },
+  postPage: {
+    tagsLabel: "Filed under",
+    editLabel: "Edit on GitHub",
+  },
   tagPage: {
     title: (tag: string) => `Posts tagged "${tag}"`,
     description: (tag: string) => `All posts tagged with ${tag}`,
     heading: (tag: string) => `Posts tagged "${tag}"`,
+    eyebrow: "Filtered archive",
+    summary: (count: number) =>
+      `${count} ${count === 1 ? "post" : "posts"} filed under this topic.`,
   },
   sitemap: {
     changeFrequency: {
