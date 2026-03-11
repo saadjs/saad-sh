@@ -82,7 +82,7 @@ export default async function BlogPostPage({ params }: PageProps) {
   };
 
   return (
-    <article>
+    <article className="space-y-8">
       <HashAnchor />
       <script
         type="application/ld+json"
@@ -90,15 +90,15 @@ export default async function BlogPostPage({ params }: PageProps) {
       />
       <PostHeader metadata={metadata} />
       <Content />
-      <div className="mt-8">
+      <div>
         <a
           href={editUrl}
           rel="noreferrer"
           target="_blank"
-          className="inline-flex items-center gap-1.5 text-sm text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100"
+          className="inline-flex items-center gap-1.5 rounded-full border border-zinc-200/80 bg-white/80 px-4 py-2 font-mono text-xs uppercase tracking-[0.14em] text-zinc-600 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-800 dark:bg-zinc-950/60 dark:text-zinc-400 dark:hover:border-zinc-700 dark:hover:text-zinc-100"
         >
           <EditIcon className="h-4 w-4" />
-          Edit on GitHub
+          {siteConfig.postPage.editLabel}
         </a>
       </div>
     </article>
