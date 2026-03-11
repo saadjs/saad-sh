@@ -236,7 +236,7 @@ export function SearchCommand() {
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={handleKeyDown}
             placeholder="Search posts or tags..."
-            className="w-full bg-transparent text-sm text-white outline-none placeholder:text-zinc-400"
+            className="w-full bg-transparent font-mono text-sm text-white outline-none placeholder:text-zinc-400"
             aria-label="Search posts or tags"
           />
         </div>
@@ -250,7 +250,7 @@ export function SearchCommand() {
             <div className="space-y-6">
               {tagResults.length > 0 && (
                 <div>
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
+                  <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
                     Tags
                   </p>
                   <ul className="space-y-2">
@@ -271,7 +271,7 @@ export function SearchCommand() {
                               <span className="text-zinc-400">→</span>
                               {result.label}
                             </span>
-                            <span className="text-xs text-zinc-500">{result.count}</span>
+                            <span className="font-mono text-xs text-zinc-500">{result.count}</span>
                           </Link>
                         </li>
                       );
@@ -281,7 +281,7 @@ export function SearchCommand() {
               )}
               {postResults.length > 0 && (
                 <div>
-                  <p className="mb-2 text-[11px] font-semibold uppercase tracking-widest text-zinc-500">
+                  <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
                     Posts
                   </p>
                   <ul className="space-y-2">
@@ -302,7 +302,7 @@ export function SearchCommand() {
                               <span className="text-zinc-400">→</span>
                               {result.title}
                             </span>
-                            <span className="text-xs text-zinc-500">{result.date}</span>
+                            <span className="font-mono text-xs text-zinc-500">{result.date}</span>
                           </Link>
                         </li>
                       );
@@ -313,7 +313,7 @@ export function SearchCommand() {
             </div>
           )}
         </div>
-        <div className="flex items-center justify-between border-t border-white/10 px-4 py-2 text-xs text-zinc-500">
+        <div className="flex items-center justify-between border-t border-white/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.12em] text-zinc-500">
           <span>Press Esc to close</span>
           <span>Use ↑ ↓ to navigate</span>
         </div>

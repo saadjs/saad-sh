@@ -14,7 +14,7 @@ export default async function TagsPage() {
 
   return (
     <div>
-      <h1 className="mb-8 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+      <h1 className="mb-8 font-mono text-2xl font-semibold tracking-[-0.04em] text-zinc-900 dark:text-zinc-100">
         {siteConfig.tagsPage.heading}
       </h1>
       {tags.length === 0 ? (
@@ -25,7 +25,7 @@ export default async function TagsPage() {
             <Link
               key={slug}
               href={`/tags/${slug}`}
-              className="flex items-center gap-2 text-sm transition-opacity hover:opacity-80"
+              className="flex items-center gap-2 font-mono text-sm uppercase tracking-[0.12em] transition-opacity hover:opacity-80"
             >
               <span className="text-tag">#{tag.label.toUpperCase()}</span>
               <span className="text-zinc-400 dark:text-zinc-500">({tag.count})</span>

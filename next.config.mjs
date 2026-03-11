@@ -14,6 +14,12 @@ const withMDX = createMDX({
     rehypePlugins: [
       "rehype-slug",
       [
+        "rehype-prism-plus",
+        {
+          ignoreMissing: true,
+        },
+      ],
+      [
         "rehype-autolink-headings",
         {
           behavior: "wrap",
