@@ -9,12 +9,12 @@ export function Header() {
       <nav className="flex items-center justify-between">
         <Link
           href="/"
-          className="flex items-center gap-2 text-lg font-semibold text-zinc-900 dark:text-zinc-100"
+          className="flex items-center gap-2 font-mono text-lg font-semibold tracking-[-0.04em] text-zinc-900 dark:text-zinc-100"
         >
           <Image src="/logo.svg" alt="" width={24} height={24} />
           {siteConfig.name}
         </Link>
-        <div className="flex items-center gap-4 text-sm">
+        <div className="flex items-center gap-4 font-mono text-sm uppercase tracking-[0.14em]">
           <SearchButton />
           {siteConfig.nav.map((item) => (
             <Link

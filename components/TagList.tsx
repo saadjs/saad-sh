@@ -15,7 +15,7 @@ export function TagList({ tags }: TagListProps) {
           <Link
             key={tag}
             href={`/tags/${slug}`}
-            className="text-sm text-tag transition-opacity hover:opacity-80"
+            className="font-mono text-sm uppercase tracking-[0.12em] text-tag transition-opacity hover:opacity-80"
           >
             #{tag.toUpperCase()}
           </Link>

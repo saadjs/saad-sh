@@ -6,7 +6,7 @@ export default async function HomePage() {
 
   return (
     <div>
-      <h1 className="mb-8 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+      <h1 className="mb-8 font-mono text-2xl font-semibold tracking-[-0.04em] text-zinc-900 dark:text-zinc-100">
         Latest
       </h1>
       {posts.length === 0 ? (

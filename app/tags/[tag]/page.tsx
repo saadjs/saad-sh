@@ -38,7 +38,7 @@ export default async function TagPage({ params }: PageProps) {
 
   return (
     <div>
-      <h1 className="mb-8 text-2xl font-bold tracking-tight text-zinc-900 dark:text-zinc-100">
+      <h1 className="mb-8 font-mono text-2xl font-semibold tracking-[-0.04em] text-zinc-900 dark:text-zinc-100">
         <span className="text-zinc-900 dark:text-zinc-100">Posts tagged</span>{" "}
         <span className="text-tag">#{tagEntry.label}</span>
       </h1>
