@@ -1,4 +1,5 @@
 import type { MDXComponents } from "mdx/types";
+import { CodeBlock } from "@/components/CopyCodeButton";
 
 export function useMDXComponents(components: MDXComponents): MDXComponents {
   return {
@@ -68,12 +69,9 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
       );
     },
     pre: ({ children, className, ...props }) => (
-      <pre
-        {...props}
-        className={`my-6 overflow-x-auto rounded-lg bg-zinc-100 p-4 font-mono text-sm dark:bg-zinc-800 [&_code]:bg-transparent [&_code]:p-0 ${className ?? ""}`.trim()}
-      >
+      <CodeBlock {...props} className={className}>
         {children}
-      </pre>
+      </CodeBlock>
     ),
     hr: () => <hr className="my-8 border-zinc-200 dark:border-zinc-700" />,
     strong: ({ children }) => (
