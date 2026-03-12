@@ -1,7 +1,8 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { PostHeader, HashAnchor, EditIcon } from "@/components";
-import { getPostBySlug, getPostSlugs, getPostModuleBySlug } from "@/lib/posts";
+import { ShareMenu } from "@/components/ShareMenu";
+import { getPostBySlug, getPostSlugs, getPostModuleBySlug, getPostRawContent } from "@/lib/posts";
 import type { PostMetadata } from "@/lib/types";
 import { siteConfig } from "@/site.config";
 import { getPostImageUrl } from "@/lib/utils";
@@ -65,6 +66,8 @@ export default async function BlogPostPage({ params }: PageProps) {
   };
   const imageUrl = getPostImageUrl(slug, metadata.image, siteConfig.url);
   const editUrl = `${siteConfig.github.editPostBaseUrl}/${slug}.mdx`;
+  const postUrl = `${siteConfig.url}/posts/${slug}`;
+  const rawMarkdown = getPostRawContent(slug);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -88,7 +91,9 @@ export default async function BlogPostPage({ params }: PageProps) {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      <PostHeader metadata={metadata} />
+      <PostHeader metadata={metadata}>
+        <ShareMenu markdown={rawMarkdown} url={postUrl} />
+      </PostHeader>
       <Content />
       <div>
         <a

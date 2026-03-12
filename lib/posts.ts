@@ -56,6 +56,14 @@ export const getPostBySlug = cache(async (slug: string): Promise<Post | null> =>
   };
 });
 
+export function getPostRawContent(slug: string): string {
+  const filePath = path.join(postsDirectory, `${slug}.mdx`);
+  if (!fs.existsSync(filePath)) return "";
+  const raw = fs.readFileSync(filePath, "utf-8");
+  // Strip the frontmatter export block
+  return raw.replace(/^export\s+const\s+metadata\s*=\s*\{[\s\S]*?\};\s*/m, "").trim();
+}
+
 export function getPostSlugs(): string[] {
   if (!fs.existsSync(postsDirectory)) {
     return [];
