@@ -5,14 +5,18 @@ import type { PostMetadata } from "@/lib/types";
 
 interface PostHeaderProps {
   metadata: PostMetadata;
+  children?: React.ReactNode;
 }
 
-export function PostHeader({ metadata }: PostHeaderProps) {
+export function PostHeader({ metadata, children }: PostHeaderProps) {
   return (
     <header className="surface-panel mb-10 rounded-[1.75rem] px-6 py-7 sm:px-8">
-      <time className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
-        {formatDate(metadata.date)}
-      </time>
+      <div className="flex items-start justify-between gap-4">
+        <time className="font-mono text-xs uppercase tracking-[0.18em] text-zinc-500 dark:text-zinc-500">
+          {formatDate(metadata.date)}
+        </time>
+        {children}
+      </div>
       <h1 className="section-title mt-3 max-w-3xl text-3xl font-semibold text-zinc-900 dark:text-zinc-100 sm:text-4xl">
         {metadata.title}
       </h1>
