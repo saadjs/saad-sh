@@ -1,8 +1,14 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
-import { PostHeader, HashAnchor, EditIcon } from "@/components";
+import { PostHeader, HashAnchor, EditIcon, RelatedPosts } from "@/components";
 import { ShareMenu } from "@/components/ShareMenu";
-import { getPostBySlug, getPostSlugs, getPostModuleBySlug, getPostRawContent } from "@/lib/posts";
+import {
+  getPostBySlug,
+  getPostSlugs,
+  getPostModuleBySlug,
+  getPostRawContent,
+  getRelatedPosts,
+} from "@/lib/posts";
 import type { PostMetadata } from "@/lib/types";
 import { siteConfig } from "@/site.config";
 import { getPostImageUrl } from "@/lib/utils";
@@ -68,6 +74,7 @@ export default async function BlogPostPage({ params }: PageProps) {
   const editUrl = `${siteConfig.github.editPostBaseUrl}/${slug}.mdx`;
   const postUrl = `${siteConfig.url}/posts/${slug}`;
   const rawMarkdown = getPostRawContent(slug);
+  const relatedPosts = await getRelatedPosts(slug);
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -106,6 +113,7 @@ export default async function BlogPostPage({ params }: PageProps) {
           {siteConfig.postPage.editLabel}
         </a>
       </div>
+      <RelatedPosts posts={relatedPosts} />
     </article>
   );
 }
