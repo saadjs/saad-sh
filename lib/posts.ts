@@ -97,6 +97,25 @@ export const getAllTags = cache(
   },
 );
 
+export const getRelatedPosts = cache(async (slug: string, limit = 3): Promise<Post[]> => {
+  const current = await getPostBySlug(slug);
+  if (!current) return [];
+
+  const all = await getAllPosts();
+  const currentTags = current.metadata.tags.map(slugifyTag);
+
+  const scored = all
+    .filter((p) => p.slug !== slug)
+    .map((post) => {
+      const shared = post.metadata.tags.filter((t) => currentTags.includes(slugifyTag(t))).length;
+      return { post, shared };
+    })
+    .filter((entry) => entry.shared > 0)
+    .sort((a, b) => b.shared - a.shared);
+
+  return scored.slice(0, limit).map((entry) => entry.post);
+});
+
 export const getPostsByTag = cache(async (tag: string): Promise<Post[]> => {
   const posts = await getAllPosts();
   const normalizedTag = slugifyTag(tag);
