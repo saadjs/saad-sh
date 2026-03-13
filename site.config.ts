@@ -18,6 +18,7 @@ export const siteConfig = {
   },
   github: {
     editPostBaseUrl: "https://github.com/saadjs/saad-sh/edit/main/content/posts",
+    sourceUrl: "https://github.com/saadjs/saad-sh",
   },
   nav: [
     { label: "Tags", href: "/tags" },
@@ -42,6 +43,7 @@ export const siteConfig = {
     description: "Personal blog for software notes, patterns, and experiments.",
     links: {
       feed: "RSS",
+      source: "Source",
       github: "GitHub",
       linkedin: "LinkedIn",
     },
@@ -73,6 +75,7 @@ export const siteConfig = {
   postPage: {
     tagsLabel: "Filed under",
     editLabel: "Edit on GitHub",
+    relatedPostsHeading: "Related posts",
   },
   tagPage: {
     title: (tag: string) => `Posts tagged "${tag}"`,
