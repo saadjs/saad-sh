@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { siteConfig } from "@/site.config";
+import { RssIcon, CodeIcon, GitHubIcon, LinkedInIcon } from "@/components";
 
 export function Footer() {
   return (
@@ -11,28 +12,40 @@ export function Footer() {
             {siteConfig.footer.description}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2 font-mono text-xs uppercase tracking-[0.14em] text-zinc-500">
+        <div className="flex flex-wrap gap-2 text-zinc-500">
           <Link
             href={siteConfig.routes.feed}
-            className="rounded-full border border-zinc-200/80 px-3 py-1.5 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 dark:hover:text-zinc-100"
+            aria-label={siteConfig.footer.links.feed}
+            className="rounded-full border border-zinc-200/80 p-2 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 dark:hover:text-zinc-100"
           >
-            {siteConfig.footer.links.feed}
+            <RssIcon className="h-4 w-4" />
           </Link>
+          <a
+            href={siteConfig.github.sourceUrl}
+            target="_blank"
+            rel="noreferrer"
+            aria-label={siteConfig.footer.links.source}
+            className="rounded-full border border-zinc-200/80 p-2 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 dark:hover:text-zinc-100"
+          >
+            <CodeIcon className="h-4 w-4" />
+          </a>
           <a
             href={siteConfig.author.github}
             target="_blank"
             rel="noreferrer"
-            className="rounded-full border border-zinc-200/80 px-3 py-1.5 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 dark:hover:text-zinc-100"
+            aria-label={siteConfig.footer.links.github}
+            className="rounded-full border border-zinc-200/80 p-2 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 dark:hover:text-zinc-100"
           >
-            {siteConfig.footer.links.github}
+            <GitHubIcon className="h-4 w-4" />
           </a>
           <a
             href={siteConfig.author.linkedin}
             target="_blank"
             rel="noreferrer"
-            className="rounded-full border border-zinc-200/80 px-3 py-1.5 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 dark:hover:text-zinc-100"
+            aria-label={siteConfig.footer.links.linkedin}
+            className="rounded-full border border-zinc-200/80 p-2 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 dark:hover:text-zinc-100"
           >
-            {siteConfig.footer.links.linkedin}
+            <LinkedInIcon className="h-4 w-4" />
           </a>
         </div>
       </div>
