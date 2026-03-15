@@ -1,0 +1,189 @@
+export const metadata = {
+  title: "Building Personal AI Assistant with GitHub Copilot SDK",
+  description:
+    "Guide to building personal AI assistants using GitHub Copilot SDK, covering session management, custom tools, and more.",
+  date: "2026-03-14",
+  tags: ["AI", "Typescript"],
+  published: true,
+};
+
+<div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "20px" }}>
+  <img src="/static/images/neo.png" alt="Neo" width="100" />
+  <span>
+    <strong>Neo</strong>: A personal AI agent accessible via **Telegram**, built with **GitHub
+    Copilot SDK**.
+  </span>
+</div>
+
+## Why GitHub Copilot SDK
+
+It wraps the Copilot CLI as a JSON-RPC server and provides a single session API that handles model switching, tool execution, session persistence, and memory compaction.
+
+The SDK includes:
+
+- **Models**: Claude, GPT-4o, Gemini, o1 (switched at runtime with a single line)
+- **Bash**: Run shell commands and capture output
+- **Code tools**: File viewing, regex search, patch application
+- **Web tools**: Search the web, fetch URLs
+- **GitHub**: Issues, PRs, commits, code search, Actions via built-in MCP
+- **Memory**: Structured memory with `store_memory`
+- **Parallel execution**: Run multiple tools at once
+- **User input**: Ask questions; the SDK bridges to the transport layer
+
+### Pricing
+
+GitHub Copilot Pro+ costs $40/month and provides 1500 premium model requests per month which includes access to all frontier model.
+
+For higher usage, bring custom API keys. The SDK supports `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` directly.
+
+## What Neo does
+
+Neo is owner-only, controlled via Telegram. It wraps Copilot SDK as a session per chat with these additions:
+
+**Custom tools** (defined with `defineTool()` and Zod):
+
+- `browser`: Automate websites with Playwright, store login credentials, take screenshots
+- `reminder`: Cron-based reminders (once, daily, weekly, monthly, weekdays)
+- `job`: Schedule recurring AI prompts (e.g., daily summary, weekly review)
+- `memory`: Read, write, search persistent memory files
+- `conversation`: Search and retrieve past chat history
+- `system`: Introspect settings, apply safe config changes, restart Neo
+
+**Session features**:
+
+- Per-chat model picker (override default Copilot model)
+- Layered memory: daily logs, weekly summaries, channel overlays
+- Live progress UI (thinking, reasoning, tool, done)
+- Voice input via Deepgram STT
+- Automatic context compaction when conversations get long
+- Session hooks for pre/post tool use, error handling, cleanup
+
+**Autonomy**:
+
+- Neo can edit its own persona (lives in `SOUL.md` similar to OpenClaw)
+- Can change its log level and memory compaction settings
+- Can request a clean restart (recorded in history)
+
+## How easy is it
+
+The following demonstrates the three core SDK primitives.
+
+### 1. Create a session
+
+```typescript
+// File: src/agent.ts
+import { CopilotClient, approveAll } from "@github/copilot-sdk";
+
+const client = new CopilotClient({ githubToken: process.env.GITHUB_TOKEN });
+await client.start();
+
+const session = await client.createSession({
+  systemMessage: {
+    role: "system",
+    content: "You are my personal assistant.",
+    mode: "replace",
+  },
+  tools: allTools,
+  onPermissionRequest: approveAll,
+});
+
+await session.send("Check the weather");
+```
+
+A session with model access, built-in tools, and a custom system prompt is created. Sessions are async.
+
+### 2. Define a custom tool
+
+```typescript
+// File: src/tools/reminder.ts
+import { defineTool } from "@github/copilot-sdk";
+import { z } from "zod";
+
+export const reminderTool = defineTool("reminder", {
+  description: "Create, list, or cancel reminders",
+  parameters: z.object({
+    action: z.enum(["create", "list", "cancel"]),
+    message: z.string().optional(),
+    fire_at: z.string().optional(), // ISO 8601 UTC
+    recurrence: z.enum(["once", "daily", "weekly", "monthly"]).optional(),
+    id: z.number().optional(),
+  }),
+  handler: async (args) => {
+    return `Reminder created for ${args.fire_at}`;
+  },
+});
+```
+
+Register it in `src/tools/index.ts`:
+
+```typescript
+import { reminderTool } from "./reminder.js";
+
+export const allTools = [reminderTool /* ...others */];
+```
+
+Pass `allTools` to session config. The agent can set reminders.
+
+### 3. Wire user input to your transport
+
+The SDK has an `ask_user` tool. When `onUserInputRequest` is provided, it calls the handler when the agent needs clarification:
+
+```typescript
+// File: src/agent.ts
+onUserInputRequest: async (question) => {
+  // Send to Telegram, wait for reply
+  await bot.sendMessage(chatId, question.question);
+  return await waitForNextUserMessage(chatId);
+},
+```
+
+The agent can ask questions in Telegram and wait for responses.
+
+## Architecture
+
+![Architecture diagram](/static/images/neo-architecture.png)
+
+One `send()` call handles streaming, tool loops, retries, and context management. Listeners observe `session` events for progress UI (`tool_use`, `reasoning`, etc.) and surface results to the transport layer.
+
+## Full code example: Add a reminder
+
+User sends: "remind me to review my savings account on Monday at 8am"
+
+**Agent flow:**
+
+1. Agent recognizes intent, calls `reminder` tool with `action: create`
+2. Handler schedules the reminder (stores in SQLite with cron metadata)
+3. Agent confirms: "Reminder set for Monday 8:00 AM"
+4. On Monday 8am, job-runner executes a scheduled prompt: "It's 8am. Remind the user to review savings."
+5. Telegram message arrives
+
+## Deployment
+
+Neo supports Docker and systemd (both system and user service).
+
+**Docker:**
+
+```bash
+cp .env.example .env
+docker compose up -d
+docker compose logs -f
+```
+
+**systemd (user service, like OpenClaw):**
+
+```bash
+./deploy/setup-ubuntu.sh  # Prompts for scope (system/user), installs everything
+```
+
+Service auto-restarts on crash. Data lives in `~/.neo` by default.
+
+Checkout the code: [github.com/saadjs/neo](https://github.com/saadjs/neo)
+
+## References
+
+- GitHub Copilot SDK: [https://github.com/github/copilot-sdk](https://github.com/github/copilot-sdk)
+- grammY Telegram Bot Framework: [https://grammy.dev/](https://grammy.dev/)
+- Playwright: [https://playwright.dev/](https://playwright.dev/)
+- Deepgram STT: [https://deepgram.com/](https://deepgram.com/)
+
+Happy Coding!
