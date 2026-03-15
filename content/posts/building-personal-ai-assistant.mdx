@@ -19,20 +19,22 @@ export const metadata = {
 
 It wraps the Copilot CLI as a JSON-RPC server and provides a single session API that handles model switching, tool execution, session persistence, and memory compaction.
 
-The SDK includes:
+The SDK does not implement the agent itself. It communicates with the Copilot CLI, which runs the agent runtime responsible for planning, tool execution, and model calls.
 
-- **Models**: Claude, GPT-4o, Gemini, o1 (switched at runtime with a single line)
+Copilot CLI runtime provides built-in tools:
+
+- **Models**: Access Copilot-supported models (Claude, GPT, Gemini, etc.)
 - **Bash**: Run shell commands and capture output
 - **Code tools**: File viewing, regex search, patch application
 - **Web tools**: Search the web, fetch URLs
 - **GitHub**: Issues, PRs, commits, code search, Actions via built-in MCP
 - **Memory**: Structured memory with `store_memory`
-- **Parallel execution**: Run multiple tools at once
+- **Parallel execution**: The agent can plan and execute multiple tool calls within a single turn
 - **User input**: Ask questions; the SDK bridges to the transport layer
 
 ### Pricing
 
-GitHub Copilot Pro+ costs $40/month and provides 1500 premium model requests per month which includes access to all frontier model.
+GitHub Copilot Pro+ costs $40/month and provides 1500 premium model requests per month which includes access to all frontier models.
 
 For higher usage, bring custom API keys. The SDK supports `ANTHROPIC_API_KEY` and `OPENAI_API_KEY` directly.
 
@@ -143,7 +145,7 @@ The agent can ask questions in Telegram and wait for responses.
 
 ![Architecture diagram](/static/images/neo-architecture.png)
 
-One `send()` call handles streaming, tool loops, retries, and context management. Listeners observe `session` events for progress UI (`tool_use`, `reasoning`, etc.) and surface results to the transport layer.
+A single `send()` call handles streaming, tool loops, retries, and context management. Listeners observe `session` events for progress UI (`tool_use`, `reasoning`, etc.) and surface results to the transport layer.
 
 ## Full code example: Add a reminder
 
