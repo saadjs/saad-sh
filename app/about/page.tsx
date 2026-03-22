@@ -12,7 +12,7 @@ type AnchorProps = ComponentPropsWithoutRef<"a">;
 const TagLink = ({ className, ...props }: AnchorProps) => (
   <a
     {...props}
-    className={`text-tag transition-opacity hover:opacity-80 ${className ?? ""}`.trim()}
+    className={`text-accent transition-colors hover:underline ${className ?? ""}`.trim()}
   />
 );
 
@@ -32,12 +32,11 @@ function MailIcon(props: ComponentPropsWithoutRef<"svg">) {
 }
 
 function AuthorLinks() {
-  const linkClass =
-    "rounded-full border border-zinc-200/80 p-2.5 text-zinc-500 transition-colors hover:border-zinc-300 hover:text-zinc-900 dark:border-zinc-800 dark:hover:border-zinc-700 dark:hover:text-zinc-100";
+  const linkClass = "text-muted transition-colors hover:text-foreground";
 
   return (
     <section>
-      <div className="flex gap-3">
+      <div className="flex gap-4">
         <a href={`mailto:${author.email}`} aria-label="Email" className={linkClass}>
           <MailIcon className="h-5 w-5" />
         </a>
@@ -85,7 +84,7 @@ export default function AboutPage() {
   return (
     <div className="space-y-12">
       <header className="flex flex-col gap-8 md:flex-row md:items-center">
-        <div className="relative h-32 w-32 overflow-hidden rounded-full border border-zinc-200 dark:border-zinc-800">
+        <div className="relative h-32 w-32 overflow-hidden rounded-full border border-border">
           <Image
             src={author.avatar}
             alt={`${author.name} avatar`}
@@ -95,14 +94,9 @@ export default function AboutPage() {
             priority
           />
         </div>
-        <div className="space-y-3">
-          <p className="text-sm uppercase tracking-[0.2em] text-zinc-500 dark:text-zinc-400">
-            {aboutPage.kicker}
-          </p>
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-            {author.name}
-          </h1>
-          <p className="text-base text-zinc-600 dark:text-zinc-400">{author.occupation}</p>
+        <div className="space-y-2">
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">{author.name}</h1>
+          <p className="text-muted">{author.occupation}</p>
         </div>
       </header>
 
