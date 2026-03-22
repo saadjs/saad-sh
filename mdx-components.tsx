@@ -6,7 +6,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h1: ({ children, ...props }) => (
       <h1
         {...props}
-        className={`mt-8 mb-4 scroll-mt-24 font-mono text-3xl font-semibold tracking-[-0.04em] text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
+        className={`mt-12 mb-5 scroll-mt-24 text-3xl font-semibold tracking-tight text-foreground ${props.className ?? ""}`.trim()}
       >
         {children}
       </h1>
@@ -14,7 +14,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h2: ({ children, ...props }) => (
       <h2
         {...props}
-        className={`mt-8 mb-4 scroll-mt-24 font-mono text-2xl font-semibold tracking-[-0.035em] text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
+        className={`mt-12 mb-5 scroll-mt-24 text-2xl font-semibold tracking-tight text-foreground ${props.className ?? ""}`.trim()}
       >
         {children}
       </h2>
@@ -22,33 +22,31 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
     h3: ({ children, ...props }) => (
       <h3
         {...props}
-        className={`mt-6 mb-3 scroll-mt-24 font-mono text-xl font-semibold tracking-[-0.03em] text-zinc-900 dark:text-zinc-100 ${props.className ?? ""}`.trim()}
+        className={`mt-10 mb-4 scroll-mt-24 text-xl font-semibold tracking-tight text-foreground ${props.className ?? ""}`.trim()}
       >
         {children}
       </h3>
     ),
     p: ({ children }) => (
-      <p className="my-4 text-[1.02rem] leading-8 text-zinc-700 dark:text-zinc-300">{children}</p>
+      <p className="my-5 text-[1.0625rem] leading-[1.8] text-foreground">{children}</p>
     ),
     a: ({ href, children, className }) => (
       <a
         href={href}
-        className={`font-medium text-zinc-900 underline decoration-zinc-400 underline-offset-4 transition-colors hover:decoration-zinc-600 dark:text-zinc-100 dark:decoration-zinc-500 dark:hover:decoration-zinc-300 ${className ?? ""}`.trim()}
+        className={`text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:decoration-accent ${className ?? ""}`.trim()}
       >
         {children}
       </a>
     ),
     ul: ({ children }) => (
-      <ul className="my-4 ml-6 list-disc space-y-2 text-zinc-700 dark:text-zinc-300">{children}</ul>
+      <ul className="my-5 ml-6 list-disc space-y-2 text-foreground">{children}</ul>
     ),
     ol: ({ children }) => (
-      <ol className="my-4 ml-6 list-decimal space-y-2 text-zinc-700 dark:text-zinc-300">
-        {children}
-      </ol>
+      <ol className="my-5 ml-6 list-decimal space-y-2 text-foreground">{children}</ol>
     ),
     li: ({ children }) => <li className="leading-7">{children}</li>,
     blockquote: ({ children }) => (
-      <blockquote className="my-6 border-l-2 border-zinc-300 pl-6 font-mono text-[0.95rem] leading-7 text-zinc-600 dark:border-zinc-600 dark:text-zinc-400">
+      <blockquote className="my-6 border-l-2 border-border pl-5 text-[0.95rem] leading-7 italic text-muted">
         {children}
       </blockquote>
     ),
@@ -61,7 +59,7 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
           className={
             isBlockCode
               ? `font-mono text-sm ${className ?? ""}`.trim()
-              : `rounded bg-zinc-100 px-1.5 py-0.5 font-mono text-sm text-zinc-800 dark:bg-zinc-800 dark:text-zinc-200 ${className ?? ""}`.trim()
+              : `rounded bg-border px-1.5 py-0.5 font-mono text-sm text-foreground ${className ?? ""}`.trim()
           }
         >
           {children}
@@ -73,31 +71,21 @@ export function useMDXComponents(components: MDXComponents): MDXComponents {
         {children}
       </CodeBlock>
     ),
-    hr: () => <hr className="my-8 border-zinc-200 dark:border-zinc-700" />,
-    strong: ({ children }) => (
-      <strong className="font-semibold text-zinc-900 dark:text-zinc-100">{children}</strong>
-    ),
+    hr: () => <hr className="my-8 border-border" />,
+    strong: ({ children }) => <strong className="font-semibold text-foreground">{children}</strong>,
     em: ({ children }) => <em className="italic">{children}</em>,
     table: ({ children }) => (
       <div className="my-6 overflow-x-auto">
         <table className="w-full border-collapse text-sm">{children}</table>
       </div>
     ),
-    thead: ({ children }) => (
-      <thead className="border-b border-zinc-200 dark:border-zinc-700">{children}</thead>
-    ),
+    thead: ({ children }) => <thead className="border-b border-border">{children}</thead>,
     tbody: ({ children }) => <tbody>{children}</tbody>,
-    tr: ({ children }) => (
-      <tr className="border-b border-zinc-100 dark:border-zinc-800">{children}</tr>
-    ),
+    tr: ({ children }) => <tr className="border-b border-border">{children}</tr>,
     th: ({ children }) => (
-      <th className="px-4 py-3 text-left font-mono font-semibold text-zinc-900 dark:text-zinc-100">
-        {children}
-      </th>
+      <th className="px-4 py-3 text-left font-semibold text-foreground">{children}</th>
     ),
-    td: ({ children }) => (
-      <td className="px-4 py-3 text-zinc-700 dark:text-zinc-300">{children}</td>
-    ),
+    td: ({ children }) => <td className="px-4 py-3 text-foreground">{children}</td>,
     ...components,
   };
 }

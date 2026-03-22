@@ -37,17 +37,14 @@ export default async function TagPage({ params }: PageProps) {
   }
 
   return (
-    <div className="space-y-8">
-      <section className="surface-panel rounded-[1.75rem] px-6 py-8 sm:px-8">
-        <p className="eyebrow">{siteConfig.tagPage.eyebrow}</p>
-        <h1 className="section-title mt-4 text-3xl font-semibold text-zinc-900 dark:text-zinc-100">
-          <span>Posts tagged</span> <span className="text-tag">#{tagEntry.label}</span>
+    <div>
+      <section>
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Posts tagged &ldquo;{tagEntry.label}&rdquo;
         </h1>
-        <p className="mt-4 max-w-2xl text-base leading-8 text-zinc-600 dark:text-zinc-400">
-          {siteConfig.tagPage.summary(posts.length)}
-        </p>
+        <p className="mt-2 text-muted">{siteConfig.tagPage.summary(posts.length)}</p>
       </section>
-      <div className="space-y-5">
+      <div className="mt-10">
         {posts.map((post) => (
           <PostCard key={post.slug} post={post} />
         ))}
