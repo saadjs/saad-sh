@@ -23,19 +23,15 @@ export default async function TagsPage() {
       {tags.length === 0 ? (
         <p className="mt-10 text-muted">{siteConfig.tagsPage.emptyMessage}</p>
       ) : (
-        <div className="mt-10 space-y-0">
+        <div className="mt-10 flex flex-wrap gap-x-4 gap-y-3">
           {tags.map(([slug, tag]) => (
             <Link
               key={slug}
               href={`/tags/${slug}`}
-              className="flex items-center justify-between py-3 border-b border-border transition-colors hover:text-accent"
+              className="inline-flex items-baseline gap-1 whitespace-nowrap text-orange-500 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:text-orange-400"
             >
-              <span className="text-orange-500 dark:text-orange-400">
-                {tag.label.toUpperCase()}
-              </span>
-              <span className="text-sm text-faint">
-                {siteConfig.tagsPage.countLabel(tag.count)}
-              </span>
+              <span>{tag.label.toUpperCase()}</span>
+              <span className="text-muted">({tag.count})</span>
             </Link>
           ))}
         </div>
