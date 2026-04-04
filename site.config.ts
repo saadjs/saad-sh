@@ -1,8 +1,7 @@
 export const siteConfig = {
   name: "saad.sh",
   url: "https://saad.sh",
-  description:
-    "Personal blog on tools and techs I am using, programming tips & tricks, and some notes.",
+  description: "Writing about TypeScript, AI tooling, web development, etc.",
   locale: "en_US",
   language: "en-US",
   titleTemplate: "%s | saad.sh",
@@ -52,7 +51,7 @@ export const siteConfig = {
   },
   homePage: {
     eyebrow: "Personal blog",
-    heading: "Notes on software development",
+    heading: "Software Development.",
     emptyMessage: "No posts yet.",
     postsEyebrow: "Recent posts",
     postsHeading: "Latest writing",

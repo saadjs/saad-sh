@@ -7,16 +7,15 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {siteConfig.homePage.heading}
-        </h1>
-        <p className="mt-2 text-muted leading-relaxed">{siteConfig.description}</p>
-      </section>
+      <div className="mb-4">
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
+          {siteConfig.homePage.postsEyebrow}
+        </p>
+      </div>
       {posts.length === 0 ? (
-        <p className="mt-10 text-muted">{siteConfig.homePage.emptyMessage}</p>
+        <p className="text-muted">No posts yet.</p>
       ) : (
-        <div className="mt-10">
+        <div>
           {posts.map((post) => (
             <PostCard key={post.slug} post={post} />
           ))}
