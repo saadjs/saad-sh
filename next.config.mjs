@@ -22,7 +22,7 @@ const withMDX = createMDX({
       [
         "rehype-autolink-headings",
         {
-          behavior: "wrap",
+          behavior: "append",
           properties: {
             className: ["heading-anchor"],
           },
