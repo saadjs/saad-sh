@@ -11,7 +11,9 @@ export function PostCard({ post }: PostCardProps) {
   return (
     <article className="py-6 border-b border-border last:border-0">
       <Link href={`/posts/${post.slug}`} className="block">
-        <time className="text-sm text-muted">{formatDate(post.metadata.date)}</time>
+        <time dateTime={post.metadata.date} className="text-sm text-muted">
+          {formatDate(post.metadata.date)}
+        </time>
         <h2 className="mt-1 text-xl font-semibold text-foreground">{post.metadata.title}</h2>
         <p className="mt-1 text-muted leading-relaxed">{post.metadata.description}</p>
       </Link>
