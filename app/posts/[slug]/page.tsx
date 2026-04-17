@@ -11,7 +11,7 @@ import {
 } from "@/lib/posts";
 import type { PostMetadata } from "@/lib/types";
 import { siteConfig } from "@/site.config";
-import { getPostImageUrl } from "@/lib/utils";
+import { absoluteUrl, getPostImageUrl } from "@/lib/utils";
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -31,17 +31,27 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const { metadata } = post;
+  const postPath = `${siteConfig.routes.posts}/${slug}`;
+  const postUrl = absoluteUrl(postPath, siteConfig.url);
   const imageUrl = getPostImageUrl(slug, metadata.image, siteConfig.url);
 
   return {
     title: metadata.title,
     description: metadata.description,
+    alternates: {
+      canonical: postPath,
+      types: siteConfig.alternateTypes,
+    },
+    authors: [{ name: siteConfig.author.name, url: siteConfig.author.url }],
+    keywords: metadata.tags,
     openGraph: {
       title: metadata.title,
       description: metadata.description,
       type: "article",
       publishedTime: metadata.date,
-      url: `${siteConfig.url}${siteConfig.routes.posts}/${slug}`,
+      url: postUrl,
+      authors: [siteConfig.author.name],
+      tags: metadata.tags,
       images: [
         {
           url: imageUrl,
@@ -72,7 +82,8 @@ export default async function BlogPostPage({ params }: PageProps) {
   };
   const imageUrl = getPostImageUrl(slug, metadata.image, siteConfig.url);
   const editUrl = `${siteConfig.github.editPostBaseUrl}/${slug}.mdx`;
-  const postUrl = `${siteConfig.url}/posts/${slug}`;
+  const postPath = `${siteConfig.routes.posts}/${slug}`;
+  const postUrl = absoluteUrl(postPath, siteConfig.url);
   const rawMarkdown = getPostRawContent(slug);
   const relatedPosts = await getRelatedPosts(slug);
 
@@ -82,13 +93,24 @@ export default async function BlogPostPage({ params }: PageProps) {
     headline: metadata.title,
     description: metadata.description,
     datePublished: metadata.date,
+    inLanguage: siteConfig.language,
+    keywords: metadata.tags.join(", "),
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": postUrl,
+    },
     author: {
       "@type": "Person",
       name: siteConfig.author.name,
       url: siteConfig.author.url,
     },
-    url: `${siteConfig.url}${siteConfig.routes.posts}/${slug}`,
-    image: imageUrl,
+    publisher: {
+      "@type": "Person",
+      name: siteConfig.author.name,
+      url: siteConfig.author.url,
+    },
+    url: postUrl,
+    image: [imageUrl],
   };
 
   return (

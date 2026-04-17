@@ -1,4 +1,5 @@
 import { getAllPosts } from "@/lib/posts";
+import { absoluteUrl } from "@/lib/utils";
 import { siteConfig } from "@/site.config";
 
 export const revalidate = 3600;
@@ -21,18 +22,19 @@ export async function GET() {
   const latestPostDate = posts[0] ? new Date(posts[0].metadata.date) : new Date(0);
 
   const itemsXml = posts
-    .map(
-      (post) => `
+    .map((post) => {
+      const postUrl = absoluteUrl(`${siteConfig.routes.posts}/${post.slug}`, siteConfig.url);
+      return `
     <item>
       <title>${wrapCdata(post.metadata.title)}</title>
-      <link>${escapeXml(`${siteConfig.url}${siteConfig.routes.posts}/${post.slug}`)}</link>
-      <guid isPermaLink="true">${escapeXml(`${siteConfig.url}${siteConfig.routes.posts}/${post.slug}`)}</guid>
+      <link>${escapeXml(postUrl)}</link>
+      <guid isPermaLink="true">${escapeXml(postUrl)}</guid>
       <description>${wrapCdata(post.metadata.description)}</description>
       <pubDate>${new Date(post.metadata.date).toUTCString()}</pubDate>
       <dc:creator>${wrapCdata(siteConfig.author.name)}</dc:creator>
       ${post.metadata.tags.map((tag) => `<category>${wrapCdata(tag)}</category>`).join("")}
-    </item>`,
-    )
+    </item>`;
+    })
     .join("");
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
@@ -43,7 +45,7 @@ export async function GET() {
     <description>${escapeXml(siteConfig.description)}</description>
     <language>${escapeXml(siteConfig.language)}</language>
     <lastBuildDate>${latestPostDate.toUTCString()}</lastBuildDate>
-    <atom:link href="${escapeXml(`${siteConfig.url}${siteConfig.routes.feed}`)}" rel="self" type="application/rss+xml"/>
+    <atom:link href="${escapeXml(absoluteUrl(siteConfig.routes.feed, siteConfig.url))}" rel="self" type="application/rss+xml"/>
     <generator>${escapeXml(siteConfig.name)}</generator>
     ${itemsXml}
   </channel>

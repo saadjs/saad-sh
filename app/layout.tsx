@@ -6,6 +6,7 @@ import { Footer } from "@/components/Footer";
 import { Header } from "@/components/Header";
 import { SearchCommandClient } from "@/components/SearchCommandClient";
 import { siteConfig } from "@/site.config";
+import { absoluteUrl } from "@/lib/utils";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -19,12 +20,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  applicationName: siteConfig.name,
   title: {
     default: siteConfig.name,
     template: siteConfig.titleTemplate,
   },
   metadataBase: new URL(siteConfig.url),
   description: siteConfig.description,
+  alternates: {
+    types: siteConfig.alternateTypes,
+  },
+  authors: [{ name: siteConfig.author.name, url: siteConfig.author.url }],
+  creator: siteConfig.author.name,
+  publisher: siteConfig.author.name,
+  category: "technology",
+  formatDetection: {
+    email: false,
+    address: false,
+    telephone: false,
+  },
   icons: {
     icon: [
       { url: "/favicon-16x16.png", sizes: "16x16", type: "image/png" },
@@ -50,7 +64,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: new URL("/opengraph-image", siteConfig.url).toString(),
+        url: absoluteUrl("/opengraph-image", siteConfig.url),
         width: 1200,
         height: 630,
         alt: siteConfig.name,
@@ -61,7 +75,7 @@ export const metadata: Metadata = {
     card: siteConfig.twitterCard,
     title: siteConfig.name,
     description: siteConfig.description,
-    images: [new URL("/opengraph-image", siteConfig.url).toString()],
+    images: [absoluteUrl("/opengraph-image", siteConfig.url)],
   },
   robots: siteConfig.robots,
 };

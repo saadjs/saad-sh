@@ -17,11 +17,15 @@ export function slugifyTag(tag: string): string {
     .replace(/-+/g, "-");
 }
 
+export function absoluteUrl(pathname: string, siteUrl: string): string {
+  return new URL(pathname, siteUrl).toString();
+}
+
 export function getPostImageUrl(
   slug: string,
   customImage: string | undefined,
   siteUrl: string,
 ): string {
-  const fallbackImage = new URL(`/posts/${slug}/opengraph-image`, siteUrl).toString();
-  return customImage ? new URL(customImage, siteUrl).toString() : fallbackImage;
+  const fallbackImage = absoluteUrl(`/posts/${slug}/opengraph-image`, siteUrl);
+  return customImage ? absoluteUrl(customImage, siteUrl) : fallbackImage;
 }
