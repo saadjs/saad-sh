@@ -11,7 +11,9 @@ export function PostHeader({ metadata, children }: PostHeaderProps) {
   return (
     <header className="mb-12">
       <div className="flex items-start justify-between gap-4">
-        <time className="text-sm text-muted">{formatDate(metadata.date)}</time>
+        <time dateTime={metadata.date} className="text-sm text-muted">
+          {formatDate(metadata.date)}
+        </time>
         {children}
       </div>
       <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">

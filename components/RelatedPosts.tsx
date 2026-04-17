@@ -21,7 +21,9 @@ export function RelatedPosts({ posts }: RelatedPostsProps) {
             <Link href={`/posts/${post.slug}`} className="text-accent hover:underline">
               {post.metadata.title}
             </Link>
-            <span className="text-sm text-faint shrink-0">{formatDate(post.metadata.date)}</span>
+            <time dateTime={post.metadata.date} className="text-sm text-faint shrink-0">
+              {formatDate(post.metadata.date)}
+            </time>
           </li>
         ))}
       </ul>
