@@ -1,6 +1,14 @@
+import type { Metadata } from "next";
 import { PostCard } from "@/components/PostCard";
 import { getAllPosts } from "@/lib/posts";
 import { siteConfig } from "@/site.config";
+
+export const metadata: Metadata = {
+  alternates: {
+    canonical: siteConfig.routes.home,
+    types: siteConfig.alternateTypes,
+  },
+};
 
 export default async function HomePage() {
   const posts = await getAllPosts();

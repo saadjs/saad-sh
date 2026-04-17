@@ -6,6 +6,20 @@ import { siteConfig } from "@/site.config";
 export const metadata: Metadata = {
   title: siteConfig.tagsPage.title,
   description: siteConfig.tagsPage.description,
+  alternates: {
+    canonical: siteConfig.routes.tags,
+    types: siteConfig.alternateTypes,
+  },
+  openGraph: {
+    title: siteConfig.tagsPage.title,
+    description: siteConfig.tagsPage.description,
+    url: `${siteConfig.url}${siteConfig.routes.tags}`,
+  },
+  twitter: {
+    card: siteConfig.twitterCard,
+    title: siteConfig.tagsPage.title,
+    description: siteConfig.tagsPage.description,
+  },
 };
 
 export default async function TagsPage() {

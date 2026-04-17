@@ -18,9 +18,24 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const tags = await getAllTags();
   const tagEntry = tags.get(tag);
   const label = tagEntry?.label ?? tag;
+  const tagPath = `${siteConfig.routes.tags}/${tag}`;
   return {
     title: siteConfig.tagPage.title(label),
     description: siteConfig.tagPage.description(label),
+    alternates: {
+      canonical: tagPath,
+      types: siteConfig.alternateTypes,
+    },
+    openGraph: {
+      title: siteConfig.tagPage.title(label),
+      description: siteConfig.tagPage.description(label),
+      url: `${siteConfig.url}${tagPath}`,
+    },
+    twitter: {
+      card: siteConfig.twitterCard,
+      title: siteConfig.tagPage.title(label),
+      description: siteConfig.tagPage.description(label),
+    },
   };
 }
 

@@ -1,7 +1,7 @@
 import type { MetadataRoute } from "next";
 import { getAllPosts, getAllTags } from "@/lib/posts";
 import { siteConfig } from "@/site.config";
-import { slugifyTag } from "@/lib/utils";
+import { absoluteUrl, slugifyTag } from "@/lib/utils";
 
 export const revalidate = 3600;
 
@@ -24,14 +24,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }
 
   const postUrls = posts.map((post) => ({
-    url: `${siteConfig.url}${siteConfig.routes.posts}/${post.slug}`,
+    url: absoluteUrl(`${siteConfig.routes.posts}/${post.slug}`, siteConfig.url),
     lastModified: new Date(post.metadata.date),
     changeFrequency: siteConfig.sitemap.changeFrequency.post,
     priority: siteConfig.sitemap.priority.post,
   }));
 
   const tagUrls = Array.from(tags.keys()).map((tag) => ({
-    url: `${siteConfig.url}${siteConfig.routes.tags}/${tag}`,
+    url: absoluteUrl(`${siteConfig.routes.tags}/${tag}`, siteConfig.url),
     lastModified: latestTagDates.get(tag) ?? latestPostDate,
     changeFrequency: siteConfig.sitemap.changeFrequency.tag,
     priority: siteConfig.sitemap.priority.tag,
@@ -39,19 +39,19 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     {
-      url: siteConfig.url,
+      url: absoluteUrl(siteConfig.routes.home, siteConfig.url),
       lastModified: latestPostDate,
       changeFrequency: siteConfig.sitemap.changeFrequency.home,
       priority: siteConfig.sitemap.priority.home,
     },
     {
-      url: `${siteConfig.url}${siteConfig.routes.about}`,
+      url: absoluteUrl(siteConfig.routes.about, siteConfig.url),
       lastModified: latestPostDate,
       changeFrequency: siteConfig.sitemap.changeFrequency.about,
       priority: siteConfig.sitemap.priority.about,
     },
     {
-      url: `${siteConfig.url}${siteConfig.routes.tags}`,
+      url: absoluteUrl(siteConfig.routes.tags, siteConfig.url),
       lastModified: latestPostDate,
       changeFrequency: siteConfig.sitemap.changeFrequency.tagsIndex,
       priority: siteConfig.sitemap.priority.tagsIndex,

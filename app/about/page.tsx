@@ -66,6 +66,10 @@ function AuthorLinks() {
 export const metadata: Metadata = {
   title: aboutPage.title,
   description: aboutPage.description,
+  alternates: {
+    canonical: siteConfig.routes.about,
+    types: siteConfig.alternateTypes,
+  },
   openGraph: {
     title: aboutPage.title,
     description: aboutPage.description,

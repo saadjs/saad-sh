@@ -34,6 +34,9 @@ export const siteConfig = {
     feed: "/feed.xml",
     sitemap: "/sitemap.xml",
   },
+  alternateTypes: {
+    "application/rss+xml": "/feed.xml",
+  },
   robots: {
     index: true,
     follow: true,
