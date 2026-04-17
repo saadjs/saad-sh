@@ -27,7 +27,8 @@ export const siteConfig = {
     tagline: "",
   },
   routes: {
-    posts: "/",
+    home: "/",
+    posts: "/posts",
     about: "/about",
     tags: "/tags",
     feed: "/feed.xml",
