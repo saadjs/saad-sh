@@ -1,22 +1,16 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
 import { getAllTags } from '#/lib/posts'
 import { siteConfig } from '#/site.config'
 import { absoluteUrl } from '#/lib/utils'
 
-const tagsQueryOptions = {
-  queryKey: ['tags'] as const,
-  queryFn: async () => {
-    const tags = await getAllTags()
-    return Array.from(tags.entries()).sort((a, b) =>
-      a[1].label.localeCompare(b[1].label),
-    )
-  },
-}
-
 export const Route = createFileRoute('/tags/')({
-  loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(tagsQueryOptions)
+  loader: async () => {
+    const tags = await getAllTags()
+    return {
+      tags: Array.from(tags.entries()).sort((a, b) =>
+        a[1].label.localeCompare(b[1].label),
+      ),
+    }
   },
   head: () => ({
     meta: [
@@ -34,7 +28,7 @@ export const Route = createFileRoute('/tags/')({
 })
 
 function TagsPage() {
-  const { data: tags } = useSuspenseQuery(tagsQueryOptions)
+  const { tags } = Route.useLoaderData()
 
   return (
     <div>

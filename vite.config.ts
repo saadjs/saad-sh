@@ -10,14 +10,12 @@ import remarkGfm from 'remark-gfm'
 import rehypeSlug from 'rehype-slug'
 import rehypePrismPlus from 'rehype-prism-plus'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
-import neon from './neon-vite-plugin.ts'
 import { cloudflare } from '@cloudflare/vite-plugin'
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },
   plugins: [
     devtools(),
-    neon,
     cloudflare({ viteEnvironment: { name: 'ssr' } }),
     tailwindcss(),
     {
