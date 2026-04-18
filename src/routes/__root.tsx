@@ -2,26 +2,20 @@ import {
   HeadContent,
   Link,
   Scripts,
-  createRootRouteWithContext,
+  createRootRoute,
 } from '@tanstack/react-router'
 import { TanStackRouterDevtoolsPanel } from '@tanstack/react-router-devtools'
 import { TanStackDevtools } from '@tanstack/react-devtools'
-import type { QueryClient } from '@tanstack/react-query'
 
 import { Header } from '#/components/Header'
 import { Footer } from '#/components/Footer'
 import { SearchCommandClient } from '#/components/SearchCommandClient'
 import { siteConfig } from '#/site.config'
 import { absoluteUrl } from '#/lib/utils'
-import TanStackQueryDevtools from '#/integrations/tanstack-query/devtools'
 
 import appCss from '#/styles.css?url'
 
-interface RouterContext {
-  queryClient: QueryClient
-}
-
-export const Route = createRootRouteWithContext<RouterContext>()({
+export const Route = createRootRoute({
   head: () => ({
     meta: [
       { charSet: 'utf-8' },
@@ -104,7 +98,6 @@ function RootDocument({ children }: { children: React.ReactNode }) {
               name: 'Tanstack Router',
               render: <TanStackRouterDevtoolsPanel />,
             },
-            TanStackQueryDevtools,
           ]}
         />
         <Scripts />

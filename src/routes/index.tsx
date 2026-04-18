@@ -1,19 +1,11 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { useSuspenseQuery } from '@tanstack/react-query'
 import { PostCard } from '#/components/PostCard'
 import { getAllPosts } from '#/lib/posts'
 import { siteConfig } from '#/site.config'
 import { absoluteUrl } from '#/lib/utils'
 
-const postsQueryOptions = {
-  queryKey: ['posts'] as const,
-  queryFn: () => getAllPosts(),
-}
-
 export const Route = createFileRoute('/')({
-  loader: async ({ context }) => {
-    await context.queryClient.ensureQueryData(postsQueryOptions)
-  },
+  loader: async () => ({ posts: await getAllPosts() }),
   head: () => ({
     meta: [
       { title: siteConfig.name },
@@ -26,7 +18,7 @@ export const Route = createFileRoute('/')({
 })
 
 function HomePage() {
-  const { data: posts } = useSuspenseQuery(postsQueryOptions)
+  const { posts } = Route.useLoaderData()
 
   return (
     <div>
