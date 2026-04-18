@@ -1,0 +1,48 @@
+# CodeRabbit configuration for saadjs/saad-sh.
+#
+# CodeRabbit is external repository tooling, configured through the GitHub App:
+#   https://github.com/apps/coderabbitai
+#
+# Install the GitHub App on the repo to enable PR reviews. This file is picked up
+# automatically by the installed app; there is no runtime SDK or in-app integration.
+# Full reference: https://docs.coderabbit.ai/guides/configuration-overview
+#
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+early_access: false
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: true
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - main
+  path_filters:
+    - '!**/routeTree.gen.ts'
+    - '!**/*.min.js'
+    - '!pnpm-lock.yaml'
+    - '!package-lock.json'
+  path_instructions:
+    - path: 'src/routes/**'
+      instructions: >
+        TanStack Start file-based routes. Confirm the file name and `createFileRoute`
+        path string match, and that any server handlers (feed.xml, sitemap.xml,
+        robots.txt, opengraph-image, search-index.json) keep their existing
+        content-types, response bodies, and cache headers.
+    - path: 'src/content/posts/**'
+      instructions: >
+        MDX blog post files. Validate the `export const metadata = { ... }` block
+        preserves required fields (title, description, date, tags, published).
+    - path: 'src/lib/**'
+      instructions: >
+        Shared utilities. Changes here affect SEO metadata, OG image generation,
+        and post/tag lookups - call out any behavior changes explicitly.
+
+chat:
+  auto_reply: true
