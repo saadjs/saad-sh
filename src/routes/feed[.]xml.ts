@@ -1,0 +1,67 @@
+import { createFileRoute } from '@tanstack/react-router'
+import { getAllPosts } from '#/lib/posts'
+import { absoluteUrl } from '#/lib/utils'
+import { siteConfig } from '#/site.config'
+
+function escapeXml(value: string) {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&apos;')
+}
+
+function wrapCdata(value: string) {
+  return `<![CDATA[${value.replaceAll(']]>', ']]]]><![CDATA[>')}]]>`
+}
+
+async function renderFeed(): Promise<Response> {
+  const posts = await getAllPosts()
+  const latestPostDate = posts[0] ? new Date(posts[0].metadata.date) : new Date(0)
+
+  const itemsXml = posts
+    .map((post) => {
+      const postUrl = absoluteUrl(`${siteConfig.routes.posts}/${post.slug}`, siteConfig.url)
+      return `
+    <item>
+      <title>${wrapCdata(post.metadata.title)}</title>
+      <link>${escapeXml(postUrl)}</link>
+      <guid isPermaLink="true">${escapeXml(postUrl)}</guid>
+      <description>${wrapCdata(post.metadata.description)}</description>
+      <pubDate>${new Date(post.metadata.date).toUTCString()}</pubDate>
+      <dc:creator>${wrapCdata(siteConfig.author.name)}</dc:creator>
+      ${post.metadata.tags.map((tag) => `<category>${wrapCdata(tag)}</category>`).join('')}
+    </item>`
+    })
+    .join('')
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>${escapeXml(siteConfig.name)}</title>
+    <link>${escapeXml(siteConfig.url)}</link>
+    <description>${escapeXml(siteConfig.description)}</description>
+    <language>${escapeXml(siteConfig.language)}</language>
+    <lastBuildDate>${latestPostDate.toUTCString()}</lastBuildDate>
+    <atom:link href="${escapeXml(absoluteUrl(siteConfig.routes.feed, siteConfig.url))}" rel="self" type="application/rss+xml"/>
+    <generator>${escapeXml(siteConfig.name)}</generator>
+    ${itemsXml}
+  </channel>
+</rss>`
+
+  return new Response(xml, {
+    headers: {
+      'Content-Type': 'application/rss+xml; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600, s-maxage=3600',
+    },
+  })
+}
+
+export const Route = createFileRoute('/feed.xml')({
+  server: {
+    handlers: {
+      GET: () => renderFeed(),
+    },
+  },
+})
