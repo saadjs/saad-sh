@@ -45,3 +45,7 @@ No third-party partner secrets are required in the current app baseline.
 1. Re-introduce post metadata OG/social image generation.
 2. Add end-to-end checks for key routes (`/`, `/about`, `/tags`, `/posts/:slug`).
 3. Keep dependency set minimal and only add integrations when actively used.
+
+
+## Pre-merge follow-up checklist
+- See `docs/pre-merge-todo.md` for the file-move checklist that should be completed before merge.

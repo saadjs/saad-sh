@@ -1,5 +1,7 @@
 import type { ComponentType } from 'react'
 
+// TODO(before-merge): move MDX sources from `content/` into `src/content/` and update these globs.
+
 export interface PostMetadata {
   title: string
   description: string
