@@ -8,6 +8,10 @@
       "pattern": "saad.sh",
       "custom_domain": true,
     },
+    {
+      "pattern": "saadbash.com",
+      "custom_domain": true,
+    },
   ],
   "main": "@tanstack/react-start/server-entry",
   "observability": {
