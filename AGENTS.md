@@ -2,10 +2,9 @@
 
 Code Style and Architecture Guide for **saad.sh** (TanStack Start).
 
-This project was migrated from Next.js 16 (App Router) to TanStack Start running
-on Cloudflare Workers. It keeps the original routes, UX, and MDX blog system.
-Cloudflare is the only third-party tool wired in — for hosting. No database,
-auth, error-tracking, or PR-review tooling is configured.
+Personal blog built with TanStack Start on Cloudflare Workers, with an MDX blog
+system. Cloudflare is the only third-party tool wired in — for hosting. No
+database, auth, error-tracking, or PR-review tooling is configured.
 
 ## Scaffold & setup history
 
@@ -106,47 +105,16 @@ wrangler login    # once
 npm run deploy
 ```
 
-## Migration notes (Next.js → TanStack Start)
-
-Adapted from https://tanstack.com/start/latest/docs/framework/react/migrate-from-next-js.
-
-| Next.js                         | TanStack Start equivalent                                        |
-| ------------------------------- | ---------------------------------------------------------------- |
-| `app/<route>/page.tsx`          | `src/routes/<route>.tsx` (file-based)                            |
-| `app/layout.tsx`                | `src/routes/__root.tsx` (shellComponent)                         |
-| `app/not-found.tsx`             | `notFoundComponent` on the root route                            |
-| `app/<route>/route.ts`          | `createFileRoute(...).server.handlers.GET/POST`                  |
-| `generateMetadata`              | `head()` on the route                                            |
-| `generateStaticParams`          | Not currently wired — prerender via Start's prerender config     |
-| `next/link` `Link`              | `@tanstack/react-router` `Link` (`to=` + `params=`)              |
-| `next/image` `Image`            | Plain `<img>` (no built-in image optimization on Workers)        |
-| `next/font`                     | Dropped — system font stack in `src/styles.css`                  |
-| `next/navigation` `usePathname` | `useRouterState({ select: s => s.location.pathname })`           |
-| `next/navigation` `useRouter`   | `useRouter()` from `@tanstack/react-router` + `navigate(...)`    |
-| `next/og` `ImageResponse`       | `src/lib/og-image.ts` emits an SVG (see gotchas below)           |
-| `fs` in server code             | `import.meta.glob` + `?raw` for MDX content                      |
-| Server Components by default    | Client components — server work goes in loaders / server fns     |
-| `@next/mdx`                     | `@mdx-js/rollup` in `vite.config.ts`, same rehype/remark plugins |
-
 ## Known gotchas / follow-ups
 
-- **OG images are SVG, not PNG.** `next/og` used Satori + WASM via
-  `@vercel/og`. On Cloudflare Workers that stack isn't a drop-in, so
-  `src/lib/og-image.ts` returns a hand-rolled SVG with the same dimensions and
-  content. OG scrapers generally accept SVG, but if you want PNG parity the
-  options are `workers-og` or running an external image service.
-- **`generateStaticParams` was not ported.** The old app statically generated
-  every `/posts/[slug]` and `/tags/[tag]` at build time. TanStack Start renders
-  these on demand (SSR on Cloudflare). If you want static prerendering back,
-  configure Start's prerender entries.
-- **Vercel Analytics / Speed Insights removed.** They were Vercel-platform
-  specific. Re-introduce via `@vercel/analytics` on a Vercel deploy, or use
-  Cloudflare Web Analytics instead.
-- **`eslint.config.mjs` and `postcss.config.mjs` were removed** (they were
-  Next-specific). Add back if you want an ESLint/PostCSS setup.
-- **`mdx-components.tsx` moved** from repo root to `src/mdx-components.tsx`
-  and is referenced as `providerImportSource: '#/mdx-components'` in
-  `vite.config.ts`.
+- **OG images are SVG, not PNG.** `src/lib/og-image.ts` returns a hand-rolled
+  SVG. OG scrapers generally accept SVG, but if you want PNG parity the options
+  are `workers-og` or running an external image service.
+- **No static prerendering.** `/posts/[slug]` and `/tags/[tag]` render on
+  demand (SSR on Cloudflare). If you want static prerendering, configure
+  Start's prerender entries.
+- **`mdx-components.tsx` lives at `src/mdx-components.tsx`** and is referenced
+  as `providerImportSource: '#/mdx-components'` in `vite.config.ts`.
 
 ## Style Guide
 

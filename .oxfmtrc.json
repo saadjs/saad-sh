@@ -10,7 +10,6 @@
   "arrowParens": "always",
   "sortPackageJson": false,
   "ignorePatterns": [
-    ".next",
     "out",
     "build",
     "dist",
