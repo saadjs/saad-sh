@@ -1,5 +1,3 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
-
 # dependencies
 /node_modules
 /.pnp
@@ -13,16 +11,23 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
-
-# production
+# production / build output
+/.output
+/dist
+/dist-ssr
 /build
+/.nitro
+/.tanstack
+/.vinxi
+/.wrangler
+
+# auto-generated
+src/routeTree.gen.ts
 
 # misc
 .DS_Store
 *.pem
+*.local
 
 # debug
 npm-debug.log*
@@ -31,14 +36,17 @@ yarn-error.log*
 .pnpm-debug.log*
 
 # env files (can opt-in for committing if needed)
-.env*
-
-# vercel
-.vercel
+.env
+.env.*
+!.env.example
 
 # typescript
 *.tsbuildinfo
-next-env.d.ts
+
+# editor
+.vercel
+__unconfig*
+todos.json
 
 # playwright-cli scratch output
 .playwright-cli/

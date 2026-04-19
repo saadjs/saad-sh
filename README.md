@@ -1,6 +1,6 @@
 # saad.sh
 
-Minimal personal blog built with Next.js (App Router), MDX, and Tailwind CSS.
+Minimal personal blog built with TanStack Start, MDX, and Tailwind CSS.
 
 ## Dev
 
