@@ -1,14 +1,14 @@
-import { Link } from '@tanstack/react-router'
-import { formatDate } from '#/lib/utils'
-import { siteConfig } from '#/site.config'
-import type { Post } from '#/lib/types'
+import { Link } from "@tanstack/react-router";
+import { formatDate } from "#/lib/utils";
+import { siteConfig } from "#/site.config";
+import type { Post } from "#/lib/types";
 
 interface RelatedPostsProps {
-  posts: Post[]
+  posts: Post[];
 }
 
 export function RelatedPosts({ posts }: RelatedPostsProps) {
-  if (posts.length === 0) return null
+  if (posts.length === 0) return null;
 
   return (
     <section className="mt-12 border-t border-border pt-8">
@@ -32,5 +32,5 @@ export function RelatedPosts({ posts }: RelatedPostsProps) {
         ))}
       </ul>
     </section>
-  )
+  );
 }

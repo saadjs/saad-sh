@@ -1,22 +1,22 @@
-import { createFileRoute } from '@tanstack/react-router'
-import type { ComponentPropsWithoutRef } from 'react'
-import { siteConfig } from '#/site.config'
-import { GitHubIcon, LinkedInIcon } from '#/components'
-import Content from '#/content/pages/about.mdx'
-import { absoluteUrl } from '#/lib/utils'
+import { createFileRoute } from "@tanstack/react-router";
+import type { ComponentPropsWithoutRef } from "react";
+import { siteConfig } from "#/site.config";
+import { GitHubIcon, LinkedInIcon } from "#/components";
+import Content from "#/content/pages/about.mdx";
+import { absoluteUrl } from "#/lib/utils";
 
-const { author, aboutPage } = siteConfig
+const { author, aboutPage } = siteConfig;
 
-type AnchorProps = ComponentPropsWithoutRef<'a'>
+type AnchorProps = ComponentPropsWithoutRef<"a">;
 
 const TagLink = ({ className, ...props }: AnchorProps) => (
   <a
     {...props}
-    className={`text-accent transition-colors hover:underline ${className ?? ''}`.trim()}
+    className={`text-accent transition-colors hover:underline ${className ?? ""}`.trim()}
   />
-)
+);
 
-function MailIcon(props: ComponentPropsWithoutRef<'svg'>) {
+function MailIcon(props: ComponentPropsWithoutRef<"svg">) {
   return (
     <svg
       xmlns="http://www.w3.org/2000/svg"
@@ -28,11 +28,11 @@ function MailIcon(props: ComponentPropsWithoutRef<'svg'>) {
       <path d="M1.5 8.67v8.58a3 3 0 0 0 3 3h15a3 3 0 0 0 3-3V8.67l-8.928 5.493a3 3 0 0 1-3.144 0L1.5 8.67Z" />
       <path d="M22.5 6.908V6.75a3 3 0 0 0-3-3h-15a3 3 0 0 0-3 3v.158l9.714 5.978a1.5 1.5 0 0 0 1.572 0L22.5 6.908Z" />
     </svg>
-  )
+  );
 }
 
 function AuthorLinks() {
-  const linkClass = 'text-muted transition-colors hover:text-foreground'
+  const linkClass = "text-muted transition-colors hover:text-foreground";
 
   return (
     <section>
@@ -60,26 +60,26 @@ function AuthorLinks() {
         </a>
       </div>
     </section>
-  )
+  );
 }
 
-export const Route = createFileRoute('/about')({
+export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
       { title: `${aboutPage.title} | ${siteConfig.name}` },
-      { name: 'description', content: aboutPage.description },
-      { property: 'og:title', content: aboutPage.title },
-      { property: 'og:description', content: aboutPage.description },
-      { property: 'og:url', content: `${siteConfig.url}${siteConfig.routes.about}` },
-      { property: 'og:image', content: author.avatar },
-      { name: 'twitter:title', content: aboutPage.title },
-      { name: 'twitter:description', content: aboutPage.description },
-      { name: 'twitter:image', content: author.avatar },
+      { name: "description", content: aboutPage.description },
+      { property: "og:title", content: aboutPage.title },
+      { property: "og:description", content: aboutPage.description },
+      { property: "og:url", content: `${siteConfig.url}${siteConfig.routes.about}` },
+      { property: "og:image", content: author.avatar },
+      { name: "twitter:title", content: aboutPage.title },
+      { name: "twitter:description", content: aboutPage.description },
+      { name: "twitter:image", content: author.avatar },
     ],
-    links: [{ rel: 'canonical', href: absoluteUrl(siteConfig.routes.about, siteConfig.url) }],
+    links: [{ rel: "canonical", href: absoluteUrl(siteConfig.routes.about, siteConfig.url) }],
   }),
   component: AboutPage,
-})
+});
 
 function AboutPage() {
   return (
@@ -100,5 +100,5 @@ function AboutPage() {
 
       <Content components={{ a: TagLink, AuthorLinks }} />
     </div>
-  )
+  );
 }

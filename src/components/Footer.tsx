@@ -1,6 +1,6 @@
-import { Link } from '@tanstack/react-router'
-import { siteConfig } from '#/site.config'
-import { RssIcon, CodeIcon, GitHubIcon, LinkedInIcon } from '#/components'
+import { Link } from "@tanstack/react-router";
+import { siteConfig } from "#/site.config";
+import { RssIcon, CodeIcon, GitHubIcon, LinkedInIcon } from "#/components";
 
 export function Footer() {
   return (
@@ -48,5 +48,5 @@ export function Footer() {
         </div>
       </div>
     </footer>
-  )
+  );
 }

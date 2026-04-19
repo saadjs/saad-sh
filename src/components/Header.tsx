@@ -1,9 +1,9 @@
-import { Link, useRouterState } from '@tanstack/react-router'
-import { siteConfig } from '#/site.config'
-import { SearchButton } from './SearchButton'
+import { Link, useRouterState } from "@tanstack/react-router";
+import { siteConfig } from "#/site.config";
+import { SearchButton } from "./SearchButton";
 
 export function Header() {
-  const pathname = useRouterState({ select: (s) => s.location.pathname })
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
     <header className="mb-14">
@@ -21,9 +21,9 @@ export function Header() {
             <Link
               key={item.href}
               to={item.href}
-              aria-current={pathname === item.href ? 'page' : undefined}
+              aria-current={pathname === item.href ? "page" : undefined}
               className={`transition-colors ${
-                pathname === item.href ? 'text-foreground' : 'text-muted hover:text-foreground'
+                pathname === item.href ? "text-foreground" : "text-muted hover:text-foreground"
               }`}
             >
               {item.label}
@@ -32,5 +32,5 @@ export function Header() {
         </div>
       </nav>
     </header>
-  )
+  );
 }
