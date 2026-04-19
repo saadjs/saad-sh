@@ -47,3 +47,6 @@ yarn-error.log*
 .vercel
 __unconfig*
 todos.json
+
+# playwright-cli scratch output
+.playwright-cli/
