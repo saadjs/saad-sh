@@ -1,24 +1,24 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { PostCard } from '#/components/PostCard'
-import { getAllPosts } from '#/lib/posts'
-import { siteConfig } from '#/site.config'
-import { absoluteUrl } from '#/lib/utils'
+import { createFileRoute } from "@tanstack/react-router";
+import { PostCard } from "#/components/PostCard";
+import { getAllPosts } from "#/lib/posts";
+import { siteConfig } from "#/site.config";
+import { absoluteUrl } from "#/lib/utils";
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute("/")({
   loader: async () => ({ posts: await getAllPosts() }),
   head: () => ({
     meta: [
       { title: siteConfig.name },
-      { property: 'og:title', content: siteConfig.name },
-      { property: 'og:url', content: siteConfig.url },
+      { property: "og:title", content: siteConfig.name },
+      { property: "og:url", content: siteConfig.url },
     ],
-    links: [{ rel: 'canonical', href: absoluteUrl(siteConfig.routes.home, siteConfig.url) }],
+    links: [{ rel: "canonical", href: absoluteUrl(siteConfig.routes.home, siteConfig.url) }],
   }),
   component: HomePage,
-})
+});
 
 function HomePage() {
-  const { posts } = Route.useLoaderData()
+  const { posts } = Route.useLoaderData();
 
   return (
     <div>
@@ -37,5 +37,5 @@ function HomePage() {
         </div>
       )}
     </div>
-  )
+  );
 }

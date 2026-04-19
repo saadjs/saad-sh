@@ -1,16 +1,16 @@
-import { Link } from '@tanstack/react-router'
-import { slugifyTag } from '#/lib/utils'
+import { Link } from "@tanstack/react-router";
+import { slugifyTag } from "#/lib/utils";
 
 interface TagListProps {
-  tags: string[]
+  tags: string[];
 }
 
 export function TagList({ tags }: TagListProps) {
   return (
     <div className="flex flex-wrap gap-x-3 gap-y-1">
       {tags.map((tag) => {
-        const slug = slugifyTag(tag)
-        if (!slug) return null
+        const slug = slugifyTag(tag);
+        if (!slug) return null;
         return (
           <Link
             key={tag}
@@ -20,8 +20,8 @@ export function TagList({ tags }: TagListProps) {
           >
             {tag.toUpperCase()}
           </Link>
-        )
+        );
       })}
     </div>
-  )
+  );
 }

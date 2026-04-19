@@ -1,12 +1,12 @@
-import type { MDXComponents } from 'mdx/types'
-import { CodeBlock } from '#/components/CopyCodeButton'
+import type { MDXComponents } from "mdx/types";
+import { CodeBlock } from "#/components/CopyCodeButton";
 
 export function useMDXComponents(components: MDXComponents = {}): MDXComponents {
   return {
     h1: ({ children, ...props }) => (
       <h1
         {...props}
-        className={`mt-12 mb-5 scroll-mt-24 text-3xl font-semibold tracking-tight text-foreground ${props.className ?? ''}`.trim()}
+        className={`mt-12 mb-5 scroll-mt-24 text-3xl font-semibold tracking-tight text-foreground ${props.className ?? ""}`.trim()}
       >
         {children}
       </h1>
@@ -14,7 +14,7 @@ export function useMDXComponents(components: MDXComponents = {}): MDXComponents 
     h2: ({ children, ...props }) => (
       <h2
         {...props}
-        className={`mt-12 mb-5 scroll-mt-24 text-2xl font-semibold tracking-tight text-foreground ${props.className ?? ''}`.trim()}
+        className={`mt-12 mb-5 scroll-mt-24 text-2xl font-semibold tracking-tight text-foreground ${props.className ?? ""}`.trim()}
       >
         {children}
       </h2>
@@ -22,7 +22,7 @@ export function useMDXComponents(components: MDXComponents = {}): MDXComponents 
     h3: ({ children, ...props }) => (
       <h3
         {...props}
-        className={`mt-10 mb-4 scroll-mt-24 text-xl font-semibold tracking-tight text-foreground ${props.className ?? ''}`.trim()}
+        className={`mt-10 mb-4 scroll-mt-24 text-xl font-semibold tracking-tight text-foreground ${props.className ?? ""}`.trim()}
       >
         {children}
       </h3>
@@ -33,7 +33,7 @@ export function useMDXComponents(components: MDXComponents = {}): MDXComponents 
     a: ({ href, children, className }) => (
       <a
         href={href}
-        className={`text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:decoration-accent ${className ?? ''}`.trim()}
+        className={`text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:decoration-accent ${className ?? ""}`.trim()}
       >
         {children}
       </a>
@@ -51,19 +51,19 @@ export function useMDXComponents(components: MDXComponents = {}): MDXComponents 
       </blockquote>
     ),
     code: ({ children, className, ...props }) => {
-      const isBlockCode = className?.includes('language-')
+      const isBlockCode = className?.includes("language-");
       return (
         <code
           {...props}
           className={
             isBlockCode
-              ? `font-mono text-sm ${className ?? ''}`.trim()
-              : `rounded bg-border px-1.5 py-0.5 font-mono text-sm text-foreground ${className ?? ''}`.trim()
+              ? `font-mono text-sm ${className ?? ""}`.trim()
+              : `rounded bg-border px-1.5 py-0.5 font-mono text-sm text-foreground ${className ?? ""}`.trim()
           }
         >
           {children}
         </code>
-      )
+      );
     },
     pre: ({ children, className, ...props }) => (
       <CodeBlock {...props} className={className}>
@@ -86,5 +86,5 @@ export function useMDXComponents(components: MDXComponents = {}): MDXComponents 
     ),
     td: ({ children }) => <td className="px-4 py-3 text-foreground">{children}</td>,
     ...components,
-  }
+  };
 }

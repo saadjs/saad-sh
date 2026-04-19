@@ -1,8 +1,8 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { ogImageResponse } from '#/lib/og-image'
-import { siteConfig } from '#/site.config'
+import { createFileRoute } from "@tanstack/react-router";
+import { ogImageResponse } from "#/lib/og-image";
+import { siteConfig } from "#/site.config";
 
-export const Route = createFileRoute('/opengraph-image')({
+export const Route = createFileRoute("/opengraph-image")({
   server: {
     handlers: {
       GET: () =>
@@ -13,4 +13,4 @@ export const Route = createFileRoute('/opengraph-image')({
         }),
     },
   },
-})
+});

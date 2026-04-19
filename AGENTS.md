@@ -54,19 +54,19 @@ npm run format:fix              # Prettier write
 
 File-based routes in `src/routes/`:
 
-| URL                              | File                                     | Notes                                                |
-| -------------------------------- | ---------------------------------------- | ---------------------------------------------------- |
-| `/`                              | `index.tsx`                              | Home — lists published posts                         |
-| `/about`                         | `about.tsx`                              | Static MDX page (`src/content/pages/about.mdx`)      |
-| `/posts/$slug`                   | `posts.$slug.tsx`                        | MDX post, JSON-LD, share menu, related posts         |
-| `/posts/$slug/opengraph-image`   | `posts.$slug.opengraph-image.ts`         | Per-post SVG OG image                                |
-| `/opengraph-image`               | `opengraph-image.ts`                     | Site-wide SVG OG image                               |
-| `/tags`                          | `tags.index.tsx`                         | All tags (alphabetical)                              |
-| `/tags/$tag`                     | `tags.$tag.tsx`                          | Posts for a given tag                                |
-| `/feed.xml`                      | `feed[.]xml.ts`                          | RSS 2.0 feed                                         |
-| `/sitemap.xml`                   | `sitemap[.]xml.ts`                       | XML sitemap                                          |
-| `/robots.txt`                    | `robots[.]txt.ts`                        | robots.txt                                           |
-| `/search-index.json`             | `search-index[.]json.ts`                 | Client-side search payload                           |
+| URL                            | File                             | Notes                                           |
+| ------------------------------ | -------------------------------- | ----------------------------------------------- |
+| `/`                            | `index.tsx`                      | Home — lists published posts                    |
+| `/about`                       | `about.tsx`                      | Static MDX page (`src/content/pages/about.mdx`) |
+| `/posts/$slug`                 | `posts.$slug.tsx`                | MDX post, JSON-LD, share menu, related posts    |
+| `/posts/$slug/opengraph-image` | `posts.$slug.opengraph-image.ts` | Per-post SVG OG image                           |
+| `/opengraph-image`             | `opengraph-image.ts`             | Site-wide SVG OG image                          |
+| `/tags`                        | `tags.index.tsx`                 | All tags (alphabetical)                         |
+| `/tags/$tag`                   | `tags.$tag.tsx`                  | Posts for a given tag                           |
+| `/feed.xml`                    | `feed[.]xml.ts`                  | RSS 2.0 feed                                    |
+| `/sitemap.xml`                 | `sitemap[.]xml.ts`               | XML sitemap                                     |
+| `/robots.txt`                  | `robots[.]txt.ts`                | robots.txt                                      |
+| `/search-index.json`           | `search-index[.]json.ts`         | Client-side search payload                      |
 
 The literal-dot route filenames (`feed[.]xml.ts`, `sitemap[.]xml.ts`, etc.) use
 TanStack Router's bracket escape so the URL path keeps the dot.
@@ -110,23 +110,23 @@ npm run deploy
 
 Adapted from https://tanstack.com/start/latest/docs/framework/react/migrate-from-next-js.
 
-| Next.js                          | TanStack Start equivalent                                        |
-| -------------------------------- | ---------------------------------------------------------------- |
-| `app/<route>/page.tsx`           | `src/routes/<route>.tsx` (file-based)                            |
-| `app/layout.tsx`                 | `src/routes/__root.tsx` (shellComponent)                         |
-| `app/not-found.tsx`              | `notFoundComponent` on the root route                            |
-| `app/<route>/route.ts`           | `createFileRoute(...).server.handlers.GET/POST`                  |
-| `generateMetadata`               | `head()` on the route                                            |
-| `generateStaticParams`           | Not currently wired — prerender via Start's prerender config     |
-| `next/link` `Link`               | `@tanstack/react-router` `Link` (`to=` + `params=`)              |
-| `next/image` `Image`             | Plain `<img>` (no built-in image optimization on Workers)        |
-| `next/font`                      | Dropped — system font stack in `src/styles.css`                  |
-| `next/navigation` `usePathname`  | `useRouterState({ select: s => s.location.pathname })`           |
-| `next/navigation` `useRouter`    | `useRouter()` from `@tanstack/react-router` + `navigate(...)`    |
-| `next/og` `ImageResponse`        | `src/lib/og-image.ts` emits an SVG (see gotchas below)           |
-| `fs` in server code              | `import.meta.glob` + `?raw` for MDX content                      |
-| Server Components by default     | Client components — server work goes in loaders / server fns     |
-| `@next/mdx`                      | `@mdx-js/rollup` in `vite.config.ts`, same rehype/remark plugins |
+| Next.js                         | TanStack Start equivalent                                        |
+| ------------------------------- | ---------------------------------------------------------------- |
+| `app/<route>/page.tsx`          | `src/routes/<route>.tsx` (file-based)                            |
+| `app/layout.tsx`                | `src/routes/__root.tsx` (shellComponent)                         |
+| `app/not-found.tsx`             | `notFoundComponent` on the root route                            |
+| `app/<route>/route.ts`          | `createFileRoute(...).server.handlers.GET/POST`                  |
+| `generateMetadata`              | `head()` on the route                                            |
+| `generateStaticParams`          | Not currently wired — prerender via Start's prerender config     |
+| `next/link` `Link`              | `@tanstack/react-router` `Link` (`to=` + `params=`)              |
+| `next/image` `Image`            | Plain `<img>` (no built-in image optimization on Workers)        |
+| `next/font`                     | Dropped — system font stack in `src/styles.css`                  |
+| `next/navigation` `usePathname` | `useRouterState({ select: s => s.location.pathname })`           |
+| `next/navigation` `useRouter`   | `useRouter()` from `@tanstack/react-router` + `navigate(...)`    |
+| `next/og` `ImageResponse`       | `src/lib/og-image.ts` emits an SVG (see gotchas below)           |
+| `fs` in server code             | `import.meta.glob` + `?raw` for MDX content                      |
+| Server Components by default    | Client components — server work goes in loaders / server fns     |
+| `@next/mdx`                     | `@mdx-js/rollup` in `vite.config.ts`, same rehype/remark plugins |
 
 ## Known gotchas / follow-ups
 
