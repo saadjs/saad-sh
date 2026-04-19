@@ -8,9 +8,8 @@
   },
   "scripts": {
     "dev": "vite dev --port 3000",
-    "build": "vite build",
+    "build": "vite build && tsc --noEmit",
     "preview": "vite preview",
-    "start": "node .output/server/index.mjs",
     "test": "vitest run",
     "format": "prettier . --check",
     "format:fix": "prettier . --write",
