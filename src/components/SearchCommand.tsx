@@ -216,16 +216,18 @@ export function SearchCommand() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 px-4 py-14 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-start justify-center px-4 py-14"
       role="dialog"
       aria-modal="true"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) {
-          setOpen(false);
-        }
-      }}
     >
-      <div className="w-full max-w-2xl rounded-2xl border border-white/10 bg-zinc-900/95 shadow-2xl shadow-black/40 backdrop-blur-xl">
+      <button
+        type="button"
+        aria-label="Close search"
+        tabIndex={-1}
+        onClick={() => setOpen(false)}
+        className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-md"
+      />
+      <div className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-zinc-900/95 shadow-2xl shadow-black/40 backdrop-blur-xl">
         <div className="border-b border-white/10 px-4 py-3">
           <input
             ref={inputRef}
