@@ -11,8 +11,10 @@
     "build": "vite build && tsc --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
-    "format": "prettier . --check",
-    "format:fix": "prettier . --write",
+    "format": "oxfmt --check",
+    "format:fix": "oxfmt",
+    "lint": "oxlint",
+    "lint:fix": "oxlint --fix",
     "deploy": "npm run build && wrangler deploy",
     "prepare": "husky"
   },
@@ -47,7 +49,8 @@
     "husky": "^9.1.7",
     "jsdom": "^28.1.0",
     "lint-staged": "^15.5.2",
-    "prettier": "^3.8.1",
+    "oxfmt": "^0.45.0",
+    "oxlint": "^1.60.0",
     "tsx": "^4.21.0",
     "typescript": "^5.7.2",
     "vite": "^8.0.0",
@@ -61,8 +64,12 @@
     ]
   },
   "lint-staged": {
-    "*.{js,jsx,ts,tsx,md,mdx,json,css,scss,html,yml,yaml}": [
-      "prettier --write"
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+      "oxlint --fix",
+      "oxfmt"
+    ],
+    "*.{md,mdx,json,jsonc,css,html,yml,yaml}": [
+      "oxfmt"
     ]
   }
 }
