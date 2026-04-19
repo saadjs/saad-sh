@@ -9,11 +9,13 @@ const { author, aboutPage } = siteConfig;
 
 type AnchorProps = ComponentPropsWithoutRef<"a">;
 
-const TagLink = ({ className, ...props }: AnchorProps) => (
+const TagLink = ({ className, children, ...props }: AnchorProps) => (
   <a
     {...props}
     className={`text-accent transition-colors hover:underline ${className ?? ""}`.trim()}
-  />
+  >
+    {children}
+  </a>
 );
 
 function MailIcon(props: ComponentPropsWithoutRef<"svg">) {
