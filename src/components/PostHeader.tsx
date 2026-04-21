@@ -10,7 +10,7 @@ interface PostHeaderProps {
 export function PostHeader({ metadata, children }: PostHeaderProps) {
   return (
     <header className="mb-12">
-      <div className="flex items-start justify-between gap-4">
+      <div className="flex items-center justify-between gap-4">
         <time dateTime={metadata.date} className="text-sm text-muted">
           {formatDate(metadata.date)}
         </time>
