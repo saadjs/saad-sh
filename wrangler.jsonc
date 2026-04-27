@@ -9,7 +9,15 @@
       "custom_domain": true,
     },
     {
+      "pattern": "www.saad.sh",
+      "custom_domain": true,
+    },
+    {
       "pattern": "saadbash.com",
+      "custom_domain": true,
+    },
+    {
+      "pattern": "www.saadbash.com",
       "custom_domain": true,
     },
   ],
