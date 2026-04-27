@@ -1,7 +1,7 @@
 import startEntry from "@tanstack/react-start/server-entry";
 
 const PRIMARY_HOST = "saad.sh";
-const ALTERNATE_HOSTS = new Set(["www.saad.sh", "saadbash.com", "www.saadbash.com"]);
+const ALTERNATE_HOSTS = new Set(["saadbash.com"]);
 
 function canonicalUrl(request: Request): URL | null {
   const url = new URL(request.url);
