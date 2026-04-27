@@ -82,17 +82,39 @@ function BlogPostPage() {
 
   const jsonLd = {
     "@context": "https://schema.org",
-    "@type": "BlogPosting",
-    headline: metadata.title,
-    description: metadata.description,
-    datePublished: metadata.date,
-    inLanguage: siteConfig.language,
-    keywords: metadata.tags.join(", "),
-    mainEntityOfPage: { "@type": "WebPage", "@id": postUrl },
-    author: { "@type": "Person", name: siteConfig.author.name, url: siteConfig.author.url },
-    publisher: { "@type": "Person", name: siteConfig.author.name, url: siteConfig.author.url },
-    url: postUrl,
-    image: [imageUrl],
+    "@graph": [
+      {
+        "@type": "BlogPosting",
+        headline: metadata.title,
+        description: metadata.description,
+        datePublished: metadata.date,
+        dateModified: metadata.date,
+        inLanguage: siteConfig.language,
+        keywords: metadata.tags.join(", "),
+        mainEntityOfPage: { "@type": "WebPage", "@id": postUrl },
+        author: { "@type": "Person", name: siteConfig.author.name, url: siteConfig.author.url },
+        publisher: { "@type": "Person", name: siteConfig.author.name, url: siteConfig.author.url },
+        url: postUrl,
+        image: [imageUrl],
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          {
+            "@type": "ListItem",
+            position: 1,
+            name: siteConfig.name,
+            item: absoluteUrl(siteConfig.routes.home, siteConfig.url),
+          },
+          {
+            "@type": "ListItem",
+            position: 2,
+            name: metadata.title,
+            item: postUrl,
+          },
+        ],
+      },
+    ],
   };
 
   return (

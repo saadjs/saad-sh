@@ -6,7 +6,7 @@ export default defineConfig({
   resolve: { tsconfigPaths: true },
   plugins: [
     cloudflareTest({
-      main: new URL(import.meta.resolve("@tanstack/react-start/server-entry")).pathname,
+      main: new URL("./src/server.ts", import.meta.url).pathname,
       wrangler: { configPath: "./wrangler.jsonc" },
     }),
     ...startPlugins(),
