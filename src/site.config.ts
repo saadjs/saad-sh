@@ -16,7 +16,7 @@ export const siteConfig = {
     avatar: "/static/images/avatar.png",
   },
   github: {
-    editPostBaseUrl: "https://github.com/saadjs/saad-sh/edit/main/content/posts",
+    editPostBaseUrl: "https://github.com/saadjs/saad-sh/edit/main/src/content/posts",
     sourceUrl: "https://github.com/saadjs/saad-sh",
   },
   nav: [
