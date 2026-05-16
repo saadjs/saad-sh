@@ -1,5 +1,6 @@
 import type { MDXComponents } from "mdx/types";
 import { CodeBlock } from "#/components/CopyCodeButton";
+import { getLinkNavigationProps } from "#/lib/links";
 
 export function useMDXComponents(components: MDXComponents = {}): MDXComponents {
   return {
@@ -30,9 +31,11 @@ export function useMDXComponents(components: MDXComponents = {}): MDXComponents 
     p: ({ children }) => (
       <p className="my-5 text-[1.0625rem] leading-[1.8] text-foreground">{children}</p>
     ),
-    a: ({ href, children, className }) => (
+    a: ({ href, children, className, rel, target, ...props }) => (
       <a
+        {...props}
         href={href}
+        {...getLinkNavigationProps({ href, rel, target })}
         className={`text-accent underline decoration-accent/40 underline-offset-4 transition-colors hover:decoration-accent ${className ?? ""}`.trim()}
       >
         {children}

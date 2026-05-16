@@ -5,6 +5,7 @@ export function getRouter() {
   return createTanStackRouter({
     routeTree,
     scrollRestoration: true,
+    getScrollRestorationKey: (location) => location.href,
     defaultPreload: "intent",
     trailingSlash: "never",
   });
