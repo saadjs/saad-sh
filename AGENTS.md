@@ -17,7 +17,7 @@ If you want them back later, re-run the CLI into a scratch dir and cherry-pick
 the pieces you actually need:
 
 ```bash
-npx @tanstack/cli@latest create my-tanstack-app --agent --deployment cloudflare \
+pnpm dlx @tanstack/cli@latest create my-tanstack-app --agent --deployment cloudflare \
   --add-ons <add-ons-you-want>
 ```
 
@@ -31,22 +31,22 @@ npx @tanstack/cli@latest create my-tanstack-app --agent --deployment cloudflare 
   `vite.config.ts`). Blog post metadata flows through MDX named exports
   (`export const metadata = {...}`).
 - **Cloudflare Workers** (hosting) — `@cloudflare/vite-plugin` +
-  `wrangler.jsonc`. Deploy with `npm run deploy`.
+  `wrangler.jsonc`. `src/server.ts` is the custom Worker entrypoint and wraps
+  TanStack Start's default server entry. Deploy with `pnpm run deploy`.
 
 ## Commands
 
 ```bash
-npm install                     # Install deps
+pnpm install                    # Install deps
 
-npm run dev                     # Dev server on localhost:3000
-npm run build                   # Production build (Vite + Start)
-npm run preview                 # Preview the built output
-npm run start                   # Node production start (reads .output/server)
-npm run deploy                  # Build and deploy to Cloudflare (wrangler)
+pnpm dev                       # Dev server on localhost:3000
+pnpm build                     # Production build (Vite + Start)
+pnpm preview                   # Preview the Workers build locally
+pnpm run deploy                # Build and deploy to Cloudflare (wrangler)
 
-npm run test                    # Vitest
-npm run format                  # Prettier check
-npm run format:fix              # Prettier write
+pnpm test                      # Vitest
+pnpm format                    # oxfmt check
+pnpm format:fix                # oxfmt write
 ```
 
 ## Routes
@@ -97,12 +97,19 @@ future secrets; copy to `.env.local` for local dev and use
 
 ## Deployment (Cloudflare Workers)
 
-`wrangler.jsonc` points at `@tanstack/react-start/server-entry` with
-`nodejs_compat`. Ship with:
+`wrangler.jsonc` points at `src/server.ts` with `nodejs_compat`. That custom
+entrypoint wraps `@tanstack/react-start/server-entry` so the Worker can enforce
+canonical host and trailing-slash redirects before handing requests to TanStack
+Start.
+
+The Cloudflare Vite plugin emits the deployable config at
+`dist/server/wrangler.json`; Wrangler deploys that generated Worker bundle and
+uploads `dist/client` as Workers Static Assets. Ship with:
 
 ```bash
-wrangler login    # once
-npm run deploy
+pnpm exec wrangler whoami    # verify auth
+pnpm exec wrangler login     # once, if not authenticated
+pnpm run deploy
 ```
 
 ## Known gotchas / follow-ups
