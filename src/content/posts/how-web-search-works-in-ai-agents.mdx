@@ -1,0 +1,161 @@
+export const metadata = {
+  title: "How web_search Works in AI Agents",
+  description:
+    "A visual explanation of how agent web search maps to tools, source context, streaming events, citations, and follow-up state.",
+  date: "2026-05-16",
+  tags: ["ai"],
+  published: true,
+};
+
+I have always been curious about how `web_search` is implemented in Codex, ChatGPT or Claude, Claude Code.
+The goal of this post is to lay out the moving parts so any of us building an agent can wire up the same web search capability as the top labs ship.
+
+Web search is a tool call (no surprises there 😀). But there are two flavors of it in modern agent APIs.
+
+Client tools: `Bash`, `Read`, or `Write` run in the agent process. The model emits a `tool_use`, agent code executes it, sends a `tool_result` back. The client sees and controls the data.
+
+Server tools (also called hosted tools): like OpenAI's `web_search` or Claude's `web_search_20260209`, run on provider infrastructure. A trace shows up in the response, but the actual results never reach the client.
+
+Web search is almost always the second kind. The one exception below is Claude Code's `WebSearch`, which runs in the CLI process and calls Anthropic's hosted search backend, but only returns titles and URLs to the model.
+
+## Main loop
+
+<figure className="my-8">
+  <img
+    src="/static/images/search-loop.png"
+    alt="Diagram showing an agent web search loop: user prompt, model, web_search tool, sources, and final answer with citations."
+    className="w-full rounded-lg border border-border bg-white"
+  />
+  <figcaption className="mt-2 text-sm text-muted">
+    The search result is not the answer. It becomes context before the answer is written.
+  </figcaption>
+</figure>
+
+An agent gets a prompt and a list of tools.
+
+If `web_search` is available, the model can decide to search before answering. The provider runs the search on its own infrastructure and ships only metadata back to the client. The page content stays server-side and flows straight into the model's context.
+
+### Steps
+
+1. Send the prompt.
+2. Include a search tool.
+3. Let the model decide whether to call it, or force tool use when needed.
+4. Run search on the provider/runtime side.
+5. Put result context back into the model turn.
+6. Return a final answer with source metadata.
+
+That is the main idea. The rest is provider-specific shape.
+
+A small visual builder lives at [agent-web-search.saad.sh](https://agent-web-search.saad.sh). It compares OpenAI Responses `web_search` blocks with Claude Messages `web_search` server-tool blocks, without making real API calls.
+
+<figure className="my-8">
+  <img
+    src="/static/images/search-surfaces.png"
+    alt="Diagram comparing OpenAI Responses API, Claude Messages API, Claude Code, and Codex cloud task internet access."
+    className="w-full rounded-lg border border-border bg-white"
+  />
+  <figcaption className="mt-2 text-sm text-muted">
+    Chat UIs, CLIs, and raw APIs can all say "web search", but they do not expose the same contract.
+  </figcaption>
+</figure>
+
+## Same idea, different surfaces
+
+OpenAI Responses API exposes a hosted tool:
+
+```json
+{ "tools": [{ "type": "web_search" }] }
+```
+
+With `tool_choice: "auto"`, search is optional. To force a search, use `tool_choice: { "type": "web_search" }`.
+
+Claude Messages API exposes a server tool. The current docs list `web_search_20260209` as the latest version, with dynamic filtering support. Claude writes and runs code in a sandbox to strip irrelevant snippets before they hit the context window. Dynamic filtering requires the `code_execution` tool to also be enabled in the request.
+
+> The older `web_search_20250305` version remains available without dynamic filtering, and is the basic version the builder demos.
+
+Claude Code is different again:
+
+- `WebSearch` runs a query against Anthropic's hosted search backend and returns only result titles and URLs.
+- It does not fetch full page contents. A single call may issue up to eight backend searches, refining internally before returning.
+- Claude follows with `WebFetch` when it needs a page.
+- It is a CLI tool, distinct from the API's `web_search_20260209` server tool. Same backend family, but the surface and result shape are different.
+
+Codex CLI is also a hosted-tool pass-through. The Rust binary does not implement web search itself. It declares `{ "type": "web_search", ... }` in the tools array of a `POST /v1/responses` call and reads back `web_search_call` items from the SSE stream. The dedicated `web_search.rs` in the source tree is around 40 lines and only handles display formatting for the TUI. No fetcher, no parser, no ranker in the binary.
+
+Codex adds one knob that vanilla Responses callers do not have: a three-state mode in `~/.codex/config.toml`.
+
+- `web_search = "cached"` -> the default. Sets `external_web_access: false` on the tool spec. Results come from an OpenAI-maintained index of pre-fetched pages, which reduces exposure to prompt injection from arbitrary live content.
+- `web_search = "live"` -> sets `external_web_access: true`. Live web fetches. `--search` on the CLI is a per-invocation override that forces this mode.
+- `web_search = "disabled"` -> drops the tool from the request entirely.
+
+Codex Cloud is different. The agent phase blocks internet access by default unless the environment allows it. This is a sandbox-network setting, not a `web_search` setting. Agent shell access (`curl`, `npm install`) and the `web_search` hosted tool are two orthogonal layers. `web_search` can be "live" while the sandbox blocks all outbound HTTP from shells, and vice versa.
+
+<figure className="my-8">
+  <img
+    src="/static/images/response-parts.png"
+    alt="Diagram showing a searched response split into tool trace, result data, final text, and citation metadata."
+    className="w-full rounded-lg border border-border bg-white"
+  />
+  <figcaption className="mt-2 text-sm text-muted">
+    The response has more than text. The tool trace and citations are part of the useful output.
+  </figcaption>
+</figure>
+
+## What comes back
+
+OpenAI responses that use web search can include:
+
+- a `web_search_call` output item
+- an action like `search`, `open_page`, or `find_in_page`
+- a final `message` item
+- URL citation annotations on the final text
+
+Claude API responses can include:
+
+- a `server_tool_use` block
+- a `web_search_tool_result` block
+- a final text block
+- `web_search_result_location` citation data
+- encrypted content that must be preserved verbatim for multi-turn conversations
+
+Drop the encrypted blocks on the next turn and the model loses its sourcing. It can no longer reference what it just searched.
+
+Flattening the whole response into one string too early loses the citation metadata and the follow-up state, which is the part apps actually need.
+
+## Controls worth remembering
+
+The small set of controls worth knowing:
+
+- `allowed_domains`: search only trusted domains.
+- `blocked_domains`: exclude unwanted domains. On OpenAI these live inside the `filters` object, with a 100-entry cap each.
+- `search_context_size`: OpenAI's knob (`low`/`medium`/`high`) for how much search context the model gets. Historically most visible on the legacy `web_search_preview` and non-reasoning paths; reasoning models doing agentic search largely manage this themselves.
+- `max_uses`: Claude's cap on how many searches the model can run.
+- `user_location`: bias local results.
+- `tool_choice`: force a search instead of leaving it to the model.
+- `stream: true`: see the search step before the answer is done.
+- For Codex: `web_search = "cached" | "live" | "disabled"` in config.toml, `--search` on the CLI for one-off live searches.
+
+For technical research, domain filters are the biggest quality improvement. "Search the web" is not the same as "search official docs and source repos."
+
+## Building it
+
+Every claim above is reproducible from the provider docs and a few hundred lines of glue code. The companion repo at [github.com/saadjs/agent-web-search](https://github.com/saadjs/agent-web-search) constructs the request bodies and mocks the response shapes for both providers, so each piece of the architecture maps to a file an agent dev can lift:
+
+- OpenAI tool spec is built in `src/lib/blocks/codex.tsx`: `{ "type": "web_search" }` with `external_web_access`, `filters`, `search_context_size`, `user_location`, and the `tool_choice` auto/required/forced switch.
+- Claude tool spec is built in `src/lib/blocks/claude.tsx`: both `web_search_20250305` and the dynamic-filtering `web_search_20260209`, plus `max_uses` and the mutually exclusive `allowed_domains` / `blocked_domains`.
+- Response shapes are hand-written in `src/lib/mock-response.ts`: `web_search_call`, `server_tool_use`, `web_search_tool_result`, `web_search_result_location` citations, and the `encrypted_content` placeholders that have to ride along on multi-turn.
+- Streaming events are scripted in `src/lib/streaming-scripts.ts`: canned SSE for both providers, useful for testing event-loop code without an API key.
+- Request assembly is a pure function in `src/lib/build-request.ts` that walks the active blocks and applies each one to the request object in order. The block registry in `src/lib/blocks/index.ts` is the pattern worth copying: each block declares its provider, group, dependencies, and an `applyToRequest` mutation.
+
+None of this needs a real key. Swap the mocks for a `fetch` against the real endpoint and the rest of the agent loop is the same one Codex and Claude Code run.
+
+## References
+
+1. [agent-web-search.saad.sh](https://agent-web-search.saad.sh)
+2. OpenAI. [Web search guide](https://developers.openai.com/api/docs/guides/tools-web-search)
+3. OpenAI. [Conversation state guide](https://developers.openai.com/api/docs/guides/conversation-state)
+4. OpenAI. [Codex internet access](https://developers.openai.com/codex/cloud/internet-access)
+5. Anthropic. [Claude web search tool](https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool)
+6. Anthropic. [Claude server tools](https://platform.claude.com/docs/en/agents-and-tools/tool-use/server-tools)
+7. Anthropic. [Claude Code tools reference](https://code.claude.com/docs/en/tools-reference)
+8. openai/codex source: [`codex-rs/core/src/web_search.rs`](https://github.com/openai/codex/blob/main/codex-rs/core/src/web_search.rs), [`codex-rs/tools/src/tool_spec.rs`](https://github.com/openai/codex/blob/main/codex-rs/tools/src/tool_spec.rs), [`codex-rs/protocol/src/models.rs`](https://github.com/openai/codex/blob/main/codex-rs/protocol/src/models.rs)
