@@ -1,0 +1,114 @@
+export const metadata = {
+  title: "Subagents: How They Work and When to Use Them",
+  description:
+    "A guide to subagents in Claude Code and Codex: what they are, what spawning one costs, when delegating helps, and when it loses information.",
+  date: "2026-05-23",
+  tags: ["ai"],
+  published: true,
+};
+
+Best way to look at subagents is to think of them as a way to manage the context (ie. context-management tool): the main agent sends work into a separate agent run, waits, and gets back a result or summary. This keeps searches, reviews, and second opinions out of the main context window (main agent's context window). It also makes delegation lossy: if the subagent summary drops key evidence or piece of information, the main agent does't see this information.
+
+This post covers what a subagent is, what one costs to spawn, and what kinds of work benefit from subagent delegation.
+
+## What a subagent is
+
+Skills, hooks, and subagents are three different things that often get confused:
+
+- **Skills** are reusable instructions, scripts, and reference files the model can load when relevant. In a normal invocation, they run inline in the main agent, sharing the same context window. Claude Code also lets a skill declare `context: fork`, where the skill content becomes the task prompt for a spawned subagent. See [Create Agent Skills in Simple Steps](/posts/create-agent-skills) for more.
+- **Hooks** are handlers the harness runs around events like `PreToolUse`, `Stop`, and `SubagentStop`. Claude Code supports five handler types: `command` (shell), `http` (POST to a URL), `mcp_tool` (call a tool on an MCP server), `prompt` (send a prompt to a Claude model for a yes/no decision), and `agent` (spawn a subagent for verification). Only `prompt` and `agent` involve a model. The other three are deterministic in the sense that no LLM is in the loop.
+- **Subagents** are separate agent runs with their own context window, their own prompt, and their own tool or permission surface. The parent delegates a task, waits, and reads the returned result or consolidated summary.
+
+That last point is important. The raw intermediate work stays outside the parent thread, and the cost and tradeoffs below follow from that constraint.
+
+Difference b/w Claude Code & Codex: Claude Code can delegate automatically when a task matches a subagent description. Codex only spawns subagents when explicitly asked to use subagents or parallel agent work.
+
+<figure className="my-8">
+  <img
+    src="/static/images/subagent-where-things-run.png"
+    alt="Diagram comparing where skills, hooks, and subagents run in relation to the main agent's context window."
+    className="w-full rounded-lg border border-border bg-white"
+  />
+  <figcaption className="mt-2 text-sm text-muted">
+    Skills run inside the main agent's context. Hooks run around tool calls. Subagents run
+    separately.
+  </figcaption>
+</figure>
+
+## The cost model
+
+Spawning a subagent costs:
+
+- **Cold start.** In Claude Code, a non-fork subagent starts with a fresh, isolated context window and does not see the parent's conversation, previously invoked skills, or files the parent has already read. The only information it gets is a delegation message the parent composes to describe the task. Codex subagents also do their own model and tool work, so the prompt needs enough task context for the worker to proceed without relying on the parent transcript.
+- **Token usage in two places.** The worker consumes tokens for its own model and tool work. The returned result then occupies the parent thread's context and is processed in later turns.
+- **Lossy hand-back.** The parent gets a result or summary, not the full working transcript. Raw tool outputs, intermediate findings, and any files the worker skimmed are gone unless the summary names them.
+
+In exchange:
+
+- **Isolated context.** A large codebase sweep does not pollute the main thread, so the main agent keeps its context window clear.
+- **Parallelism.** Independent subagents can run concurrently. Both runtimes cap the number of concurrent agents: Codex defaults to six via `agents.max_threads`, Claude Code defaults to ten via the `CLAUDE_CODE_MAX_TOOL_USE_CONCURRENCY` environment variable.
+- **Bounded permissions.** A read-only subagent can be restricted at the worker level: Claude Code can deny tools like `Edit` and `Write`, while Codex custom agents can use a read-only sandbox. The main agent does not have to remember the constraint.
+
+A subagent pays off when the work would have cost more context than the summary costs, or when independence (read-only, parallel, second opinion) is worth more than fidelity.
+
+<figure className="my-8">
+  <img
+    src="/static/images/subagent-parallel.png"
+    alt="Comparison of context usage with and without subagents: without, the main context fills up to 130k of 200k tokens; with, the main context stays at 5k while subagents hold the data and return small summaries."
+    className="w-full rounded-lg border border-border bg-white"
+  />
+  <figcaption className="mt-2 text-sm text-muted">
+    Without subagents, every tool run piles into the main context. With subagents, the heavy data
+    lives elsewhere and only small summaries land in the main thread.
+  </figcaption>
+</figure>
+
+<figure className="my-8">
+  <img
+    src="/static/images/subagent-lifecycle.png"
+    alt="Diagram of a non-fork subagent lifecycle: parent sends a delegation message, the subagent works in a fresh context, and one summary returns to the parent."
+    className="w-full rounded-lg border border-border bg-white"
+  />
+  <figcaption className="mt-2 text-sm text-muted">
+    The parent sends one delegation message. A non-fork subagent works in a fresh context. One
+    summary returns.
+  </figcaption>
+</figure>
+
+## When to spawn
+
+Subagents work well for:
+
+- **Codebase search that would pollute context.** Questions like "Where is X defined" or "Which files reference Y" can return dozens of grep hits that the main agent does not need to keep around. Claude Code's `Explore` is the standard example. It returns a handful of file paths and the main thread continues.
+- **Independent code review.** A reviewer that sees the implementer's reasoning is not really independent. A subagent starts with a clean slate. Review can also run in parallel with continued implementation.
+- **Cross-model second opinions.** When one model has failed twice on the same loop, trying harder in the same context rarely works. Handing off to a different model (Codex from Claude, or the reverse) provides a fresh context and different priors.
+- **Parallel research on independent questions.** Three subagents in one round, each chasing one unknown, usually beats three sequential queries. This only holds when the questions are actually independent and do not need to share state.
+
+These are all read-only, bounded, or independent tasks.
+
+## When not to spawn
+
+Cases where delegation usually hurts:
+
+- **Short reactive tasks where the next step is dictated by what was just read.** The main agent already has the context, so a subagent only adds overhead.
+- **"Just to be safe" delegation.** Spawning a subagent to double-check something already understood is ceremony. It usually returns "looks good."
+- **Anything where raw output matters.** If every grep hit, every file's contents, or every error line is needed, do not delegate. The summary will lose what was wanted.
+- **Implementation tasks the main agent is about to do anyway.** Asking a subagent to research the approach and then re-implementing it in the main thread is two cold starts and one summary's worth of lost detail.
+
+## The hand-back problem
+
+The most common failure mode is acting on a subagent's recommendation without the underlying evidence. The subagent returns "looked at this and recommend X," and the parent applies the recommendation without checking.
+
+Three mitigations work reliably:
+
+- **Demand file paths and line numbers in the summary.** Ask for findings as `path:line` plus a one-line note. The summary becomes verifiable instead of suggestive.
+- **Ask for structured output when the task is structured.** A punch-list, a table, or a JSON blob. Prose summaries lose specifics; structured ones do not.
+- **Verify before acting on recommendations.** Especially for "this function exists" or "this flag is set" claims, the subagent's word is not the same as the file's. Grep before editing.
+
+The same caveat applies to "second opinion" prompts in general. An advisor that sees the parent transcript but not the current file state can be confidently wrong. When advice conflicts with what was just observed in a file, the file is correct.
+
+## Summary
+
+Subagents keep verbose work out of the main context, produce reads that are not contaminated by the parent's reasoning, and let independent questions run concurrently. They are bad at preserving detail. Anything that matters needs to be in the summary, or it is not coming back.
+
+If the work is read-only, parallelizable, or needs a clean slate, delegating to a subagent is usually worth the cost. If the main agent already has the context it needs, handling the work inline avoids paying for a cold start.
