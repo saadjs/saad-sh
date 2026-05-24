@@ -20,6 +20,7 @@ export const siteConfig = {
     sourceUrl: "https://github.com/saadjs/saad-sh",
   },
   nav: [
+    { label: "Projects", href: "/projects" },
     { label: "Tags", href: "/tags" },
     { label: "About", href: "/about" },
   ],
@@ -29,6 +30,7 @@ export const siteConfig = {
   routes: {
     home: "/",
     posts: "/posts",
+    projects: "/projects",
     about: "/about",
     tags: "/tags",
     feed: "/feed.xml",
@@ -75,6 +77,13 @@ export const siteConfig = {
     description: "Learn more about Saad Bash.",
     kicker: "About the author",
   },
+  projectsPage: {
+    title: "Projects",
+    description: "Side projects and recent things built by Saad Bash.",
+    heading: "Projects",
+    eyebrow: "Side projects",
+    intro: "List of few things I have built/been building lately.",
+  },
   postPage: {
     tagsLabel: "Filed under",
     editLabel: "Edit on GitHub",
@@ -92,6 +101,7 @@ export const siteConfig = {
     changeFrequency: {
       about: "monthly",
       home: "weekly",
+      projects: "monthly",
       tagsIndex: "weekly",
       tag: "weekly",
       post: "monthly",
@@ -99,6 +109,7 @@ export const siteConfig = {
     priority: {
       about: 0.7,
       home: 1,
+      projects: 0.75,
       tagsIndex: 0.6,
       tag: 0.5,
       post: 0.8,
