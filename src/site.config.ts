@@ -82,7 +82,7 @@ export const siteConfig = {
     description: "Side projects and recent things built by Saad Bash.",
     heading: "Projects",
     eyebrow: "Side projects",
-    intro: "List of few things I have built/been building lately.",
+    intro: "A few things I have built/been building lately.",
   },
   postPage: {
     tagsLabel: "Filed under",
