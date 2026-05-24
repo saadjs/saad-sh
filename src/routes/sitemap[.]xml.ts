@@ -60,6 +60,12 @@ async function renderSitemap(): Promise<Response> {
       priority: siteConfig.sitemap.priority.about,
     },
     {
+      url: absoluteUrl(siteConfig.routes.projects, siteConfig.url),
+      lastModified: latestPostDate,
+      changeFrequency: siteConfig.sitemap.changeFrequency.projects,
+      priority: siteConfig.sitemap.priority.projects,
+    },
+    {
       url: absoluteUrl(siteConfig.routes.tags, siteConfig.url),
       lastModified: latestPostDate,
       changeFrequency: siteConfig.sitemap.changeFrequency.tagsIndex,
