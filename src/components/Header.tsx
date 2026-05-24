@@ -7,16 +7,23 @@ export function Header() {
 
   return (
     <header className="mb-14">
-      <nav className="flex items-center justify-between">
-        <Link
-          to="/"
-          className="flex items-center gap-2.5 text-lg font-semibold tracking-tight text-foreground"
-        >
-          <img src="/logo.svg" alt="" width={22} height={22} />
-          {siteConfig.name}
-        </Link>
+      <nav className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center justify-between gap-4">
+          <Link
+            to="/"
+            className="flex shrink-0 items-center gap-2.5 text-lg font-semibold tracking-tight text-foreground"
+          >
+            <img src="/logo.svg" alt="" width={22} height={22} />
+            {siteConfig.name}
+          </Link>
+          <div className="sm:hidden">
+            <SearchButton />
+          </div>
+        </div>
         <div className="flex items-center gap-5 text-sm">
-          <SearchButton />
+          <div className="hidden sm:block">
+            <SearchButton />
+          </div>
           {siteConfig.nav.map((item) => (
             <Link
               key={item.href}
