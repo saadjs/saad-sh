@@ -1,0 +1,335 @@
+export const metadata = {
+  title: "Claude Code: Hooks vs Skills vs MCP vs Plugins vs CLAUDE.md vs AGENTS.md",
+  description:
+    "What each Claude Code primitive actually is, where it lives on disk, when it loads into context, and how to pick the right one.",
+  date: "2026-05-25",
+  tags: ["ai"],
+  published: true,
+};
+
+Claude Code ships with a handful of extension points that look similar from the outside and behave very differently underneath.
+
+CLAUDE.md is persistent context. A skill's body loads only when invoked, while its description is usually discoverable up front. A hook fires at lifecycle events regardless of what Claude decides to do. MCP is an open protocol for connecting external tools and data. A plugin is a distribution bundle for skills, agents, hooks, MCP/LSP servers, monitors, and related settings. AGENTS.md is inert in Claude Code unless something else pulls it in.
+
+This post covers what each one is, where it lives on disk, when its content enters the context window, and which one to reach for.
+
+## The quick map
+
+| Primitive          | Lives in                                                            | Loaded into context                                                           | Who decides to run it        |
+| ------------------ | ------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ---------------------------- |
+| `CLAUDE.md`        | Managed paths, `~/.claude/`, project root, `.claude/`, subdirs      | Startup files in full; nested files on demand                                 | Always loaded                |
+| `AGENTS.md`        | Project root                                                        | _**Never**_ by itself; only through `CLAUDE.md`, a symlink, or `/init` output | `CLAUDE.md` or `/init`       |
+| Skill (`SKILL.md`) | `~/.claude/skills/`, `.claude/skills/`, `.claude/commands/`, plugin | Description usually; body on invocation                                       | User (`/name`) or Claude     |
+| Hook               | `settings.json`, plugin, skill/subagent frontmatter                 | Runs as a side-effect; some outputs can enter context                         | The harness, at fixed events |
+| MCP server         | `~/.claude.json`, `.mcp.json`, plugin, claude.ai connector          | Tool names by default; tool definitions on demand via Tool Search             | Claude, when calling a tool  |
+| Plugin             | Marketplace cache, `--plugin-dir`, `--plugin-url`                   | Whatever its bundled components load                                          | Plugin manager or settings   |
+
+## CLAUDE.md
+
+`CLAUDE.md` is the persistent instruction file Claude Code reads at the start of every session. Startup files load in full, are delivered as a user message after the system prompt, and stay in context for the conversation.
+
+Claude Code walks up the directory tree from the working directory and concatenates every `CLAUDE.md` and `CLAUDE.local.md` it finds. Files from parent directories load first; files closer to the launch directory load last. Subdirectory `CLAUDE.md` files load on demand the first time Claude reads a file in that subdirectory.
+
+Scopes, in load order:
+
+| Scope          | Location                                                                                                                                                 | Shared with                        |
+| -------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| Managed policy | `/Library/Application Support/ClaudeCode/CLAUDE.md` (macOS), `/etc/claude-code/CLAUDE.md` (Linux/WSL), `C:\Program Files\ClaudeCode\CLAUDE.md` (Windows) | Everyone on the machine            |
+| User           | `~/.claude/CLAUDE.md`                                                                                                                                    | One user, all projects             |
+| Project        | `./CLAUDE.md` or `./.claude/CLAUDE.md`                                                                                                                   | Team, via git                      |
+| Local          | `./CLAUDE.local.md`                                                                                                                                      | One user, one project (gitignored) |
+
+`CLAUDE.md` supports pulling in other files with `@path/to/file` syntax. Imports are expanded at load time and consume tokens like any other content. Max depth is five hops.
+
+```markdown
+# Project conventions
+
+- Run `pnpm test` before committing
+- API handlers live in `src/api/handlers/`
+
+@docs/git-instructions.md
+```
+
+`CLAUDE.md` is the place for anything that would otherwise need re-explaining every session: build commands, project layout, "always do X" rules. The official guidance is to keep each file under 200 lines. Longer files consume more context and reduce adherence. If an entry becomes a multi-step procedure, move it to a skill. If it only matters for one part of the codebase, move it to `.claude/rules/<topic>.md` with a `paths:` frontmatter so it loads only when Claude touches matching files.
+
+`CLAUDE.md` is context, not enforcement. Claude reads it and tries to follow it. Use a hook if something must run.
+
+## AGENTS.md
+
+`AGENTS.md` is an open, cross-tool convention for agent-readable repo docs. Some coding agents read it directly.
+
+**Claude Code does not auto-load `AGENTS.md`.** Per the official docs: "Claude Code reads `CLAUDE.md`, not `AGENTS.md`." Three options exist for getting Claude Code to read an existing `AGENTS.md`:
+
+1. Import it from `CLAUDE.md`:
+
+   ```markdown
+   @AGENTS.md
+
+   ## Claude Code specifics
+
+   Use plan mode for changes under `src/billing/`.
+   ```
+
+2. Symlink (when no Claude-specific content is needed):
+
+   ```bash
+   ln -s AGENTS.md CLAUDE.md
+   ```
+
+3. Run `/init` in a repo that already has `AGENTS.md`. It reads `AGENTS.md`, `.cursorrules`, `.windsurfrules`, and friends, and incorporates the relevant parts into the `CLAUDE.md` it generates.
+
+`AGENTS.md` is purely a convention. The interesting question isn't "what does Claude Code do with it" (nothing, by default) but whether one source of truth across AI tools is preferable to tool-specific files. For a team using two or three agents, `AGENTS.md` with a Claude-importing `CLAUDE.md` keeps the instructions in one place.
+
+## Skills (and `SKILL.md`)
+
+A skill is a reusable, named workflow. `SKILL.md` is the main file format for defining one. Most skills live in their own directory, with `SKILL.md` as the entrypoint and optional supporting files (scripts, templates, references) alongside. Flat files in `.claude/commands/` are legacy custom commands, but Claude Code treats them as skills too.
+
+```
+example-skill/
+├── SKILL.md          # required: frontmatter + instructions
+├── scripts/
+│   └── helper.py     # executed, not loaded into context
+└── reference.md      # loaded when SKILL.md links to it
+```
+
+A minimal `SKILL.md`:
+
+```yaml
+---
+description: Summarize uncommitted changes and flag anything risky. Use when the user asks what changed or wants a commit message.
+---
+
+## Current changes
+!`git diff HEAD`
+
+## Instructions
+Summarize the changes above in two or three bullets, then list any risks.
+```
+
+The key property is **progressive disclosure**. Skill descriptions are normally in context so Claude knows what's available. Manual-only skills with `disable-model-invocation: true` are the exception: their descriptions are not loaded for Claude, and only the user can invoke them. The body loads only when the skill is invoked, either by a `/name` invocation or by Claude matching the description to the current prompt. Supporting files load only when Claude needs them. Reference material in a skill costs almost nothing until it is actually used, which is the main reason to prefer a skill over more lines in `CLAUDE.md`.
+
+Once invoked, the rendered `SKILL.md` content enters the conversation as a single message and stays for the rest of the session.
+
+Where skills live:
+
+| Location        | Path                               | Applies to                     |
+| --------------- | ---------------------------------- | ------------------------------ |
+| Enterprise      | Managed settings                   | All users in an organization   |
+| Personal        | `~/.claude/skills/<name>/SKILL.md` | All projects (one user)        |
+| Project         | `.claude/skills/<name>/SKILL.md`   | This project only              |
+| Project command | `.claude/commands/<name>.md`       | This project only              |
+| Plugin          | `<plugin>/skills/<name>/SKILL.md`  | Wherever the plugin is enabled |
+
+Project skills are discovered from the starting directory and parent directories up to the repository root. Nested `.claude/skills/` directories below the starting directory are discovered on demand when Claude works in those subdirectories.
+
+The useful frontmatter fields:
+
+- `description`: what the skill does. Claude uses this to decide when to load it. Put the key use case first; the combined `description` and `when_to_use` text is capped at 1,536 characters in the listing.
+- `when_to_use`: extra trigger guidance appended to the description and counted toward the same 1,536-character cap.
+- `disable-model-invocation: true`: only the user can invoke it, never Claude. Use this for anything with side effects (`/commit`, `/deploy`).
+- `user-invocable: false`: only Claude can invoke it. Use for background context that isn't an action.
+- `allowed-tools`: pre-approves tools while the skill is active, e.g. `Bash(git add *) Bash(git commit *)`. It does not hide or deny other tools.
+- `context: fork` (with optional `agent: Explore`): runs the skill in a subagent instead of inline. The skill body becomes the subagent's prompt.
+- `paths`: glob patterns that limit auto-invocation to matching files.
+
+Custom commands have been merged into skills. A file at `.claude/commands/deploy.md` and a directory at `.claude/skills/deploy/SKILL.md` both create `/deploy` and work the same way. If a skill and command share the same name, the skill takes precedence. The skill-directory form is the recommended format for new work because it supports supporting files and progressive disclosure.
+
+When to reach for a skill instead of `CLAUDE.md`:
+
+- The content is a procedure, not a fact.
+- It only matters sometimes, and isn't worth paying tokens for every session.
+- It needs supporting scripts or templates.
+- It should be invoked explicitly with `/name`.
+
+## Hooks
+
+Hooks are handlers the harness runs at fixed lifecycle events. They are the only Claude Code primitive that runs without Claude deciding anything. If `CLAUDE.md` says "always run lint after edits" Claude may or may not remember. A `PostToolUse` hook on `Edit|Write` runs every time.
+
+Events fall into rough buckets:
+
+- **Session**: `SessionStart`, `Setup`, `SessionEnd`.
+- **Per-turn**: `UserPromptSubmit`, `UserPromptExpansion`, `Stop`, `StopFailure`.
+- **Per-tool-call**: `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PostToolBatch`, `PermissionRequest`, `PermissionDenied`.
+- **Subagents and tasks**: `SubagentStart`, `SubagentStop`, `TaskCreated`, `TaskCompleted`, `TeammateIdle`.
+- **Files and config**: `FileChanged`, `ConfigChange`, `CwdChanged`, `InstructionsLoaded`.
+- **Compaction**: `PreCompact`, `PostCompact`.
+- **Worktrees**: `WorktreeCreate`, `WorktreeRemove`.
+- **MCP and UX**: `Notification`, `Elicitation`, `ElicitationResult`.
+
+There are five handler types:
+
+| Type       | What it does                            | Model in the loop? |
+| ---------- | --------------------------------------- | ------------------ |
+| `command`  | Runs a shell command with JSON on stdin | No                 |
+| `http`     | POSTs JSON to a URL                     | No                 |
+| `mcp_tool` | Calls a tool on a connected MCP server  | No                 |
+| `prompt`   | Asks Claude a single yes/no question    | Yes                |
+| `agent`    | Spawns a subagent to verify something   | Yes                |
+
+Hooks are configured in `settings.json` at any scope (managed, user, project, project-local) or bundled inside a plugin, skill frontmatter, or subagent frontmatter. The structure has three levels: event -> matcher -> handler.
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "${CLAUDE_PROJECT_DIR}/.claude/hooks/block-rm.sh",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          { "type": "command", "command": "jq -r '.tool_input.file_path' | xargs npm run lint:fix" }
+        ]
+      }
+    ]
+  }
+}
+```
+
+For command hooks, exit codes carry common meaning: `0` is success and stdout may be parsed for JSON output, `2` is a blocking error whose effect depends on the event, and other nonzero exits are non-blocking errors for most events. Some events use event-specific JSON fields or ignore output entirely, so check the hook reference before relying on blocking behavior.
+
+Reach for a hook when something must happen on a fixed event: format after every edit, block destructive commands, post a notification when a long task finishes. Don't use a hook for guidance Claude should follow conditionally. That's what `CLAUDE.md` and skills are for.
+
+## MCP
+
+MCP (Model Context Protocol) is an open standard for connecting Claude Code to external tools, databases, and APIs. An MCP server is a separate service or local subprocess that exposes tools, resources, and prompts over one of three transports: HTTP (recommended for remote servers), SSE (deprecated), or stdio (local subprocess).
+
+Configuration scopes:
+
+| Scope           | Loads in                | Shared       | Stored in                |
+| --------------- | ----------------------- | ------------ | ------------------------ |
+| Local (default) | Current project only    | No           | `~/.claude.json`         |
+| Project         | Current project only    | Yes, via git | `.mcp.json` in repo root |
+| User            | All projects (one user) | No           | `~/.claude.json`         |
+
+Add servers with `claude mcp add`. Local scope is the default; pass `--scope project` when the configuration should land in `.mcp.json` and be shared with the repo.
+
+```bash
+claude mcp add --transport http github https://api.githubcopilot.com/mcp/ \
+  --header "Authorization: Bearer YOUR_PAT"
+
+claude mcp add --transport stdio db -- npx -y @bytebase/dbhub \
+  --dsn "postgresql://readonly:pass@host/db"
+```
+
+Project-scoped servers land in a checked-in `.mcp.json`:
+
+```bash
+claude mcp add --transport http github --scope project https://api.githubcopilot.com/mcp/ \
+  --header "Authorization: Bearer YOUR_PAT"
+```
+
+```json
+{
+  "mcpServers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/",
+      "headers": { "Authorization": "Bearer ${GITHUB_PAT}" }
+    }
+  }
+}
+```
+
+By default, on supported Claude configurations, Claude Code defers MCP tool definitions until they're needed (Tool Search). Only tool names load at startup, and a search step pulls in the tools Claude actually uses. This is why many MCP servers can be connected without watching context vanish. Set `alwaysLoad: true` on a server to opt out for tools Claude needs every turn.
+
+Resources show up under `@server:protocol://path` mentions. Prompts surface as `/mcp__server__prompt` commands.
+
+Reach for MCP when integrating with something external: Sentry, Jira, GitHub, a database, a custom internal API. When the target is already a file in the repo, or a shell command, a skill or a hook is the lighter answer.
+
+## Plugins
+
+A plugin is a distribution bundle. It can package skills, agents, hooks, MCP servers, LSP servers, monitors, executables, output styles, themes, and limited settings. You can load one for a session with `--plugin-dir` or `--plugin-url`, or install one from a marketplace for future sessions. Marketplace installs are copied into Claude Code's local plugin cache under `~/.claude/plugins/cache`.
+
+A `.claude-plugin/plugin.json` manifest provides metadata and custom component paths. If you include a manifest, `name` is the only required field; default-layout plugins can omit the manifest entirely.
+
+```
+example-plugin/
+├── .claude-plugin/
+│   └── plugin.json
+├── skills/
+│   └── review/SKILL.md
+├── agents/
+│   └── reviewer.md
+├── hooks/
+│   └── hooks.json
+├── .mcp.json
+├── .lsp.json
+├── monitors/
+│   └── monitors.json
+├── bin/
+├── settings.json
+└── commands/           # legacy flat command files still work
+```
+
+A common manifest is small:
+
+```json
+{
+  "name": "example-plugin",
+  "description": "What this plugin does",
+  "version": "1.0.0",
+  "author": { "name": "Your Name" }
+}
+```
+
+Install with `/plugin install <name>@<marketplace>`, or test locally with `claude --plugin-dir ./example-plugin`. Plugin skills are namespaced (`/example-plugin:review` instead of `/review`), so installing two plugins with overlapping skill names is safe.
+
+The choice between a plugin and standalone `.claude/` config comes down to distribution:
+
+| Goal                                      | Use                                            |
+| ----------------------------------------- | ---------------------------------------------- |
+| One-off project config                    | `.claude/skills/`, `.claude/settings.json`     |
+| Same config across local projects         | `~/.claude/skills/`, `~/.claude/settings.json` |
+| Share with a team or community, versioned | Plugin                                         |
+| Quick experiment before packaging         | Standalone, convert later                      |
+
+A plugin isn't a separate primitive from the components it carries. It's the envelope to put reusable Claude Code pieces in once iteration is done.
+
+## How they compose
+
+Most non-trivial setups use several of these together. A few patterns that show up:
+
+- A skill that calls an MCP tool. The skill provides the instructions ("when reviewing a PR, fetch the diff and the comments"); MCP provides the GitHub tool.
+- A hook that calls an MCP tool (`type: "mcp_tool"`) for verification or notification.
+- A skill with `hooks` in its frontmatter, scoped to the skill's lifecycle rather than the whole session.
+- A plugin that ships all three: a skill, the hooks that enforce it, and the MCP server it depends on.
+- `CLAUDE.md` that imports `AGENTS.md` so a polyglot AI setup keeps one source of truth.
+
+Subagents sit alongside these as a separate primitive: separate context windows, delegated tasks, lossy hand-back. Covered separately in [Subagents: How They Work and When to Use Them](/posts/subagents-in-practice).
+
+## Picking the right one
+
+Three questions usually settle it.
+
+**Is this context Claude should always know, or only sometimes?**
+Always -> `CLAUDE.md` (or a `.claude/rules/` file if it's path-scoped).
+Sometimes -> skill. The body only loads when invoked.
+
+**Should Claude decide, or should the harness?**
+Claude decides -> skill (with a good description) or MCP tool.
+Harness decides -> hook. Hooks run on fixed events regardless of what Claude wants.
+
+**Is the thing local instructions, or an external system?**
+Local -> skill, hook, or `CLAUDE.md`.
+External -> MCP server. When data keeps getting copied into chat from another tool, MCP is the right fit.
+
+And one structural question: **is this for one person, a team, or the public?**
+One person -> personal scope (`~/.claude/`).
+Team -> project scope (`.claude/`, `.mcp.json`, committed `CLAUDE.md`).
+Public -> plugin in a marketplace.
+
+## Summary
+
+`CLAUDE.md` is always-on context that Claude tries to follow. `AGENTS.md` does nothing in Claude Code unless `CLAUDE.md`, a symlink, or `/init` brings it in. A skill is a named workflow whose body loads on demand. A hook is an enforcement point the harness runs at lifecycle events. MCP is a protocol for talking to external systems. A plugin is how reusable Claude Code components get bundled and shipped.
+
+They overlap less than the names suggest. Pick by what loads when, and by who decides to run it.
