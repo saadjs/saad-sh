@@ -12,6 +12,14 @@
       "pattern": "saadbash.com",
       "custom_domain": true,
     },
+    {
+      "pattern": "saadbash.dev",
+      "custom_domain": true,
+    },
+    {
+      "pattern": "www.saadbash.dev",
+      "custom_domain": true,
+    },
   ],
   "main": "src/server.ts",
   "observability": {
