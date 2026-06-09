@@ -12,6 +12,13 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    name: "Runway",
+    description:
+      "Minimal macOS menu-bar app that shows 5-hour and weekly usage limits for Claude Code and Codex.",
+    tags: ["Swift", "SwiftUI", "macOS"],
+    links: [{ label: "GitHub", href: "https://github.com/saadjs/Runway" }],
+  },
+  {
     name: "RunPace",
     description:
       "Native SwiftUI app for converting running pace, speed, and race targets across miles and kilometers.",
