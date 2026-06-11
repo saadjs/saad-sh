@@ -1,0 +1,59 @@
+export const metadata = {
+  title: "Zsh Autosuggestions Setup",
+  description: "Set up zsh-autosuggestions and zsh-syntax-highlighting with oh-my-zsh.",
+  date: "2026-06-10",
+  tags: ["zsh", "terminal"],
+  published: true,
+};
+
+If zsh is already default shell, skip to [step 3](#3-install-oh-my-zsh).
+
+## 1. Check if zsh is installed and set as default
+
+```shell
+zsh --version
+echo $SHELL
+```
+
+## 2. Install zsh
+
+```shell
+chsh -s $(which zsh)
+```
+
+Ubuntu/Debian:
+
+```shell
+sudo apt install zsh
+chsh -s $(which zsh)
+```
+
+Log out and back in for the shell change to take effect.
+
+## 3. Install oh-my-zsh
+
+```shell
+sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+```
+
+## 4. Add autosuggestions + syntax highlighting
+
+```shell
+git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
+```
+
+```shell
+git clone https://github.com/zsh-users/zsh-syntax-highlighting ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+```
+
+## 5. Update `~/.zshrc`
+
+Find the plugins line and update it:
+
+```shell
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting)
+```
+
+Reopen terminal.
+
+Now your shell suggests commands from history as you type (right arrow or `ctrl+e` to accept), and turns commands red before run them if they're invalid.
