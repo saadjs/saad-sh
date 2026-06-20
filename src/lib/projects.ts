@@ -32,11 +32,20 @@ export const projects: Project[] = [
     ],
   },
   {
-    name: "In Days",
+    name: "InDays",
     description:
       "Mobile app for tracking hybrid in-office days, workplace presence, and history over time.",
     tags: ["Expo", "React Native", "TypeScript"],
-    links: [{ label: "Features", href: "https://saadjs.github.io/in-days-docs/features.html" }],
+    links: [
+      {
+        label: "Features",
+        href: "https://saadjs.github.io/in-days-docs/features.html",
+      },
+      {
+        label: "TestFlight Beta",
+        href: "https://testflight.apple.com/join/tYK39N6c",
+      },
+    ],
   },
   {
     name: "agent-web-search",
@@ -147,7 +156,10 @@ export const projects: Project[] = [
     tags: ["TypeScript", "JSON", "Web"],
     links: [
       { label: "Live", href: "https://min-json-formatter.vercel.app/" },
-      { label: "GitHub", href: "https://github.com/saadjs/minimal-json-formatter" },
+      {
+        label: "GitHub",
+        href: "https://github.com/saadjs/minimal-json-formatter",
+      },
     ],
   },
   {
