@@ -28,7 +28,7 @@ export const projects: Project[] = [
         label: "App Store",
         href: "https://apps.apple.com/us/app/runpace-speed-converter/id6759844858",
       },
-      { label: "GitHub", href: "https://github.com/saadjs/pace-to-mph" },
+      { label: "GitHub", href: "https://github.com/saadjs/runpace" },
     ],
   },
   {
