@@ -1,142 +1,109 @@
 # AGENTS.md
 
-Code Style and Architecture Guide for **saad.sh** (TanStack Start).
+Project guide for **saad.sh**.
 
-Personal blog built with TanStack Start on Cloudflare Workers, with an MDX blog
-system. Cloudflare is the only third-party tool wired in — for hosting. No
-database, auth, error-tracking, or PR-review tooling is configured.
-
-## Scaffold & setup history
-
-The project shell was originally generated with the TanStack CLI (for
-Cloudflare deployment) and then merged on top of the existing blog. The
-scaffold's partner add-ons (Neon, Drizzle, Sentry, Better Auth, TanStack Query,
-CodeRabbit) have since been removed — the static MDX blog does not need them.
-
-If you want them back later, re-run the CLI into a scratch dir and cherry-pick
-the pieces you actually need:
-
-```bash
-pnpm dlx @tanstack/cli@latest create my-tanstack-app --agent --deployment cloudflare \
-  --add-ons <add-ons-you-want>
-```
+Personal blog built with TanStack Start on Cloudflare Workers. Content is MDX,
+routes are file-based, and Cloudflare is the only deployed third-party service.
+No database, auth, analytics, or error-tracking service is configured.
 
 ## Stack
 
-- **TanStack Start** — framework (SSR, server functions, server routes).
-- **TanStack Router** (file-based) — `src/routes/`.
-- **React 19**, **Vite 8**, **Tailwind CSS 4** (`@tailwindcss/vite`).
+- **TanStack Start** with **TanStack Router** file-based routes in `src/routes/`.
+- **React 19**, **TypeScript**, **Vite 8**.
+- **Tailwind CSS 4** via `@tailwindcss/vite`.
 - **MDX** via `@mdx-js/rollup` with `remark-gfm`, `rehype-slug`,
-  `rehype-prism-plus`, `rehype-autolink-headings` (configured in
-  `vite.config.ts`). Blog post metadata flows through MDX named exports
-  (`export const metadata = {...}`).
-- **Cloudflare Workers** (hosting) — `@cloudflare/vite-plugin` +
-  `wrangler.jsonc`. `src/server.ts` is the custom Worker entrypoint and wraps
-  TanStack Start's default server entry. Deploy with `pnpm run deploy`.
+  `rehype-prism-plus`, and `rehype-autolink-headings` in `vite.shared.ts`.
+- **Cloudflare Workers** via `@cloudflare/vite-plugin`, `wrangler.jsonc`, and
+  the custom Worker entrypoint at `src/server.ts`.
 
 ## Commands
 
 ```bash
-pnpm install                    # Install deps
-
-pnpm dev                       # Dev server on localhost:3000
-pnpm build                     # Production build (Vite + Start)
-pnpm preview                   # Preview the Workers build locally
-pnpm run deploy                # Build and deploy to Cloudflare (wrangler)
-
-pnpm test                      # Vitest
-pnpm format                    # oxfmt check
-pnpm format:fix                # oxfmt write
+pnpm install       # Install deps
+pnpm dev           # Dev server on localhost:3000
+pnpm build         # Production build + typecheck
+pnpm preview       # Preview the Workers build locally
+pnpm test          # Vitest
+pnpm lint          # oxlint
+pnpm lint:fix      # oxlint --fix
+pnpm format        # oxfmt check
+pnpm format:fix    # oxfmt write
+pnpm run deploy    # Build and deploy to Cloudflare
 ```
 
 ## Routes
 
-File-based routes in `src/routes/`:
+File-based routes live in `src/routes/`.
 
 | URL                            | File                             | Notes                                           |
 | ------------------------------ | -------------------------------- | ----------------------------------------------- |
 | `/`                            | `index.tsx`                      | Home — lists published posts                    |
 | `/about`                       | `about.tsx`                      | Static MDX page (`src/content/pages/about.mdx`) |
+| `/projects`                    | `projects.tsx`                   | Projects page                                   |
 | `/posts/$slug`                 | `posts.$slug.tsx`                | MDX post, JSON-LD, share menu, related posts    |
 | `/posts/$slug/opengraph-image` | `posts.$slug.opengraph-image.ts` | Per-post SVG OG image                           |
 | `/opengraph-image`             | `opengraph-image.ts`             | Site-wide SVG OG image                          |
-| `/tags`                        | `tags.index.tsx`                 | All tags (alphabetical)                         |
-| `/tags/$tag`                   | `tags.$tag.tsx`                  | Posts for a given tag                           |
+| `/tags`                        | `tags.index.tsx`                 | All tags                                        |
+| `/tags/$tag`                   | `tags.$tag.tsx`                  | Posts for a tag                                 |
 | `/feed.xml`                    | `feed[.]xml.ts`                  | RSS 2.0 feed                                    |
 | `/sitemap.xml`                 | `sitemap[.]xml.ts`               | XML sitemap                                     |
 | `/robots.txt`                  | `robots[.]txt.ts`                | robots.txt                                      |
 | `/search-index.json`           | `search-index[.]json.ts`         | Client-side search payload                      |
 
-The literal-dot route filenames (`feed[.]xml.ts`, `sitemap[.]xml.ts`, etc.) use
-TanStack Router's bracket escape so the URL path keeps the dot.
+Literal-dot route filenames use TanStack Router bracket escaping, e.g.
+`feed[.]xml.ts` maps to `/feed.xml`.
 
-## Content System
+## Content
 
-Blog posts are MDX files in `src/content/posts/`. Each post exports a
-`metadata` object:
+Blog posts are MDX files in `src/content/posts/`. Each post exports metadata:
 
 ```typescript
 export const metadata = {
   title: string;
   description: string;
-  date: string;        // ISO format: "2026-01-31"
+  date: string; // ISO format: "2026-01-31"
   tags: string[];
-  published: boolean;  // Only published posts appear on site
-  image?: string;      // Optional OG image
+  published: boolean;
+  image?: string;
 };
 ```
 
-`src/lib/posts.ts` loads posts via Vite's `import.meta.glob` (no `fs`), so it
-works on Cloudflare Workers where Node's `fs` is unavailable.
+`src/lib/posts.ts` loads posts with Vite `import.meta.glob`; do not use Node
+`fs` for content loading because the app runs on Cloudflare Workers.
 
-## Environment variables
+## Deployment
 
-None are required for the blog. `.env.example` is kept as a placeholder for
-future secrets; copy to `.env.local` for local dev and use
-`wrangler secret put <NAME>` to set production secrets on Cloudflare.
+`wrangler.jsonc` points at `src/server.ts` with `nodejs_compat`. The Worker
+handles canonical-host and trailing-slash redirects before delegating to
+TanStack Start.
 
-## Deployment (Cloudflare Workers)
-
-`wrangler.jsonc` points at `src/server.ts` with `nodejs_compat`. That custom
-entrypoint wraps `@tanstack/react-start/server-entry` so the Worker can enforce
-canonical host and trailing-slash redirects before handing requests to TanStack
-Start.
-
-The Cloudflare Vite plugin emits the deployable config at
-`dist/server/wrangler.json`; Wrangler deploys that generated Worker bundle and
-uploads `dist/client` as Workers Static Assets. Ship with:
+Deploy with:
 
 ```bash
-pnpm exec wrangler whoami    # verify auth
-pnpm exec wrangler login     # once, if not authenticated
+pnpm exec wrangler whoami
+pnpm exec wrangler login # if needed
 pnpm run deploy
 ```
 
-## Known gotchas / follow-ups
+## Notes
 
-- **OG images are SVG, not PNG.** `src/lib/og-image.ts` returns a hand-rolled
-  SVG. OG scrapers generally accept SVG, but if you want PNG parity the options
-  are `workers-og` or running an external image service.
-- **No static prerendering.** `/posts/[slug]` and `/tags/[tag]` render on
-  demand (SSR on Cloudflare). If you want static prerendering, configure
-  Start's prerender entries.
-- **`mdx-components.tsx` lives at `src/mdx-components.tsx`** and is referenced
-  as `providerImportSource: '#/mdx-components'` in `vite.config.ts`.
+- OG images are generated as SVG in `src/lib/og-image.ts`.
+- There is no static prerendering configured; dynamic post and tag pages render
+  on demand.
+- `src/mdx-components.tsx` is the MDX component provider referenced by
+  `providerImportSource: "#/mdx-components"`.
 
-## Style Guide
+## Style
 
-- TypeScript with strict mode enabled.
-- Functional React components with hooks.
-- Tailwind CSS for styling, utility-first.
-- MDX for blog content with custom components.
-- SEO via route `head()` and structured data (JSON-LD on post pages).
-- Accessibility (semantic HTML, ARIA where needed).
-- Mobile-first responsive design.
-- Dark/light mode via CSS variables + `prefers-color-scheme` (no manual toggle).
+- Keep TypeScript strict and avoid unnecessary runtime dependencies.
+- Use functional React components and hooks.
+- Prefer semantic HTML and accessible interactions.
+- Use Tailwind utilities and existing CSS variables.
+- Preserve the automatic dark/light mode behavior based on
+  `prefers-color-scheme`; there is no manual theme toggle.
+- Use route `head()` metadata and structured data where relevant.
 
 ## Git
 
-- Commit messages follow Conventional Commits format.
-- Branches named by feature or fix.
-- Atomic commits.
-- Ensure tests + format pass before merging.
+- Keep commits atomic and use Conventional Commits when committing.
+- Run format, lint, tests, and build before merging when practical.
