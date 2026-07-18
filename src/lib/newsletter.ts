@@ -224,7 +224,7 @@ export async function upsertContact(audienceId: string, email: string): Promise<
 }
 
 function confirmationEmailHtml(confirmUrl: string): string {
-  // Always absolute against the production URL, never the request origin: a
+  // Always absolute against the production URL, never the request origin:
   // localhost URL would render as a broken image in the recipient's inbox.
   const logoUrl = absoluteUrl(siteConfig.newsletter.emailLogo, siteConfig.url);
   const siteUrl = siteConfig.url;
@@ -235,7 +235,7 @@ function confirmationEmailHtml(confirmUrl: string): string {
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f6f6f6;padding:32px 0;">
       <tr>
         <td align="center">
-          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:480px;background-color:#ffffff;border:1px solid #e5e5e5;border-radius:8px;padding:32px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background-color:#ffffff;border:1px solid #e5e5e5;border-radius:8px;padding:32px;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;">
             <tr>
               <td align="center" style="padding-bottom:24px;">
                 <a href="${siteUrl}" style="text-decoration:none;">

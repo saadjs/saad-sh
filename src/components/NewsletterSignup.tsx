@@ -11,6 +11,9 @@ declare global {
           sitekey: string;
           size?: "normal" | "flexible" | "compact";
           callback: (token: string) => void;
+          "error-callback": () => void;
+          "expired-callback": () => void;
+          "timeout-callback": () => void;
         },
       ) => string;
       reset: (widgetId?: string) => void;
@@ -22,7 +25,6 @@ declare global {
 const TURNSTILE_SCRIPT_URL =
   "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const TOKEN_WAIT_TIMEOUT_MS = 4000;
 
 // Module-level so the script tag survives remounts and is only injected once.
 let turnstileScriptPromise: Promise<void> | null = null;
@@ -47,41 +49,30 @@ function loadTurnstileScript(): Promise<void> {
   return turnstileScriptPromise;
 }
 
-function waitForToken(
-  tokenRef: { current: string | null },
-  timeoutMs: number,
-): Promise<string | null> {
-  if (tokenRef.current) return Promise.resolve(tokenRef.current);
-  return new Promise((resolve) => {
-    const start = Date.now();
-    const interval = window.setInterval(() => {
-      if (tokenRef.current) {
-        window.clearInterval(interval);
-        resolve(tokenRef.current);
-      } else if (Date.now() - start >= timeoutMs) {
-        window.clearInterval(interval);
-        resolve(null);
-      }
-    }, 100);
-  });
-}
-
 type Status = "idle" | "submitting" | "success" | "error";
 type ErrorKind = "invalid_email" | "server" | null;
 
 export function NewsletterSignup() {
   const { newsletter } = siteConfig;
-  const siteKey = import.meta.env.DEV ? "1x00000000000000000000AA" : newsletter.turnstileSiteKey;
+  // const siteKey = import.meta.env.DEV ? "1x00000000000000000000AA" : newsletter.turnstileSiteKey;
+  const siteKey = import.meta.env.DEV ? "3x00000000000000000000FF" : newsletter.turnstileSiteKey;
 
   const emailId = useId();
   const [email, setEmail] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [errorKind, setErrorKind] = useState<ErrorKind>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetIdRef = useRef<string | null>(null);
   const widgetLoadingRef = useRef(false);
-  const tokenRef = useRef<string | null>(null);
+
+  const resetWidget = useCallback(() => {
+    setTurnstileToken(null);
+    if (widgetIdRef.current && window.turnstile) {
+      window.turnstile.reset(widgetIdRef.current);
+    }
+  }, []);
 
   const ensureWidget = useCallback(() => {
     if (widgetLoadingRef.current || widgetIdRef.current || !siteKey) return;
@@ -92,16 +83,18 @@ export function NewsletterSignup() {
         widgetIdRef.current = window.turnstile.render(containerRef.current, {
           sitekey: siteKey,
           size: "flexible",
-          callback: (token) => {
-            tokenRef.current = token;
-          },
+          callback: setTurnstileToken,
+          "error-callback": resetWidget,
+          "expired-callback": resetWidget,
+          "timeout-callback": resetWidget,
         });
       })
       .catch(() => {
         // Allow a retry on the next focus or keystroke if the script failed.
         widgetLoadingRef.current = false;
+        setTurnstileToken(null);
       });
-  }, [siteKey]);
+  }, [resetWidget, siteKey]);
 
   useEffect(() => {
     return () => {
@@ -127,33 +120,25 @@ export function NewsletterSignup() {
         return;
       }
 
-      setStatus("submitting");
-      setErrorKind(null);
-
-      let token = tokenRef.current;
-      if (!token) {
-        token = await waitForToken(tokenRef, TOKEN_WAIT_TIMEOUT_MS);
-      }
-
-      if (!token) {
-        // Token was consumed by a previous submit, expired, or never arrived.
-        // Reset the widget for the next attempt instead of hanging.
-        if (widgetIdRef.current && window.turnstile) {
-          window.turnstile.reset(widgetIdRef.current);
-        }
-        setStatus("error");
-        setErrorKind("server");
+      // A valid Turnstile token is a prerequisite for submission. The button
+      // is disabled until the success callback supplies one, but keep this
+      // guard for programmatic form submissions.
+      if (!turnstileToken) {
+        ensureWidget();
         return;
       }
 
+      setStatus("submitting");
+      setErrorKind(null);
+
       // Consume immediately so a retry can't reuse a stale token.
-      tokenRef.current = null;
+      setTurnstileToken(null);
 
       try {
         const response = await fetch("/api/newsletter/subscribe", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: trimmedEmail, website, turnstileToken: token }),
+          body: JSON.stringify({ email: trimmedEmail, website, turnstileToken }),
         });
         const data = (await response.json()) as { ok: boolean; error?: string };
 
@@ -169,23 +154,20 @@ export function NewsletterSignup() {
           return;
         }
 
-        if (widgetIdRef.current && window.turnstile) {
-          window.turnstile.reset(widgetIdRef.current);
-        }
+        resetWidget();
         setStatus("error");
         setErrorKind(data.error === "invalid_email" ? "invalid_email" : "server");
       } catch {
-        if (widgetIdRef.current && window.turnstile) {
-          window.turnstile.reset(widgetIdRef.current);
-        }
+        resetWidget();
         setStatus("error");
         setErrorKind("server");
       }
     },
-    [email, status],
+    [email, ensureWidget, resetWidget, status, turnstileToken],
   );
 
   const isSubmitting = status === "submitting";
+  const canSubmit = Boolean(turnstileToken) && !isSubmitting;
   const errorMessage =
     status === "error"
       ? errorKind === "invalid_email"
@@ -207,7 +189,7 @@ export function NewsletterSignup() {
         aria-hidden="true"
         className="sr-only"
       />
-      <div className="flex flex-col gap-2 sm:flex-row">
+      <div className="flex flex-col gap-3">
         <input
           id={emailId}
           type="email"
@@ -225,15 +207,15 @@ export function NewsletterSignup() {
           autoComplete="email"
           className="w-full rounded-md border border-border bg-transparent px-3 py-2 text-sm text-foreground placeholder:text-faint focus:border-accent focus:outline-none"
         />
+        <div ref={containerRef} />
         <button
           type="submit"
-          disabled={isSubmitting}
-          className="inline-flex shrink-0 items-center justify-center rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          disabled={!canSubmit}
+          className="inline-flex self-start items-center justify-center rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
         >
           {isSubmitting ? newsletter.submittingLabel : newsletter.buttonLabel}
         </button>
       </div>
-      <div ref={containerRef} className="mt-3" />
       <p aria-live="polite" className="mt-2 min-h-[1.25rem] text-sm text-red-500 dark:text-red-400">
         {errorMessage}
       </p>
