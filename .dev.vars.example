@@ -1,0 +1,18 @@
+# Local development secrets for the newsletter feature.
+# Copy this file to `.dev.vars` (which is gitignored) and fill in real values.
+# The @cloudflare/vite-plugin loads `.dev.vars` into `env` during `pnpm dev` (not `pnpm preview`).
+# In production these are set with `wrangler secret put <NAME>` instead.
+
+# Resend API key. Must be **Full access**: a "Sending access" key sends the
+# confirmation email fine but 401s on every contacts call, so nobody can finish
+# confirming. Without any key, only the send step fails; validation still works.
+RESEND_API_KEY=re_replace_me
+
+# Secret used to HMAC-sign double opt-in confirmation tokens. Any long random string.
+# Changing it invalidates every confirmation link already sitting in an inbox.
+NEWSLETTER_SIGNING_SECRET=replace_with_a_long_random_string
+
+# Cloudflare Turnstile secret key. Leave this as the always-pass test secret: it
+# pairs with the test site key the dev build substitutes, and the real widget
+# issues no token on localhost. Set the real secret in production only.
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
