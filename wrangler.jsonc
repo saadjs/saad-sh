@@ -22,6 +22,9 @@
     },
   ],
   "main": "src/server.ts",
+  "vars": {
+    "RESEND_AUDIENCE_ID": "1ce3a377-d546-4b98-a36a-2eeaa3592060",
+  },
   "observability": {
     "logs": {
       "enabled": true,

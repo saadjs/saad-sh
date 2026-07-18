@@ -6,6 +6,7 @@ export { TagList } from "./TagList";
 export { SearchCommand } from "./SearchCommand";
 export { SearchButton } from "./SearchButton";
 export { RelatedPosts } from "./RelatedPosts";
+export { NewsletterSignup } from "./NewsletterSignup";
 export { HashAnchor } from "./HashAnchor";
 export { EditIcon } from "./icons/EditIcon";
 export { CheckIcon } from "./icons/CheckIcon";
