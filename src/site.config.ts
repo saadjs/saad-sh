@@ -125,8 +125,13 @@ export const siteConfig = {
       description: (email: string) => `Subscribe ${email} to the saad.sh newsletter.`,
       confirmButtonLabel: "Confirm subscription",
       confirmingLabel: "Confirming…",
+      confirmingHeading: "Confirming your subscription…",
+      confirmingMessage: (email: string) => `Finishing sign-up for ${email}. This takes a second.`,
+      noscriptMessage:
+        "JavaScript is required to finish confirming. Enable it and reload this page, or reply to the confirmation email and I'll add you manually.",
       successHeading: "You're subscribed!",
-      successMessage: "Thanks for subscribing. The next letter will land in your inbox.",
+      successMessage:
+        "Thanks for subscribing. The next letter will land in your inbox. Every email has an unsubscribe link, and you can opt out any time.",
       alreadyMemberHeading: "You're already a member",
       alreadyMemberMessage: "Thanks for being a subscriber, no need to confirm again.",
       invalidHeading: "This link isn't valid",

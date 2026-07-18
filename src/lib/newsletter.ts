@@ -11,7 +11,7 @@ const DEFAULT_TTL_MS = 48 * 60 * 60 * 1000; // 48 hours
 type TokenPayload = { email: string; exp: number };
 
 export type VerifyResult =
-  | { status: "valid"; email: string }
+  | { status: "valid"; email: string; exp: number }
   | { status: "invalid" }
   | { status: "expired" };
 
@@ -108,7 +108,82 @@ export async function verifyToken(token: string, secret: string): Promise<Verify
   if (typeof email !== "string" || typeof exp !== "number") return { status: "invalid" };
 
   if (Date.now() > exp) return { status: "expired" };
-  return { status: "valid", email };
+  return { status: "valid", email, exp };
+}
+
+// ---------------------------------------------------------------------------
+// Consent records + single-use tokens (D1)
+// ---------------------------------------------------------------------------
+
+export type ConsentContext = {
+  ip?: string;
+  userAgent?: string;
+  country?: string;
+};
+
+/** SHA-256 of a token, hex-encoded. The raw token is never persisted. */
+export async function hashToken(token: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", encoder.encode(token));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+/**
+ * Claim a confirmation token so it can only be redeemed once. Returns true if
+ * this call won the claim, false if the token had already been used.
+ *
+ * The PRIMARY KEY on `token_hash` makes this atomic: two concurrent redemptions
+ * race on the insert and exactly one sees a row change.
+ */
+export async function claimToken(db: D1Database, token: string, exp: number): Promise<boolean> {
+  const result = await db
+    .prepare("INSERT OR IGNORE INTO used_tokens (token_hash, used_at, expires_at) VALUES (?, ?, ?)")
+    .bind(await hashToken(token), new Date().toISOString(), new Date(exp).toISOString())
+    .run();
+
+  return result.meta.changes > 0;
+}
+
+/**
+ * Release a claim taken by `claimToken`. Called when the work the claim was
+ * guarding did not happen, so the confirmation link stays usable for a retry.
+ *
+ * Only ever call this for a claim this request won. Releasing someone else's
+ * claim would hand a spent token back to a replay.
+ */
+export async function releaseToken(db: D1Database, token: string): Promise<void> {
+  await db
+    .prepare("DELETE FROM used_tokens WHERE token_hash = ?")
+    .bind(await hashToken(token))
+    .run();
+}
+
+/**
+ * Append a proof-of-consent row. Best-effort by design: a logging failure must
+ * not stop someone from subscribing, so callers should catch and carry on.
+ */
+export async function recordConsent(
+  db: D1Database,
+  email: string,
+  exp: number,
+  context: ConsentContext,
+): Promise<void> {
+  // The token's exp is issue time + TTL, so working backwards gives issue time.
+  const issuedAt = new Date(exp - DEFAULT_TTL_MS).toISOString();
+
+  await db
+    .prepare(
+      `INSERT INTO consent_records (email, confirmed_at, ip, user_agent, country, token_issued_at)
+       VALUES (?, ?, ?, ?, ?, ?)`,
+    )
+    .bind(
+      email,
+      new Date().toISOString(),
+      context.ip ?? null,
+      context.userAgent ?? null,
+      context.country ?? null,
+      issuedAt,
+    )
+    .run();
 }
 
 // ---------------------------------------------------------------------------

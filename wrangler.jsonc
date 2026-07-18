@@ -25,6 +25,21 @@
   "vars": {
     "RESEND_AUDIENCE_ID": "1ce3a377-d546-4b98-a36a-2eeaa3592060",
   },
+  // Names only, never values. Declaring them here means `wrangler types`
+  // produces the same output on a machine with no `.dev.vars` (CI, fresh
+  // clone) instead of inferring the list from that gitignored file.
+  // Marked experimental by Wrangler as of 4.83.
+  "secrets": {
+    "required": ["RESEND_API_KEY", "NEWSLETTER_SIGNING_SECRET", "TURNSTILE_SECRET_KEY"],
+  },
+  "d1_databases": [
+    {
+      "binding": "NEWSLETTER_DB",
+      "database_name": "saad-sh-newsletter",
+      "database_id": "9f40ff08-82c0-4700-9221-7999db450e0a",
+      "migrations_dir": "migrations",
+    },
+  ],
   "observability": {
     "logs": {
       "enabled": true,
