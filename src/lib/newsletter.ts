@@ -239,6 +239,15 @@ const RESEND_API = "https://api.resend.com";
 
 export type ResendContact = { id: string; unsubscribed: boolean };
 
+/**
+ * What an upsert actually changed. `already-active` means nothing did: the
+ * contact was subscribed before the call and still is.
+ */
+export type UpsertOutcome = "created" | "reactivated" | "already-active";
+
+/** The outcomes worth telling the site owner about. */
+export type NotifiableOutcome = Exclude<UpsertOutcome, "already-active">;
+
 function resendHeaders(): Record<string, string> {
   return {
     Authorization: `Bearer ${env.RESEND_API_KEY}`,
@@ -267,13 +276,23 @@ export async function getContact(audienceId: string, email: string): Promise<Res
 }
 
 /**
- * Ensure the email is a subscribed contact in the audience. Updates an existing
- * contact (clearing any unsubscribe) or creates a new one.
+ * Ensure the email is a subscribed contact in the audience, whatever state it
+ * started in. Safe to call twice; confirming an existing subscriber is a no-op.
+ *
+ * Returns what changed, because the caller cannot tell afterwards and the three
+ * cases mean different things: a first-time signup, someone returning after
+ * unsubscribing, or nothing at all.
  */
-export async function upsertContact(audienceId: string, email: string): Promise<void> {
+export async function upsertContact(audienceId: string, email: string): Promise<UpsertOutcome> {
   const existing = await getContact(audienceId, email);
 
   if (existing) {
+    // Already subscribed: nothing to write. Worth its own outcome because the
+    // confirm page reaches here when its own membership check failed and it
+    // fell through, and calling that a resubscription would report a signup
+    // that never happened.
+    if (!existing.unsubscribed) return "already-active";
+
     const url = `${RESEND_API}/audiences/${audienceId}/contacts/${encodeURIComponent(email)}`;
     const response = await fetch(url, {
       method: "PATCH",
@@ -284,7 +303,7 @@ export async function upsertContact(audienceId: string, email: string): Promise<
       console.error("Resend updateContact failed", response.status, await response.text());
       throw new Error(`Resend updateContact failed with status ${response.status}`);
     }
-    return;
+    return "reactivated";
   }
 
   const response = await fetch(`${RESEND_API}/audiences/${audienceId}/contacts`, {
@@ -296,6 +315,7 @@ export async function upsertContact(audienceId: string, email: string): Promise<
     console.error("Resend createContact failed", response.status, await response.text());
     throw new Error(`Resend createContact failed with status ${response.status}`);
   }
+  return "created";
 }
 
 function confirmationEmailHtml(confirmUrl: string): string {
@@ -350,6 +370,119 @@ function confirmationEmailText(confirmUrl: string): string {
     "",
     "This link expires in 48 hours. If you didn't request this, you can safely ignore this email.",
   ].join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// Signup notification (to the site owner, not the subscriber)
+// ---------------------------------------------------------------------------
+
+export type SignupNotification = {
+  email: string;
+  outcome: NotifiableOutcome;
+  /** Token expiry, which is issue time + TTL, so signup time works back from it. */
+  exp: number;
+  country?: string;
+  /** Host that served the confirmation. Decides the [dev] subject prefix. */
+  hostname: string;
+};
+
+/**
+ * Local dev talks to the real Resend account, so a notification triggered by
+ * `pnpm dev` is indistinguishable from a real signup unless it says so.
+ *
+ * Lists the non-production hosts rather than checking for `saad.sh`, because
+ * the worker serves several custom domains (see `routes` in wrangler.jsonc) and
+ * the confirmation link is built from whichever one the visitor signed up on.
+ * Matching a single canonical hostname would flag real confirmations as dev.
+ *
+ * `.workers.dev` covers the account subdomain and per-version preview URLs,
+ * both enabled by default. A confirmation arriving there is a test, not a
+ * signup someone made from the site.
+ */
+function isDevHost(hostname: string): boolean {
+  return (
+    hostname === "localhost" ||
+    hostname === "127.0.0.1" ||
+    hostname.endsWith(".localhost") ||
+    hostname.endsWith(".workers.dev")
+  );
+}
+
+/**
+ * How long a subscriber took to confirm, phrased for a human skimming an email.
+ * Rounded on purpose: the useful signal is "right away" versus "next morning".
+ */
+function formatElapsed(ms: number): string {
+  if (ms < 0) return "unknown";
+
+  const minutes = Math.round(ms / 60_000);
+  if (minutes < 1) return "under a minute";
+  if (minutes === 1) return "1 minute";
+  if (minutes < 60) return `${minutes} minutes`;
+
+  const hours = Math.round(minutes / 60);
+  return hours === 1 ? "1 hour" : `${hours} hours`;
+}
+
+/**
+ * Compose the notification sent to the site owner when someone confirms.
+ *
+ * Kept pure and separate from the send so the wording can be tested without a
+ * network call. `now` is injectable for the same reason.
+ */
+export function buildSignupNotification(
+  notification: SignupNotification,
+  now: number = Date.now(),
+): { subject: string; text: string } {
+  const { email, outcome, exp, country, hostname } = notification;
+
+  const label = outcome === "created" ? "New subscriber" : "Resubscribed";
+  const prefix = isDevHost(hostname) ? "[dev] " : "";
+  // Recovers signup time the same way recordConsent does.
+  const elapsed = formatElapsed(now - (exp - DEFAULT_TTL_MS));
+
+  // One space after each label, never padding. Mail clients render text/plain
+  // in a proportional font, where padded columns do not line up: the padding
+  // only produces a ragged left edge down the values.
+  const text = [
+    `${label}: ${email}`,
+    "",
+    `Country: ${country ?? "unknown"}`,
+    `Confirmed: ${elapsed} after signing up`,
+    `Site: ${hostname}`,
+  ].join("\n");
+
+  return { subject: `${prefix}${label}: ${email}`, text };
+}
+
+/**
+ * Email the site owner that someone confirmed.
+ *
+ * Throws on non-2xx, but callers are expected to catch and continue: the
+ * subscription has already succeeded by this point, and a heads-up that failed
+ * to send is no reason to show the subscriber an error.
+ */
+export async function sendSignupNotification(notification: SignupNotification): Promise<void> {
+  const { subject, text } = buildSignupNotification(notification);
+  const { notifications } = siteConfig.newsletter;
+
+  const response = await fetch(`${RESEND_API}/emails`, {
+    method: "POST",
+    headers: resendHeaders(),
+    body: JSON.stringify({
+      from: notifications.from,
+      to: [notifications.to],
+      // Hitting reply in the inbox writes to the new subscriber, not to me.
+      reply_to: notification.email,
+      subject,
+      text,
+    }),
+  });
+
+  if (!response.ok) {
+    console.error("Resend signup notification failed", response.status, await response.text());
+    throw new Error(`Resend signup notification failed with status ${response.status}`);
+  }
 }
 
 /** Send the double opt-in confirmation email via Resend. Throws on non-2xx. */
