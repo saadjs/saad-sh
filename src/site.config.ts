@@ -113,6 +113,12 @@ export const siteConfig = {
     from: "Saad Bash <newsletter@updates.saad.sh>",
     replyTo: "saadbashdev@gmail.com",
     confirmSubject: "Confirm your subscription to saad.sh",
+    // Owner-facing signup notification. Separate sender from the newsletter
+    // itself so these can be filtered without touching subscriber mail.
+    notifications: {
+      to: "saadbashdev@gmail.com",
+      from: "saad.sh <notify@updates.saad.sh>",
+    },
     emailLogo: "/android-chrome-192x192.png",
     page: {
       title: "Newsletter",

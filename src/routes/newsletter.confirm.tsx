@@ -4,11 +4,13 @@ import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { UpsertOutcome } from "#/lib/newsletter";
 import {
   claimToken,
   getContact,
   recordConsent,
   releaseToken,
+  sendSignupNotification,
   upsertContact,
   verifyToken,
 } from "#/lib/newsletter";
@@ -29,10 +31,15 @@ type ConfirmResult =
   | { state: "expired" }
   | { state: "error" };
 
-// Read-only: verify the token and, if valid, look up membership. NO writes here
-// so link scanners / prefetchers that hit the page on GET can't subscribe anyone.
-// The actual write happens on the POST below, fired from a client effect --
-// scanners fetch HTML but don't run JS, so only a real browser reaches it.
+// This page is the second half of double opt-in: the subscriber lands here by
+// clicking the link in their confirmation email.
+//
+// It is split into a read-only GET and a write POST for one reason. Corporate
+// mail scanners and inbox prefetchers follow links automatically, so anything
+// that subscribed someone during a plain page load would subscribe people who
+// never clicked. This handler therefore only reads. The write lives in the POST
+// below, fired from a client effect: scanners fetch HTML but do not run JS, so
+// in practice only a real browser gets that far.
 const getConfirmState = createServerFn({ method: "GET" })
   .inputValidator((token: string) => token)
   .handler(async ({ data: token }): Promise<ConfirmState> => {
@@ -61,14 +68,14 @@ const confirmSubscription = createServerFn({ method: "POST" })
     if (verified.status === "invalid") return { state: "invalid" };
     if (verified.status === "expired") return { state: "expired" };
 
-    // Tokens are single-use. Losing this claim means the link was already
-    // redeemed -- a re-click, a double-fired effect, or a replay. All three are
-    // "you're already subscribed", not an error worth alarming anyone about.
+    // Confirmation tokens are single-use, enforced by a row in D1. Losing the
+    // claim means the link was already redeemed: a re-click, a double-fired
+    // effect, or a replay. All three mean "you are already subscribed", which
+    // is not an error worth alarming anyone about.
     //
-    // `unavailable` is distinct from `won` on purpose: it means no row was
-    // written, so there is nothing of ours to release later. Treating it as
-    // `won` would let a failed upsert delete a claim a concurrent request
-    // legitimately holds.
+    // The third state matters. `unavailable` means D1 itself failed, so no row
+    // was written and there is nothing to release later. Folding it into `won`
+    // would let a failed upsert delete a claim that a concurrent request holds.
     let claim: "won" | "lost" | "unavailable";
     try {
       claim = (await claimToken(env.NEWSLETTER_DB, token, verified.exp)) ? "won" : "lost";
@@ -80,8 +87,9 @@ const confirmSubscription = createServerFn({ method: "POST" })
     }
     if (claim === "lost") return { state: "already-member" };
 
+    let outcome: UpsertOutcome;
     try {
-      await upsertContact(env.RESEND_AUDIENCE_ID, verified.email);
+      outcome = await upsertContact(env.RESEND_AUDIENCE_ID, verified.email);
     } catch (error) {
       console.error("confirmSubscription failed", error);
       // The claim guards a write that did not happen. Release it, or a
@@ -98,17 +106,40 @@ const confirmSubscription = createServerFn({ method: "POST" })
       return { state: "error" };
     }
 
+    const request = getRequest();
+    const country = (request as { cf?: { country?: string } }).cf?.country;
+
     // Proof-of-consent log. Best-effort: the subscription already succeeded, so
     // a logging failure must not surface as an error to the subscriber.
     try {
-      const request = getRequest();
       await recordConsent(env.NEWSLETTER_DB, verified.email, verified.exp, {
         ip: request.headers.get("CF-Connecting-IP") ?? undefined,
         userAgent: request.headers.get("User-Agent") ?? undefined,
-        country: (request as { cf?: { country?: string } }).cf?.country,
+        country,
       });
     } catch (error) {
       console.error("recordConsent failed", error);
+    }
+
+    // Heads-up to the site owner. Best-effort for the same reason as the
+    // consent log, and with even less claim on the subscriber: nobody's
+    // subscription should fail because a notification could not be sent.
+    //
+    // Skipped when the contact was already subscribed, which happens when the
+    // read-only handler above could not reach Resend and fell through. Nothing
+    // changed in that case, so reporting it would invent a signup.
+    if (outcome !== "already-active") {
+      try {
+        await sendSignupNotification({
+          email: verified.email,
+          outcome,
+          exp: verified.exp,
+          country,
+          hostname: new URL(request.url).hostname,
+        });
+      } catch (error) {
+        console.error("sendSignupNotification failed", error);
+      }
     }
 
     return { state: "success" };
@@ -179,13 +210,14 @@ function ConfirmPage() {
   const { token } = Route.useSearch();
   const [result, setResult] = useState<ConfirmResult | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
-  // The address the loader handed us on the pass that asked for a confirm.
-  // Held here because a successful POST revalidates the loader to
-  // `already-member`, after which `data.email` is gone but the retry copy and
-  // the in-flight panel still need it.
+  // The address from the loader pass that asked for a confirm. Copied into
+  // state because a successful POST revalidates the loader to `already-member`,
+  // and `data.email` disappears with it while the in-flight and retry panels
+  // still need something to show.
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-  // StrictMode double-invokes effects in dev; without this the second call
-  // would lose the token claim and render "already a member" on a fresh signup.
+  // React StrictMode double-invokes effects in development. Without this guard
+  // the second call would lose the single-use token claim and render "already a
+  // member" to someone who just signed up for the first time.
   const hasFired = useRef(false);
 
   const confirm = useCallback(async () => {
@@ -207,10 +239,11 @@ function ConfirmPage() {
     void confirm();
   }, [data, confirm]);
 
-  // This browser's own outcome outranks the loader. A successful POST
-  // revalidates the loader, which then truthfully reports `already-member` --
-  // but showing that to the person who just subscribed would swap
-  // "You're subscribed!" for "You're already a member" a beat later.
+  // What this browser just did outranks whatever the loader says. A successful
+  // POST triggers loader revalidation, which then correctly reports
+  // `already-member` -- correct, but wrong to show: the person who just
+  // subscribed would watch "You're subscribed!" turn into "You're already a
+  // member" a moment later. These checks run before the loader switch below.
   if (result?.state === "success") {
     return (
       <StatusPanel heading={confirmPage.successHeading} message={confirmPage.successMessage} />
@@ -248,7 +281,8 @@ function ConfirmPage() {
       </StatusPanel>
     );
   }
-  // Confirm is in flight. Also survives loader revalidation mid-request.
+  // The POST is still in flight. Keyed off local state so it survives a loader
+  // revalidation landing mid-request.
   if (pendingEmail) return <ConfirmingPanel email={pendingEmail} />;
 
   switch (data.state) {
@@ -263,8 +297,9 @@ function ConfirmPage() {
     case "already-member":
       return <AlreadyMemberPanel />;
     case "confirm":
-      // Server render and the tick before the effect fires. With JS disabled
-      // this is the final state, hence the noscript fallback.
+      // Covers the server render and the tick before the effect fires. With
+      // JavaScript disabled nothing advances past this, so the noscript block
+      // tells those visitors how to get subscribed anyway.
       return (
         <>
           <ConfirmingPanel email={data.email} />
