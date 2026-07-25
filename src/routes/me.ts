@@ -6,7 +6,7 @@ const profile = {
   nightMode: "tools + ideas",
   interests: ["AI Stuff", "CLIs", "automation"],
   programmingLanguages: ["TypeScript", "Python", "Go", "Swift"],
-  principle: "Always building, always learning",
+  livesBy: "Always building, always learning",
   links: {
     website: "https://saad.sh",
     linkedin: "https://linkedin.com/in/saadbash",
