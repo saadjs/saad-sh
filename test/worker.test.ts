@@ -4,6 +4,25 @@ import { exports } from "cloudflare:workers";
 import { describe, expect, it } from "vitest";
 
 describe("Cloudflare Worker", () => {
+  it("serves Saad's profile as JSON", async () => {
+    const response = await exports.default.fetch("https://saad.sh/me");
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toContain("application/json");
+    await expect(response.json()).resolves.toEqual({
+      status: "building",
+      dayJob: "enterprise engineering",
+      nightMode: "tools + ideas",
+      interests: ["AI Stuff", "CLIs", "automation"],
+      programmingLanguages: ["TypeScript", "Python", "Go", "Swift"],
+      principle: "Always building, always learning",
+      links: {
+        website: "https://saad.sh",
+        linkedin: "https://linkedin.com/in/saadbash",
+      },
+    });
+  });
+
   it("serves robots.txt from the Worker runtime", async () => {
     const response = await exports.default.fetch("https://saad.sh/robots.txt");
 
