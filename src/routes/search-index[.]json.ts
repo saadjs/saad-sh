@@ -45,7 +45,7 @@ async function buildSearchIndex(): Promise<SearchIndexEntry[]> {
       const content = stripMarkdown(raw);
       const excerpt = makeExcerpt(content);
       const searchText =
-        `${metadata.title} ${metadata.description} ${metadata.tags.join(" ")} ${content}`.toLowerCase();
+        `${metadata.title} ${metadata.description ?? ""} ${metadata.tags.join(" ")} ${content}`.toLowerCase();
 
       const entry: SearchIndexEntry = {
         slug,

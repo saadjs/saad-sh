@@ -32,7 +32,7 @@ function normalizeQuery(value: string) {
 
 function scoreEntry(entry: SearchIndexEntry, terms: string[]) {
   const title = entry.title.toLowerCase();
-  const description = entry.description.toLowerCase();
+  const description = (entry.description ?? "").toLowerCase();
   const tags = entry.tags.join(" ").toLowerCase();
   const content = entry.searchText;
 
