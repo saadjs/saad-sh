@@ -12,6 +12,36 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    name: "Hush",
+    description:
+      "Ultra-minimal native Safari content blocker for iPhone, iPad, and Mac that ships its rules offline and makes no network requests.",
+    tags: ["Swift", "Safari", "iOS & macOS"],
+    links: [
+      { label: "GitHub", href: "https://github.com/saadjs/hush" },
+      {
+        label: "Homebrew",
+        href: "https://github.com/saadjs/homebrew-tap/blob/main/Casks/hush.rb",
+      },
+    ],
+  },
+  {
+    name: "Octobase",
+    description:
+      "Browser extension that replaces the GitHub homepage feed with a dashboard of review requests, open pull requests, and assigned issues.",
+    tags: ["TypeScript", "WXT", "Browser extension"],
+    links: [
+      {
+        label: "Chrome Web Store",
+        href: "https://chromewebstore.google.com/detail/octobase/mgipbfmankhlkpeioipbgibidppifnec",
+      },
+      { label: "GitHub", href: "https://github.com/saadjs/octobase" },
+      {
+        label: "Homebrew",
+        href: "https://github.com/saadjs/homebrew-tap/blob/main/Casks/octobase.rb",
+      },
+    ],
+  },
+  {
     name: "Runway",
     description:
       "Minimal macOS menu-bar app that shows 5-hour and weekly usage limits for Claude Code and Codex.",
