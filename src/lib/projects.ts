@@ -34,6 +34,7 @@ export const projects: Project[] = [
         label: "Chrome Web Store",
         href: "https://chromewebstore.google.com/detail/octobase/mgipbfmankhlkpeioipbgibidppifnec",
       },
+      { label: "Docs", href: "https://saadjs.github.io/octobase/" },
       { label: "GitHub", href: "https://github.com/saadjs/octobase" },
       {
         label: "Homebrew",
@@ -46,7 +47,13 @@ export const projects: Project[] = [
     description:
       "Minimal macOS menu-bar app that shows 5-hour and weekly usage limits for Claude Code and Codex.",
     tags: ["Swift", "SwiftUI", "macOS"],
-    links: [{ label: "GitHub", href: "https://github.com/saadjs/Runway" }],
+    links: [
+      { label: "GitHub", href: "https://github.com/saadjs/Runway" },
+      {
+        label: "Homebrew",
+        href: "https://github.com/saadjs/homebrew-tap/blob/main/Casks/tokens-runway.rb",
+      },
+    ],
   },
   {
     name: "RunPace",
@@ -89,18 +96,6 @@ export const projects: Project[] = [
     ],
   },
   {
-    name: "skillctl",
-    description: "Go CLI for installing, syncing, listing, removing, and validating agent skills.",
-    tags: ["Go", "CLI", "Agent skills"],
-    links: [
-      { label: "GitHub", href: "https://github.com/saadjs/skillctl" },
-      {
-        label: "Homebrew",
-        href: "https://github.com/saadjs/homebrew-tap/blob/main/Formula/skillctl.rb",
-      },
-    ],
-  },
-  {
     name: "ViewMD",
     description:
       "Native macOS Markdown viewer with a Quick Look extension for previewing Markdown files from Finder.",
@@ -125,16 +120,6 @@ export const projects: Project[] = [
       },
       { label: "GitHub", href: "https://github.com/saadjs/chrome-json-formtr" },
       { label: "Post", href: "/posts/building-first-chrome-extension" },
-    ],
-  },
-  {
-    name: "Neo",
-    description:
-      "Personal AI agent powered by the GitHub Copilot SDK, exposed through Telegram with custom tools and job automation.",
-    tags: ["TypeScript", "GitHub Copilot SDK", "Telegram"],
-    links: [
-      { label: "GitHub", href: "https://github.com/saadjs/neo" },
-      { label: "Post", href: "/posts/building-personal-ai-assistant" },
     ],
   },
   {
@@ -172,13 +157,6 @@ export const projects: Project[] = [
       { label: "Live", href: "https://saad.sh" },
       { label: "GitHub", href: "https://github.com/saadjs/saad-sh" },
     ],
-  },
-  {
-    name: "Lift Math",
-    description:
-      "Barbell loading calculator for choosing plates and quickly seeing the exact weight breakdown per side.",
-    tags: ["Expo", "React Native", "TypeScript"],
-    links: [{ label: "GitHub", href: "https://github.com/saadjs/lift-math" }],
   },
   {
     name: "minimal-json-formatter",
