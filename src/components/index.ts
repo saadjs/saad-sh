@@ -8,6 +8,7 @@ export { SearchButton } from "./SearchButton";
 export { RelatedPosts } from "./RelatedPosts";
 export { NewsletterSignup } from "./NewsletterSignup";
 export { HashAnchor } from "./HashAnchor";
+export { TableOfContents } from "./TableOfContents";
 export { EditIcon } from "./icons/EditIcon";
 export { CheckIcon } from "./icons/CheckIcon";
 export { ChevronDownIcon } from "./icons/ChevronDownIcon";

@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { lazy, Suspense, useMemo } from "react";
-import { PostHeader, HashAnchor, EditIcon, RelatedPosts } from "#/components";
+import { lazy, Suspense, useMemo, useRef } from "react";
+import { PostHeader, HashAnchor, EditIcon, RelatedPosts, TableOfContents } from "#/components";
 import { ShareMenu } from "#/components/ShareMenu";
 import { getPostBySlug, getPostRawContent, getRelatedPosts } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
@@ -66,6 +66,7 @@ export const Route = createFileRoute("/posts/$slug")({
 
 function BlogPostPage() {
   const { rawMarkdown, relatedPosts, post } = Route.useLoaderData();
+  const contentRef = useRef<HTMLDivElement>(null);
   const { metadata } = post;
   const postPath = `${siteConfig.routes.posts}/${post.slug}`;
   const postUrl = absoluteUrl(postPath, siteConfig.url);
@@ -127,9 +128,12 @@ function BlogPostPage() {
       <PostHeader metadata={metadata}>
         <ShareMenu markdown={rawMarkdown} url={postUrl} />
       </PostHeader>
-      <Suspense fallback={<div className="text-muted">Loading…</div>}>
-        <Content />
-      </Suspense>
+      <TableOfContents contentRef={contentRef} />
+      <div ref={contentRef}>
+        <Suspense fallback={<div className="text-muted">Loading…</div>}>
+          <Content />
+        </Suspense>
+      </div>
       <div>
         <a
           href={editUrl}

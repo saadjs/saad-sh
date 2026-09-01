@@ -227,3 +227,26 @@ code[class*="language-"] *::selection {
   outline: 2px solid currentColor;
   outline-offset: 4px;
 }
+
+/* Post table of contents: a fixed rail in the left gutter on wide screens,
+   collapsed inline above the post everywhere else. */
+.toc-rail {
+  display: none;
+}
+
+@media (min-width: 1400px) {
+  .toc-rail {
+    display: block;
+    position: fixed;
+    top: 9rem;
+    left: max(1.5rem, calc(50% - 28rem - 14rem));
+    width: 12rem;
+    max-height: calc(100vh - 13rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .toc-inline {
+    display: none;
+  }
+}

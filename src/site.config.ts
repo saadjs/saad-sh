@@ -90,6 +90,7 @@ export const siteConfig = {
     tagsLabel: "Filed under",
     editLabel: "Edit on GitHub",
     relatedPostsHeading: "Related posts",
+    tocLabel: "On this page",
   },
   tagPage: {
     title: (tag: string) => `Posts tagged "${tag}"`,
