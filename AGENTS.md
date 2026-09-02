@@ -40,18 +40,22 @@ File-based routes live in `src/routes/`.
 | `/`                            | `index.tsx`                      | Home — lists published posts                    |
 | `/about`                       | `about.tsx`                      | Static MDX page (`src/content/pages/about.mdx`) |
 | `/projects`                    | `projects.tsx`                   | Projects page                                   |
+| `/posts`                       | `posts.index.tsx`                | Full archive, grouped by year                   |
 | `/posts/$slug`                 | `posts.$slug.tsx`                | MDX post, JSON-LD, share menu, related posts    |
-| `/posts/$slug/opengraph-image` | `posts.$slug.opengraph-image.ts` | Per-post SVG OG image                           |
-| `/opengraph-image`             | `opengraph-image.ts`             | Site-wide SVG OG image                          |
+| `/posts/$slug.md`              | `posts.{$slug}[.]md.ts`          | Raw markdown of a post, for agents and LLMs     |
+| `/posts/$slug/opengraph-image` | `posts.$slug.opengraph-image.ts` | Legacy URL, 301s to `/og/$slug.png`             |
+| `/opengraph-image`             | `opengraph-image.ts`             | Legacy URL, 301s to `/og/site.png`              |
 | `/tags`                        | `tags.index.tsx`                 | All tags                                        |
 | `/tags/$tag`                   | `tags.$tag.tsx`                  | Posts for a tag                                 |
 | `/feed.xml`                    | `feed[.]xml.ts`                  | RSS 2.0 feed                                    |
 | `/sitemap.xml`                 | `sitemap[.]xml.ts`               | XML sitemap                                     |
 | `/robots.txt`                  | `robots[.]txt.ts`                | robots.txt                                      |
 | `/search-index.json`           | `search-index[.]json.ts`         | Client-side search payload                      |
+| `/llms.txt`                    | `llms[.]txt.ts`                  | llmstxt.org index linking every post's markdown |
 
 Literal-dot route filenames use TanStack Router bracket escaping, e.g.
-`feed[.]xml.ts` maps to `/feed.xml`.
+`feed[.]xml.ts` maps to `/feed.xml`. A param followed by a literal suffix wraps
+the param in braces: `posts.{$slug}[.]md.ts` maps to `/posts/$slug.md`.
 
 ## Content
 
@@ -123,7 +127,19 @@ pnpm exec wrangler secret put TURNSTILE_SECRET_KEY
 
 ## Notes
 
-- OG images are generated as SVG in `src/lib/og-image.ts`.
+- OG cards are PNGs because social platforms do not render an SVG `og:image`.
+  They are committed to `public/og/` and ship as static assets, so serving one
+  costs no Worker CPU — rendering at request time would blow the 10ms limit.
+  `scripts/generate-og-images.ts` (`pnpm run og`) renders them with satori and
+  resvg from the layout in `src/lib/og-image.ts`; Inter is downloaded from
+  Google Fonts and cached under `node_modules/.cache/og-fonts`.
+- Card generation runs on commit, not in `pnpm build`, so no deploy pipeline
+  ever renders one. lint-staged runs `pnpm run og` when a post, the layout, or
+  `site.config.ts` is staged and stages whatever it wrote. Each card is keyed
+  in `public/og/manifest.json` by a hash of its text plus the layout, so only
+  the affected cards re-render and a clean checkout renders nothing. Committing
+  with `--no-verify` skips this; `pnpm run og` afterwards fixes it, and
+  `pnpm run og --force` rebuilds every card.
 - There is no static prerendering configured; dynamic post and tag pages render
   on demand.
 - `src/mdx-components.tsx` is the MDX component provider referenced by

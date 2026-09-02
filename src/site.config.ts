@@ -20,6 +20,7 @@ export const siteConfig = {
     sourceUrl: "https://github.com/saadjs/saad-sh",
   },
   nav: [
+    { label: "Posts", href: "/posts" },
     { label: "Projects", href: "/projects" },
     { label: "Tags", href: "/tags" },
     { label: "Newsletter", href: "/newsletter" },
@@ -64,6 +65,17 @@ export const siteConfig = {
     postsEyebrow: "Recent posts",
     postsHeading: "Latest writing",
     postsCountLabel: (count: number) => `${count} published`,
+    postsLimit: 10,
+    allPostsLabel: "See all posts",
+  },
+  postsPage: {
+    title: "Posts",
+    description: "Every post on saad.sh, newest first.",
+    heading: "All posts",
+    eyebrow: "Archive",
+    intro: "Everything I have written, newest first.",
+    emptyMessage: "No posts yet.",
+    countLabel: (count: number) => `${count} ${count === 1 ? "post" : "posts"}`,
   },
   tagsPage: {
     title: "Tags",
@@ -152,6 +164,7 @@ export const siteConfig = {
     changeFrequency: {
       about: "monthly",
       home: "weekly",
+      postsIndex: "weekly",
       projects: "monthly",
       newsletter: "yearly",
       tagsIndex: "weekly",
@@ -161,6 +174,7 @@ export const siteConfig = {
     priority: {
       about: 0.7,
       home: 1,
+      postsIndex: 0.9,
       projects: 0.75,
       newsletter: 0.6,
       tagsIndex: 0.6,

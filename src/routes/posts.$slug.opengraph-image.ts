@@ -1,18 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ogImageResponse } from "#/lib/og-image";
-import { getPostBySlug } from "#/lib/posts";
+import { ogImagePath } from "#/lib/utils";
 
+// Cards are static files now; this only keeps previously shared URLs alive.
 export const Route = createFileRoute("/posts/$slug/opengraph-image")({
   server: {
     handlers: {
-      GET: async ({ params }) => {
-        const post = await getPostBySlug(params.slug);
-        if (!post?.metadata?.published) {
-          return new Response("Not Found", { status: 404 });
-        }
-        const { title, description } = post.metadata;
-        return ogImageResponse({ title, description });
-      },
+      GET: ({ params }) =>
+        new Response(null, {
+          status: 301,
+          headers: {
+            Location: ogImagePath(params.slug),
+            "Cache-Control": "public, max-age=3600, s-maxage=86400",
+          },
+        }),
     },
   },
 });

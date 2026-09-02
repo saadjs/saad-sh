@@ -6,14 +6,15 @@
   --muted: #6b6b66;
   --faint: #a8a8a3;
   --border: #e8e8e4;
-  --accent: #4a6fa5;
+  --accent: #f97316;
+  --selection: color-mix(in srgb, var(--accent) 40%, transparent);
   --code-bg: #101114;
   --code-fg: #e7e5e4;
   --code-border: rgba(17, 24, 39, 0.18);
   --code-shadow: rgba(15, 23, 42, 0.24);
   --code-muted: #8a8f98;
   --code-caret: #7ea8d4;
-  --code-selection: rgba(74, 111, 165, 0.18);
+  --code-selection: rgba(249, 115, 22, 0.35);
   --code-keyword: #7ea8d4;
   --code-string: #22c55e;
   --code-number: #fb7185;
@@ -46,14 +47,15 @@
     --muted: #878782;
     --faint: #555550;
     --border: #333330;
-    --accent: #7ea8d4;
+    --accent: #fb923c;
+    --selection: color-mix(in srgb, var(--accent) 45%, transparent);
     --code-bg: #111315;
     --code-fg: #f1f5f9;
     --code-border: rgba(255, 255, 255, 0.1);
     --code-shadow: rgba(0, 0, 0, 0.45);
     --code-muted: #71717a;
     --code-caret: #7ea8d4;
-    --code-selection: rgba(126, 168, 212, 0.2);
+    --code-selection: rgba(251, 146, 60, 0.4);
     --code-keyword: #7ea8d4;
     --code-string: #4ade80;
     --code-number: #fda4af;
@@ -78,7 +80,7 @@ body {
 }
 
 ::selection {
-  background: color-mix(in srgb, var(--accent) 20%, transparent);
+  background: var(--selection);
 }
 
 pre[class*="language-"] {

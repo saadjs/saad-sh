@@ -6,7 +6,7 @@ import { Header } from "#/components/Header";
 import { Footer } from "#/components/Footer";
 import { SearchCommandClient } from "#/components/SearchCommandClient";
 import { siteConfig } from "#/site.config";
-import { absoluteUrl } from "#/lib/utils";
+import { absoluteUrl, ogImagePath } from "#/lib/utils";
 
 import appCss from "#/styles.css?url";
 
@@ -30,14 +30,15 @@ export const Route = createRootRoute({
       { property: "og:url", content: siteConfig.url },
       { property: "og:locale", content: siteConfig.locale },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: absoluteUrl("/opengraph-image", siteConfig.url) },
+      { property: "og:image", content: absoluteUrl(ogImagePath("site"), siteConfig.url) },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
+      { property: "og:image:type", content: "image/png" },
       { property: "og:image:alt", content: siteConfig.name },
       { name: "twitter:card", content: siteConfig.twitterCard },
       { name: "twitter:title", content: siteConfig.name },
       { name: "twitter:description", content: siteConfig.description },
-      { name: "twitter:image", content: absoluteUrl("/opengraph-image", siteConfig.url) },
+      { name: "twitter:image", content: absoluteUrl(ogImagePath("site"), siteConfig.url) },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

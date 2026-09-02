@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "vite dev --port 3000",
+    "og": "tsx scripts/generate-og-images.ts",
     "build": "wrangler types --check && vite build && tsc --noEmit",
     "cf-typegen": "wrangler types",
     "preview": "vite preview",
@@ -39,6 +40,7 @@
   },
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.14.7",
+    "@resvg/resvg-js": "^2.6.2",
     "@tailwindcss/typography": "^0.5.19",
     "@tanstack/devtools-vite": "^0.6.0",
     "@testing-library/dom": "^10.4.1",
@@ -53,6 +55,7 @@
     "lint-staged": "^16.4.0",
     "oxfmt": "^0.45.0",
     "oxlint": "^1.60.0",
+    "satori": "^0.33.4",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3",
     "vite": "^8.0.8",
@@ -66,6 +69,10 @@
     ],
     "*.{md,mdx,json,jsonc,css,html,yml,yaml}": [
       "oxfmt"
+    ],
+    "src/{content/posts/*.mdx,lib/og-image.ts,site.config.ts}": [
+      "pnpm run og",
+      "git add public/og"
     ]
   }
 }

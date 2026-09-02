@@ -45,7 +45,7 @@ function TagsPage() {
               key={slug}
               to="/tags/$tag"
               params={{ tag: slug }}
-              className="inline-flex items-baseline gap-1 whitespace-nowrap text-orange-500 transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 dark:text-orange-400"
+              className="inline-flex items-baseline gap-1 whitespace-nowrap text-accent transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
             >
               <span>{tag.label.toUpperCase()}</span>
               <span className="text-muted">({tag.count})</span>

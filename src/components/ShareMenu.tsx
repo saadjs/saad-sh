@@ -4,13 +4,14 @@ import { ChevronDownIcon } from "#/components/icons/ChevronDownIcon";
 import { ChatGPTIcon } from "#/components/icons/ChatGPTIcon";
 import { ClaudeIcon } from "#/components/icons/ClaudeIcon";
 import { CopyIcon } from "#/components/icons/CopyIcon";
+import { MarkdownIcon } from "#/components/icons/MarkdownIcon";
 
 interface ShareMenuProps {
   markdown: string;
-  url: string;
+  markdownUrl: string;
 }
 
-export function ShareMenu({ markdown, url }: ShareMenuProps) {
+export function ShareMenu({ markdown, markdownUrl }: ShareMenuProps) {
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -45,11 +46,11 @@ export function ShareMenu({ markdown, url }: ShareMenuProps) {
 
   const openInLLM = useCallback(
     (baseUrl: string, paramKey: string) => {
-      const prompt = `I'm looking at this blog post: ${url}\nHelp me understand it. Be ready to explain concepts, give examples, or help debug based on it.\n`;
+      const prompt = `I'm looking at this blog post: ${markdownUrl}\nHelp me understand it. Be ready to explain concepts, give examples, or help debug based on it.\n`;
       const params = new URLSearchParams({ [paramKey]: prompt });
       window.open(`${baseUrl}?${params.toString()}`, "_blank");
     },
-    [url],
+    [markdownUrl],
   );
 
   const btnBase =
@@ -97,6 +98,13 @@ export function ShareMenu({ markdown, url }: ShareMenuProps) {
             <ClaudeIcon className="h-4 w-4 shrink-0" />
             Open in Claude
           </button>
+          <a
+            href={markdownUrl}
+            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+          >
+            <MarkdownIcon className="h-4 w-4 shrink-0" />
+            View as Markdown
+          </a>
         </div>
       )}
     </div>

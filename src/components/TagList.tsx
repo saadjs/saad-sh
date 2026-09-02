@@ -16,7 +16,7 @@ export function TagList({ tags }: TagListProps) {
             key={tag}
             to="/tags/$tag"
             params={{ tag: slug }}
-            className="text-sm text-orange-500 transition-colors hover:underline dark:text-orange-400"
+            className="text-sm text-accent transition-colors hover:underline"
           >
             {tag.toUpperCase()}
           </Link>

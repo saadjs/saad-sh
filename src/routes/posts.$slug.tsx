@@ -39,6 +39,7 @@ export const Route = createFileRoute("/posts/$slug")({
     const postPath = `${siteConfig.routes.posts}/${post.slug}`;
     const postUrl = absoluteUrl(postPath, siteConfig.url);
     const imageUrl = getPostImageUrl(post.slug, metadata.image, siteConfig.url);
+    const markdownUrl = absoluteUrl(`${postPath}.md`, siteConfig.url);
 
     return {
       meta: [
@@ -53,12 +54,16 @@ export const Route = createFileRoute("/posts/$slug")({
         { property: "og:image", content: imageUrl },
         { property: "og:image:width", content: "1200" },
         { property: "og:image:height", content: "630" },
+        ...(metadata.image ? [] : [{ property: "og:image:type", content: "image/png" }]),
         { name: "twitter:card", content: siteConfig.twitterCard },
         { name: "twitter:title", content: metadata.title },
         { name: "twitter:description", content: metadata.description },
         { name: "twitter:image", content: imageUrl },
       ],
-      links: [{ rel: "canonical", href: postUrl }],
+      links: [
+        { rel: "canonical", href: postUrl },
+        { rel: "alternate", type: "text/markdown", href: markdownUrl },
+      ],
     };
   },
   component: BlogPostPage,
@@ -126,7 +131,10 @@ function BlogPostPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PostHeader metadata={metadata}>
-        <ShareMenu markdown={rawMarkdown} url={postUrl} />
+        <ShareMenu
+          markdown={rawMarkdown}
+          markdownUrl={absoluteUrl(`${postPath}.md`, siteConfig.url)}
+        />
       </PostHeader>
       <TableOfContents contentRef={contentRef} />
       <div ref={contentRef}>

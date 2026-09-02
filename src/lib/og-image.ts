@@ -1,78 +1,149 @@
 import { siteConfig } from "#/site.config";
 
 export const imageSize = { width: 1200, height: 630 };
+export const ogFontFamily = "Inter";
+// The wordmark and URL are set in mono; the rest stays in Inter for readability.
+export const ogMonoFamily = "JetBrains Mono";
 
-interface OgImageProps {
+// Pulled from the logo mark so cards, favicon, and logo stay one brand.
+const accent = "#ff6341";
+const background = "#0a0a0a";
+
+// "saad.sh" -> ["saad", ".sh"], so the suffix can carry the accent.
+const [nameStem, nameSuffix] = [
+  siteConfig.name.slice(0, siteConfig.name.indexOf(".")),
+  siteConfig.name.slice(siteConfig.name.indexOf(".")),
+];
+
+export interface OgImageProps {
   title: string;
-  description: string;
+  description?: string;
   titleSize?: number;
+  // The site card is the hero variant; every post link gets the compact one.
+  variant?: "site" | "post";
+  // Data URI for public/logo.svg, passed in so this file stays free of node builtins.
+  logo?: string;
 }
 
-function escapeXml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&apos;");
+// Satori takes a React-element shape, but plain objects work and keep this
+// file free of JSX so the build script can import it directly.
+export interface OgNode {
+  type: string;
+  props: {
+    style: Record<string, string | number>;
+    src?: string;
+    children?: (OgNode | string)[] | string;
+  };
 }
 
-function wrapLines(value: string, maxChars: number, maxLines: number): string[] {
-  const words = value.split(/\s+/);
-  const lines: string[] = [];
-  let current = "";
-  for (const word of words) {
-    if ((current + " " + word).trim().length > maxChars && current) {
-      lines.push(current);
-      current = word;
-    } else {
-      current = (current + " " + word).trim();
-    }
-  }
-  if (current) lines.push(current);
-  return lines.slice(0, maxLines);
+function truncate(value: string, max: number): string {
+  if (value.length <= max) return value;
+  return `${value.slice(0, max - 1).trimEnd()}…`;
 }
 
-export function generateOgSvg({ title, description, titleSize = 64 }: OgImageProps): string {
-  const titleLines = wrapLines(title, 28, 4);
-  const descriptionLines = wrapLines(description, 48, 3);
-  const titleLineHeight = Math.round(titleSize * 1.1);
-  const descLineHeight = 40;
-  const titleBlockHeight = titleLines.length * titleLineHeight;
-  const descBlockHeight = descriptionLines.length * descLineHeight;
-  const contentTop = 630 - 140 - descBlockHeight - titleBlockHeight;
-
-  const titleTspans = titleLines
-    .map(
-      (line, i) => `<tspan x="72" dy="${i === 0 ? 0 : titleLineHeight}">${escapeXml(line)}</tspan>`,
-    )
-    .join("");
-
-  const descTspans = descriptionLines
-    .map(
-      (line, i) => `<tspan x="72" dy="${i === 0 ? 0 : descLineHeight}">${escapeXml(line)}</tspan>`,
-    )
-    .join("");
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
-  <rect width="1200" height="630" fill="#0a0a0a"/>
-  <g font-family="system-ui, -apple-system, Segoe UI, sans-serif" fill="#fafafa">
-    <text x="72" y="96" font-size="28" font-weight="500">${escapeXml(siteConfig.name)}</text>
-    <text x="72" y="${contentTop + titleSize}" font-size="${titleSize}" font-weight="600" letter-spacing="-0.02em">${titleTspans}</text>
-    <text x="72" y="${contentTop + titleBlockHeight + 60}" font-size="28" fill="#a1a1a1">${descTspans}</text>
-    <text x="72" y="580" font-size="22" fill="#737373">${escapeXml(siteConfig.url)}</text>
-  </g>
-</svg>`;
+function box(
+  style: Record<string, string | number>,
+  children?: (OgNode | string)[] | string,
+): OgNode {
+  return { type: "div", props: { style: { display: "flex", ...style }, children } };
 }
 
-export function ogImageResponse(props: OgImageProps): Response {
-  const svg = generateOgSvg(props);
-  return new Response(svg, {
-    headers: {
-      "Content-Type": "image/svg+xml; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=86400",
-      "X-Robots-Tag": "noindex",
+function logoMark(logo: string | undefined, size: number): OgNode {
+  if (!logo) return box({ width: size, height: size });
+  return { type: "img", props: { src: logo, style: { width: size, height: size } } };
+}
+
+function siteName(fontSize: number, letterSpacing: number): OgNode {
+  const style = {
+    fontSize,
+    fontFamily: ogMonoFamily,
+    fontWeight: 500,
+    letterSpacing,
+    lineHeight: 1,
+  };
+  return box({ alignItems: "baseline" }, [
+    box({ ...style, color: "#fafafa" }, nameStem),
+    box({ ...style, color: accent }, nameSuffix),
+  ]);
+}
+
+function frame(children: OgNode[]): OgNode {
+  return box(
+    {
+      flexDirection: "column",
+      justifyContent: "space-between",
+      width: imageSize.width,
+      height: imageSize.height,
+      backgroundColor: background,
+      padding: 72,
+      fontFamily: ogFontFamily,
     },
-  });
+    children,
+  );
+}
+
+function siteCard(description: string | undefined, logo: string | undefined): OgNode {
+  return frame([
+    box({}),
+    box({ flexDirection: "column" }, [
+      logoMark(logo, 112),
+      box({ marginTop: 36 }, [siteName(84, -3)]),
+      description
+        ? box(
+            { marginTop: 30, fontSize: 32, lineHeight: 1.4, color: "#a1a1a1", maxWidth: 820 },
+            truncate(description, 140),
+          )
+        : box({}),
+    ]),
+    box({ fontSize: 24, fontFamily: ogMonoFamily, color: "#737373" }, siteConfig.author.name),
+  ]);
+}
+
+function postCard(
+  title: string,
+  description: string | undefined,
+  titleSize: number,
+  logo: string | undefined,
+): OgNode {
+  const body: OgNode[] = [
+    box(
+      {
+        fontSize: titleSize,
+        fontWeight: 600,
+        lineHeight: 1.1,
+        letterSpacing: -titleSize * 0.02,
+        color: "#fafafa",
+      },
+      truncate(title, 110),
+    ),
+  ];
+
+  if (description) {
+    body.push(
+      box(
+        { marginTop: 26, fontSize: 28, lineHeight: 1.4, color: "#a1a1a1" },
+        truncate(description, 170),
+      ),
+    );
+  }
+
+  return frame([
+    box({ alignItems: "center", gap: 16 }, [logoMark(logo, 44), siteName(28, -0.6)]),
+    box({ flexDirection: "column" }, body),
+    box({ fontSize: 22, fontFamily: ogMonoFamily, color: "#737373" }, siteConfig.url),
+  ]);
+}
+
+// Rendered to PNG at build time by scripts/generate-og-images.ts, never at
+// request time: satori is far slower than the Workers CPU budget allows.
+export function generateOgElement({
+  title,
+  description,
+  titleSize = 64,
+  variant = "post",
+  logo,
+}: OgImageProps): OgNode {
+  return variant === "site"
+    ? siteCard(description, logo)
+    : postCard(title, description, titleSize, logo);
 }

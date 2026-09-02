@@ -54,6 +54,12 @@ async function renderSitemap(): Promise<Response> {
       priority: siteConfig.sitemap.priority.home,
     },
     {
+      url: absoluteUrl(siteConfig.routes.posts, siteConfig.url),
+      lastModified: latestPostDate,
+      changeFrequency: siteConfig.sitemap.changeFrequency.postsIndex,
+      priority: siteConfig.sitemap.priority.postsIndex,
+    },
+    {
       url: absoluteUrl(siteConfig.routes.about, siteConfig.url),
       lastModified: latestPostDate,
       changeFrequency: siteConfig.sitemap.changeFrequency.about,

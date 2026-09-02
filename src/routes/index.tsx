@@ -1,11 +1,14 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { PostCard } from "#/components/PostCard";
 import { getAllPosts } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
 
 export const Route = createFileRoute("/")({
-  loader: async () => ({ posts: await getAllPosts() }),
+  loader: async () => {
+    const posts = await getAllPosts();
+    return { posts: posts.slice(0, siteConfig.homePage.postsLimit), total: posts.length };
+  },
   head: () => ({
     meta: [
       { title: siteConfig.name },
@@ -18,7 +21,7 @@ export const Route = createFileRoute("/")({
 });
 
 function HomePage() {
-  const { posts } = Route.useLoaderData();
+  const { posts, total } = Route.useLoaderData();
 
   return (
     <div>
@@ -34,6 +37,11 @@ function HomePage() {
           {posts.map((post) => (
             <PostCard key={post.slug} post={post} />
           ))}
+          {total > posts.length && (
+            <Link to="/posts" className="mt-8 inline-block text-sm text-accent hover:underline">
+              {siteConfig.homePage.allPostsLabel} →
+            </Link>
+          )}
         </div>
       )}
     </div>

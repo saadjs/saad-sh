@@ -21,11 +21,16 @@ export function absoluteUrl(pathname: string, siteUrl: string): string {
   return new URL(pathname, siteUrl).toString();
 }
 
+// Cards live in public/og, rendered at build time by
+// scripts/generate-og-images.ts.
+export function ogImagePath(name: string): string {
+  return `/og/${name}.png`;
+}
+
 export function getPostImageUrl(
   slug: string,
   customImage: string | undefined,
   siteUrl: string,
 ): string {
-  const fallbackImage = absoluteUrl(`/posts/${slug}/opengraph-image`, siteUrl);
-  return customImage ? absoluteUrl(customImage, siteUrl) : fallbackImage;
+  return absoluteUrl(customImage ?? ogImagePath(slug), siteUrl);
 }

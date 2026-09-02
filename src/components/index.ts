@@ -15,6 +15,7 @@ export { ChevronDownIcon } from "./icons/ChevronDownIcon";
 export { ChatGPTIcon } from "./icons/ChatGPTIcon";
 export { ClaudeIcon } from "./icons/ClaudeIcon";
 export { CopyIcon } from "./icons/CopyIcon";
+export { MarkdownIcon } from "./icons/MarkdownIcon";
 export { RssIcon } from "./icons/RssIcon";
 export { CodeIcon } from "./icons/CodeIcon";
 export { GitHubIcon } from "./icons/GitHubIcon";

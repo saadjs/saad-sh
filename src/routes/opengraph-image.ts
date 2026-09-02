@@ -1,15 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ogImageResponse } from "#/lib/og-image";
-import { siteConfig } from "#/site.config";
+import { ogImagePath } from "#/lib/utils";
 
+// Cards are static files now; this only keeps previously shared URLs alive.
 export const Route = createFileRoute("/opengraph-image")({
   server: {
     handlers: {
       GET: () =>
-        ogImageResponse({
-          title: siteConfig.name,
-          description: siteConfig.description,
-          titleSize: 72,
+        new Response(null, {
+          status: 301,
+          headers: {
+            Location: ogImagePath("site"),
+            "Cache-Control": "public, max-age=3600, s-maxage=86400",
+          },
         }),
     },
   },
