@@ -31,8 +31,8 @@ export const projects: Project[] = [
   {
     name: "Octobase",
     description:
-      "Browser extension that replaces the GitHub homepage feed with a dashboard of review requests, open pull requests, and assigned issues.",
-    tags: ["TypeScript", "WXT", "Browser extension"],
+      "Browser extension for Chrome, Firefox, and Safari that replaces the GitHub homepage feed with a read-only dashboard of review requests, open pull requests, and assigned issues.",
+    tags: ["TypeScript", "WXT", "Chrome & Safari"],
     links: [
       {
         label: "Chrome Web Store",
