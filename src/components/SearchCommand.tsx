@@ -14,6 +14,20 @@ type SearchIndexEntry = {
   searchText: string;
 };
 
+type SearchIndexProject = {
+  slug: string;
+  name: string;
+  description: string;
+  tags: string[];
+  url: string;
+  searchText: string;
+};
+
+type SearchIndexPayload = {
+  posts: SearchIndexEntry[];
+  projects: SearchIndexProject[];
+};
+
 type TagResult = {
   type: "tag";
   label: string;
@@ -23,6 +37,8 @@ type TagResult = {
 };
 
 type PostResult = SearchIndexEntry & { type: "post"; score: number };
+
+type ProjectResult = SearchIndexProject & { type: "project"; score: number };
 
 const RESULTS_LIMIT = 10;
 
@@ -51,6 +67,34 @@ function scoreEntry(entry: SearchIndexEntry, terms: string[]) {
   return score;
 }
 
+function scoreProject(project: SearchIndexProject, terms: string[]) {
+  const name = project.name.toLowerCase();
+  const tags = project.tags.join(" ").toLowerCase();
+  const description = project.description.toLowerCase();
+
+  let score = 0;
+
+  for (const term of terms) {
+    if (!term) continue;
+    if (name === term) score += 6;
+    if (name.startsWith(term)) score += 4;
+    if (name.includes(term)) score += 3;
+    if (tags.includes(term)) score += 3;
+    if (description.includes(term)) score += 2;
+    if (project.searchText.includes(term)) score += 1;
+  }
+
+  return score;
+}
+
+// A cached client from before projects were indexed still receives the old
+// bare-array payload, so both shapes are accepted.
+function normalizePayload(data: unknown): SearchIndexPayload {
+  if (Array.isArray(data)) return { posts: data as SearchIndexEntry[], projects: [] };
+  const payload = data as Partial<SearchIndexPayload>;
+  return { posts: payload?.posts ?? [], projects: payload?.projects ?? [] };
+}
+
 export function SearchCommand() {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -58,7 +102,7 @@ export function SearchCommand() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const [index, setIndex] = useState<SearchIndexEntry[] | null>(null);
+  const [index, setIndex] = useState<SearchIndexPayload | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [error, setError] = useState("");
 
@@ -111,8 +155,7 @@ export function SearchCommand() {
         if (!response.ok) {
           throw new Error("Search index request failed");
         }
-        const data = (await response.json()) as SearchIndexEntry[];
-        setIndex(data);
+        setIndex(normalizePayload(await response.json()));
       } catch (fetchError) {
         setError(fetchError instanceof Error ? fetchError.message : "Failed to load search index");
       } finally {
@@ -123,19 +166,20 @@ export function SearchCommand() {
     loadIndex();
   }, [open, index, loading]);
 
-  const { postResults, tagResults, combinedResults } = useMemo(() => {
+  const { postResults, tagResults, projectResults, combinedResults } = useMemo(() => {
     if (!index) {
       return {
         postResults: [] as PostResult[],
         tagResults: [] as TagResult[],
-        combinedResults: [],
+        projectResults: [] as ProjectResult[],
+        combinedResults: [] as (PostResult | TagResult | ProjectResult)[],
       };
     }
 
     const normalized = normalizeQuery(query);
     const terms = normalized ? normalized.split(" ") : [];
 
-    const postResults = index
+    const postResults = index.posts
       .map((entry) => ({ ...entry, type: "post" as const, score: scoreEntry(entry, terms) }))
       .filter((entry) => (normalized ? entry.score > 0 : true))
       .sort((a, b) => {
@@ -144,8 +188,22 @@ export function SearchCommand() {
       })
       .slice(0, RESULTS_LIMIT);
 
+    // Projects only surface for an actual query; the empty state stays the
+    // tags-plus-recent-posts panel it has always been.
+    const projectResults = normalized
+      ? index.projects
+          .map((project) => ({
+            ...project,
+            type: "project" as const,
+            score: scoreProject(project, terms),
+          }))
+          .filter((project) => project.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, RESULTS_LIMIT)
+      : [];
+
     const tagCount = new Map<string, number>();
-    for (const entry of index) {
+    for (const entry of index.posts) {
       for (const tag of entry.tags) {
         const slug = slugifyTag(tag);
         if (!slug) continue;
@@ -166,9 +224,9 @@ export function SearchCommand() {
       })
       .slice(0, RESULTS_LIMIT);
 
-    const combinedResults = [...tagResults, ...postResults];
+    const combinedResults = [...tagResults, ...projectResults, ...postResults];
 
-    return { postResults, tagResults, combinedResults };
+    return { postResults, tagResults, projectResults, combinedResults };
   }, [index, query]);
 
   useEffect(() => {
@@ -209,6 +267,10 @@ export function SearchCommand() {
         router.navigate({ to: "/tags/$tag", params: { tag: selected.slug } });
         setOpen(false);
       }
+      if (selected?.type === "project") {
+        router.navigate({ to: "/projects", hash: selected.slug });
+        setOpen(false);
+      }
     }
   };
 
@@ -234,9 +296,9 @@ export function SearchCommand() {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Search posts or tags..."
+            placeholder="Search posts, projects, or tags..."
             className="w-full bg-transparent font-mono text-sm text-white outline-none placeholder:text-zinc-400"
-            aria-label="Search posts or tags"
+            aria-label="Search posts, projects, or tags"
           />
         </div>
         <div ref={listRef} className="max-h-[60vh] overflow-y-auto px-4 py-4">
@@ -279,6 +341,40 @@ export function SearchCommand() {
                   </ul>
                 </div>
               )}
+              {projectResults.length > 0 && (
+                <div>
+                  <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
+                    Projects
+                  </p>
+                  <ul className="space-y-2">
+                    {projectResults.map((result, index) => {
+                      const overallIndex = tagResults.length + index;
+                      const isActive = overallIndex === activeIndex;
+                      return (
+                        <li key={`project-${result.slug}`}>
+                          <Link
+                            to="/projects"
+                            hash={result.slug}
+                            onClick={() => setOpen(false)}
+                            data-result-index={overallIndex}
+                            className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+                              isActive ? "bg-white/10 text-white" : "text-zinc-200 hover:bg-white/5"
+                            }`}
+                          >
+                            <span className="flex items-center gap-2">
+                              <span className="text-zinc-400">→</span>
+                              {result.name}
+                            </span>
+                            <span className="truncate font-mono text-xs text-zinc-500">
+                              {result.tags.slice(0, 2).join(" · ")}
+                            </span>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              )}
               {postResults.length > 0 && (
                 <div>
                   <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
@@ -286,7 +382,7 @@ export function SearchCommand() {
                   </p>
                   <ul className="space-y-2">
                     {postResults.map((result, index) => {
-                      const overallIndex = tagResults.length + index;
+                      const overallIndex = tagResults.length + projectResults.length + index;
                       const isActive = overallIndex === activeIndex;
                       return (
                         <li key={`post-${result.slug}`}>

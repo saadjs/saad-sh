@@ -1,3 +1,7 @@
+import type { FileRoutesByTo } from "#/routeTree.gen";
+import { siteConfig } from "#/site.config";
+import { slugifyTag } from "#/lib/utils";
+
 export type ProjectLink = {
   label: string;
   href: string;
@@ -191,3 +195,71 @@ export const projects: Project[] = [
     links: [{ label: "GitHub", href: "https://github.com/saadjs/tinyfy-urls" }],
   },
 ];
+
+// Param-free routes a project link may point at; checked against the route tree.
+const appRoutes = [
+  "/",
+  "/about",
+  "/newsletter",
+  "/posts",
+  "/projects",
+  "/tags",
+] as const satisfies readonly (keyof FileRoutesByTo)[];
+
+export type ProjectLinkTarget =
+  | { kind: "post"; slug: string }
+  | { kind: "route"; to: (typeof appRoutes)[number] }
+  | { kind: "external"; href: string };
+
+const siteOrigin = new URL(siteConfig.url).origin;
+
+// Same-origin absolute hrefs resolve to their path so they stay client-side.
+function internalPath(href: string): string | null {
+  if (href.startsWith("/")) return href;
+
+  try {
+    const url = new URL(href);
+    if (url.origin !== siteOrigin) return null;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return null;
+  }
+}
+
+export function resolveProjectLink(href: string): ProjectLinkTarget {
+  const path = internalPath(href);
+  if (!path) return { kind: "external", href };
+
+  const post = path.match(/^\/posts\/([^/?#]+)\/?$/);
+  if (post) return { kind: "post", slug: post[1] };
+
+  const normalized = path.length > 1 ? path.replace(/\/$/, "") : path;
+  const route = appRoutes.find((candidate) => candidate === normalized);
+  if (route) return { kind: "route", to: route };
+
+  return { kind: "external", href };
+}
+
+const fallbackSlug = "project";
+
+function buildProjectSlugs(): Map<string, string> {
+  const used = new Set<string>();
+  const slugs = new Map<string, string>();
+
+  for (const { name } of projects) {
+    const base = slugifyTag(name) || fallbackSlug;
+    let slug = base;
+    for (let n = 2; used.has(slug); n += 1) slug = `${base}-${n}`;
+    used.add(slug);
+    slugs.set(name, slug);
+  }
+
+  return slugs;
+}
+
+const projectSlugs = buildProjectSlugs();
+
+// Stable, unique id for anchors, search results, and structured data.
+export function projectSlug(name: string): string {
+  return projectSlugs.get(name) ?? (slugifyTag(name) || fallbackSlug);
+}

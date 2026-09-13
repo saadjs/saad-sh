@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { getAllPosts } from "#/lib/posts";
+import { projects, projectSlug } from "#/lib/projects";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
 
@@ -21,6 +22,13 @@ async function renderLlmsTxt(): Promise<Response> {
       const url = absoluteUrl(`${routes.posts}/${post.slug}.md`, siteConfig.url);
       const summary = post.metadata.description ? `: ${post.metadata.description}` : "";
       return `- [${post.metadata.title}](${url})${summary}`;
+    }),
+    "",
+    "## Projects",
+    "",
+    ...projects.map((project) => {
+      const url = `${absoluteUrl(routes.projects, siteConfig.url)}#${projectSlug(project.name)}`;
+      return `- [${project.name}](${url}): ${project.description}`;
     }),
     "",
     "## Pages",

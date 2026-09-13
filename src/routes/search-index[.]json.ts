@@ -1,6 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { PostMetadata } from "#/lib/types";
+import { siteConfig } from "#/site.config";
 import { getPostModuleBySlug, getPostRawContent, getPostSlugs } from "#/lib/posts";
+import { projects, projectSlug } from "#/lib/projects";
 
 type SearchIndexEntry = {
   slug: string;
@@ -11,6 +13,20 @@ type SearchIndexEntry = {
   image?: string;
   excerpt: string;
   searchText: string;
+};
+
+type SearchIndexProject = {
+  slug: string;
+  name: string;
+  description: string;
+  tags: string[];
+  url: string;
+  searchText: string;
+};
+
+type SearchIndexPayload = {
+  posts: SearchIndexEntry[];
+  projects: SearchIndexProject[];
 };
 
 function stripMarkdown(source: string): string {
@@ -66,11 +82,29 @@ async function buildSearchIndex(): Promise<SearchIndexEntry[]> {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 
+function buildProjectIndex(): SearchIndexProject[] {
+  return projects.map((project) => {
+    const slug = projectSlug(project.name);
+    return {
+      slug,
+      name: project.name,
+      description: project.description,
+      tags: project.tags,
+      url: `${siteConfig.routes.projects}#${slug}`,
+      searchText:
+        `${project.name} ${project.description} ${project.tags.join(" ")} ${project.links.map((link) => link.label).join(" ")}`.toLowerCase(),
+    };
+  });
+}
+
 export const Route = createFileRoute("/search-index.json")({
   server: {
     handlers: {
       GET: async () => {
-        const index = await buildSearchIndex();
+        const index: SearchIndexPayload = {
+          posts: await buildSearchIndex(),
+          projects: buildProjectIndex(),
+        };
         return new Response(JSON.stringify(index), {
           headers: {
             "Content-Type": "application/json; charset=utf-8",

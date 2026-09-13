@@ -129,6 +129,14 @@ async function main() {
         logo,
       },
     },
+    {
+      name: "projects",
+      props: {
+        title: siteConfig.projectsPage.heading,
+        description: siteConfig.projectsPage.description,
+        logo,
+      },
+    },
   ];
 
   for (const file of files) {
