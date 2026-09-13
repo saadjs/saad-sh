@@ -17,6 +17,10 @@ export const projects: Project[] = [
       "Ultra-minimal native Safari content blocker for iPhone, iPad, and Mac that ships its rules offline and makes no network requests.",
     tags: ["Swift", "Safari", "iOS & macOS"],
     links: [
+      {
+        label: "App Store",
+        href: "https://apps.apple.com/us/app/hush-minimal-content-blocker/id6806835360",
+      },
       { label: "GitHub", href: "https://github.com/saadjs/hush" },
       {
         label: "Homebrew",
@@ -39,6 +43,10 @@ export const projects: Project[] = [
       {
         label: "Homebrew",
         href: "https://github.com/saadjs/homebrew-tap/blob/main/Casks/octobase.rb",
+      },
+      {
+        label: "Mac App Store",
+        href: "https://apps.apple.com/us/app/octobase/id6805298048",
       },
     ],
   },
