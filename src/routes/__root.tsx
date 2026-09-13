@@ -7,6 +7,7 @@ import { Footer } from "#/components/Footer";
 import { SearchCommandClient } from "#/components/SearchCommandClient";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl, ogImagePath } from "#/lib/utils";
+import { logoAccent } from "#/lib/logo";
 
 import appCss from "#/styles.css?url";
 
@@ -42,11 +43,18 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
+      {
+        rel: "preload",
+        href: "/fonts/wordmark.woff2",
+        as: "font",
+        type: "font/woff2",
+        crossOrigin: "anonymous",
+      },
       { rel: "icon", type: "image/png", sizes: "16x16", href: "/favicon-16x16.png" },
       { rel: "icon", type: "image/png", sizes: "32x32", href: "/favicon-32x32.png" },
       { rel: "shortcut icon", href: "/favicon.ico" },
       { rel: "apple-touch-icon", href: "/apple-touch-icon.png" },
-      { rel: "mask-icon", href: "/safari-pinned-tab.svg", color: "#ff6341" },
+      { rel: "mask-icon", href: "/safari-pinned-tab.svg", color: logoAccent },
       { rel: "manifest", href: "/site.webmanifest" },
       { rel: "alternate", type: "application/rss+xml", href: siteConfig.routes.feed },
     ],

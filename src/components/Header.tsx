@@ -1,6 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { siteConfig } from "#/site.config";
+import { LogoMark } from "./LogoMark";
 import { SearchButton } from "./SearchButton";
+
+// "saad.sh" -> ["saad", ".sh"], so the suffix can carry the accent.
+const dot = siteConfig.name.indexOf(".");
+const nameStem = siteConfig.name.slice(0, dot);
+const nameSuffix = siteConfig.name.slice(dot);
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
@@ -11,10 +17,14 @@ export function Header() {
         <div className="flex items-center justify-between gap-4">
           <Link
             to="/"
-            className="flex shrink-0 items-center gap-2.5 text-lg font-semibold tracking-tight text-foreground"
+            className="wordmark flex shrink-0 items-center gap-2.5 text-lg tracking-tight text-foreground"
           >
-            <img src="/logo.svg" alt="" width={22} height={22} />
-            {siteConfig.name}
+            <LogoMark width={22} height={22} />
+            <span>
+              {nameStem}
+              <span className="text-accent">{nameSuffix}</span>
+              <span className="caret" aria-hidden="true" />
+            </span>
           </Link>
           <div className="sm:hidden">
             <SearchButton />

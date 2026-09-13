@@ -1,3 +1,4 @@
+import { logoAccent } from "#/lib/logo";
 import { siteConfig } from "#/site.config";
 
 export const imageSize = { width: 1200, height: 630 };
@@ -6,7 +7,7 @@ export const ogFontFamily = "Inter";
 export const ogMonoFamily = "JetBrains Mono";
 
 // Pulled from the logo mark so cards, favicon, and logo stay one brand.
-const accent = "#ff6341";
+const accent = logoAccent;
 const background = "#0a0a0a";
 
 // "saad.sh" -> ["saad", ".sh"], so the suffix can carry the accent.

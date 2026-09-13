@@ -1,4 +1,5 @@
 export { Header } from "./Header";
+export { LogoMark } from "./LogoMark";
 export { Footer } from "./Footer";
 export { PostCard } from "./PostCard";
 export { PostHeader } from "./PostHeader";

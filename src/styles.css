@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+/* JetBrains Mono 700, subset to the five characters the wordmark uses. */
+@font-face {
+  font-family: "Wordmark";
+  src: url("/fonts/wordmark.woff2") format("woff2");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   --background: #fafaf8;
   --foreground: #1c1c1a;
@@ -81,6 +90,34 @@ body {
 
 ::selection {
   background: var(--selection);
+}
+
+@keyframes caret-blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.wordmark {
+  font-family: "Wordmark", var(--font-mono);
+  font-weight: 700;
+}
+
+/* One character cell wide, like a real terminal cursor. */
+.caret {
+  display: inline-block;
+  width: 0.6em;
+  height: 0.95em;
+  margin-left: 0.16em;
+  translate: 0 0.1em;
+  background: var(--accent);
+  animation: caret-blink 1.15s steps(1, end) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret {
+    animation: none;
+  }
 }
 
 pre[class*="language-"] {
