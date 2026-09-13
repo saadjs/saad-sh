@@ -21,7 +21,7 @@ Web search is almost always the second kind. The one exception below is Claude C
 ## Main loop
 
 <figure className="my-8">
-  <img
+  <ContentImage
     src="/static/images/search-loop.png"
     alt="Diagram showing an agent web search loop: user prompt, model, web_search tool, sources, and final answer with citations."
     className="w-full rounded-lg border border-border bg-white"
@@ -49,7 +49,7 @@ That is the main idea. The rest is provider-specific shape.
 A small visual builder lives at [agent-web-search.saad.sh](https://agent-web-search.saad.sh). It compares OpenAI Responses `web_search` blocks with Claude Messages `web_search` server-tool blocks, without making real API calls.
 
 <figure className="my-8">
-  <img
+  <ContentImage
     src="/static/images/search-surfaces.png"
     alt="Diagram comparing OpenAI Responses API, Claude Messages API, Claude Code, and Codex cloud task internet access."
     className="w-full rounded-lg border border-border bg-white"
@@ -91,7 +91,7 @@ Codex adds one knob that vanilla Responses callers do not have: a three-state mo
 Codex Cloud is different. The agent phase blocks internet access by default unless the environment allows it. This is a sandbox-network setting, not a `web_search` setting. Agent shell access (`curl`, `npm install`) and the `web_search` hosted tool are two orthogonal layers. `web_search` can be "live" while the sandbox blocks all outbound HTTP from shells, and vice versa.
 
 <figure className="my-8">
-  <img
+  <ContentImage
     src="/static/images/response-parts.png"
     alt="Diagram showing a searched response split into tool trace, result data, final text, and citation metadata."
     className="w-full rounded-lg border border-border bg-white"

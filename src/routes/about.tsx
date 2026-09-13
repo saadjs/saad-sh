@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type { ComponentPropsWithoutRef } from "react";
 import { siteConfig } from "#/site.config";
-import { GitHubIcon, LinkedInIcon } from "#/components";
+import { GitHubIcon } from "#/components/icons/GitHubIcon";
+import { LinkedInIcon } from "#/components/icons/LinkedInIcon";
 import Content from "#/content/pages/about.mdx";
 import { absoluteUrl } from "#/lib/utils";
 

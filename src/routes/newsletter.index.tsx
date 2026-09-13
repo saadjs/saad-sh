@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { NewsletterSignup } from "#/components";
+import { NewsletterSignup } from "#/components/NewsletterSignup";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
 

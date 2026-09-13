@@ -1,6 +1,9 @@
 import { Link } from "@tanstack/react-router";
 import { siteConfig } from "#/site.config";
-import { RssIcon, CodeIcon, GitHubIcon, LinkedInIcon } from "#/components";
+import { RssIcon } from "#/components/icons/RssIcon";
+import { CodeIcon } from "#/components/icons/CodeIcon";
+import { GitHubIcon } from "#/components/icons/GitHubIcon";
+import { LinkedInIcon } from "#/components/icons/LinkedInIcon";
 
 export function Footer() {
   return (

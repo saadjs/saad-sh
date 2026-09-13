@@ -1,3 +1,4 @@
+import { useClipboard } from "#/hooks/useClipboard";
 import { useCallback, useRef, useState } from "react";
 import { CheckIcon } from "#/components/icons/CheckIcon";
 import { CopyIcon } from "#/components/icons/CopyIcon";
@@ -5,16 +6,13 @@ import { WrapIcon } from "#/components/icons/WrapIcon";
 
 export function CodeBlock({ children, className, ...props }: React.ComponentProps<"pre">) {
   const preRef = useRef<HTMLPreElement>(null);
-  const [copied, setCopied] = useState(false);
+  const { status, copy } = useClipboard();
+  const copied = status === "copied";
   const [wrapped, setWrapped] = useState(false);
 
-  const handleCopy = useCallback(() => {
-    const code = preRef.current?.querySelector("code")?.textContent ?? "";
-    navigator.clipboard.writeText(code).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    });
-  }, []);
+  const handleCopy = () => {
+    void copy(() => preRef.current?.querySelector("code")?.textContent ?? "");
+  };
 
   const handleWrapToggle = useCallback(() => {
     setWrapped((prev) => !prev);
@@ -36,7 +34,7 @@ export function CodeBlock({ children, className, ...props }: React.ComponentProp
           type="button"
           onClick={handleWrapToggle}
           aria-label={wrapped ? "Unwrap lines" : "Wrap lines"}
-          className={`flex h-8 w-8 items-center justify-center rounded-md border border-transparent bg-white/80 text-zinc-500 opacity-0 backdrop-blur-sm transition-all hover:text-zinc-900 group-hover:opacity-100 dark:bg-zinc-700/80 dark:text-zinc-400 dark:hover:text-zinc-100 ${
+          className={`flex h-8 w-8 items-center justify-center rounded-md border border-transparent bg-white/80 text-zinc-500 opacity-0 backdrop-blur-sm transition-all hover:text-zinc-900 group-hover:opacity-100 focus-visible:opacity-100 dark:bg-zinc-700/80 dark:text-zinc-400 dark:hover:text-zinc-100 ${
             wrapped
               ? "bg-blue-100 text-blue-500 hover:text-blue-600 dark:bg-blue-900/50 dark:text-blue-300 dark:hover:text-blue-200"
               : ""
@@ -48,11 +46,16 @@ export function CodeBlock({ children, className, ...props }: React.ComponentProp
           type="button"
           onClick={handleCopy}
           aria-label={copied ? "Copied" : "Copy code"}
-          className="flex h-8 w-8 items-center justify-center rounded-md border border-transparent bg-white/80 text-zinc-500 opacity-0 backdrop-blur-sm transition-all hover:text-zinc-900 group-hover:opacity-100 dark:bg-zinc-700/80 dark:text-zinc-400 dark:hover:text-zinc-100"
+          className="flex h-8 w-8 items-center justify-center rounded-md border border-transparent bg-white/80 text-zinc-500 opacity-0 backdrop-blur-sm transition-all hover:text-zinc-900 group-hover:opacity-100 focus-visible:opacity-100 dark:bg-zinc-700/80 dark:text-zinc-400 dark:hover:text-zinc-100"
         >
           {copied ? <CheckIcon className="h-4 w-4" /> : <CopyIcon className="h-4 w-4" />}
         </button>
       </div>
+      {status === "error" && (
+        <p role="alert" className="mt-2 text-sm text-red-500">
+          Could not copy. Select the code and copy it manually, or try again.
+        </p>
+      )}
     </div>
   );
 }

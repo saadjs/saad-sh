@@ -1,14 +1,17 @@
+import { createServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PostCard } from "#/components/PostCard";
 import { getAllPosts } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
 
+const loadHomePosts = createServerFn({ method: "GET" }).handler(async () => {
+  const posts = await getAllPosts();
+  return { posts: posts.slice(0, siteConfig.homePage.postsLimit), total: posts.length };
+});
+
 export const Route = createFileRoute("/")({
-  loader: async () => {
-    const posts = await getAllPosts();
-    return { posts: posts.slice(0, siteConfig.homePage.postsLimit), total: posts.length };
-  },
+  loader: () => loadHomePosts(),
   head: () => ({
     meta: [
       { title: siteConfig.name },

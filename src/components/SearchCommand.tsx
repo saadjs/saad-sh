@@ -95,11 +95,12 @@ function normalizePayload(data: unknown): SearchIndexPayload {
   return { posts: payload?.posts ?? [], projects: payload?.projects ?? [] };
 }
 
-export function SearchCommand() {
+export function SearchCommand({ open, onClose }: { open: boolean; onClose: () => void }) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
-  const [open, setOpen] = useState(false);
+  const dialogRef = useRef<HTMLDialogElement>(null);
+  const [attempt, setAttempt] = useState(0);
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [index, setIndex] = useState<SearchIndexPayload | null>(null);
@@ -107,64 +108,42 @@ export function SearchCommand() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    const onKeyDown = (event: KeyboardEvent) => {
-      const isShortcut = (event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k";
-      if (isShortcut) {
-        event.preventDefault();
-        setOpen(true);
-        return;
-      }
-
-      if (event.key === "Escape") {
-        setOpen(false);
-      }
-    };
-
-    const onOpen = () => setOpen(true);
-
-    window.addEventListener("keydown", onKeyDown);
-    window.addEventListener("search:open", onOpen as EventListener);
-
-    return () => {
-      window.removeEventListener("keydown", onKeyDown);
-      window.removeEventListener("search:open", onOpen as EventListener);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!open) {
+    const dialog = dialogRef.current;
+    if (!dialog) return;
+    if (open) {
+      dialog.showModal();
+      inputRef.current?.focus();
+    } else {
+      dialog.close();
       setQuery("");
       setActiveIndex(0);
-      return;
     }
-
-    const handle = window.requestAnimationFrame(() => {
-      inputRef.current?.focus();
-    });
-    return () => window.cancelAnimationFrame(handle);
+    return () => dialog.close();
   }, [open]);
 
   useEffect(() => {
-    if (!open || index || loading) return;
-
+    if (!open || index) return;
+    const controller = new AbortController();
     const loadIndex = async () => {
       setLoading(true);
       setError("");
       try {
-        const response = await fetch("/search-index.json");
-        if (!response.ok) {
-          throw new Error("Search index request failed");
-        }
-        setIndex(normalizePayload(await response.json()));
+        const response = await fetch("/search-index.json", { signal: controller.signal });
+        if (!response.ok) throw new Error("Search index request failed");
+        const payload = normalizePayload(await response.json());
+        if (!controller.signal.aborted) setIndex(payload);
       } catch (fetchError) {
-        setError(fetchError instanceof Error ? fetchError.message : "Failed to load search index");
+        if (!controller.signal.aborted)
+          setError(
+            fetchError instanceof Error ? fetchError.message : "Failed to load search index",
+          );
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) setLoading(false);
       }
     };
-
-    loadIndex();
-  }, [open, index, loading]);
+    void loadIndex();
+    return () => controller.abort();
+  }, [open, index, attempt]);
 
   const { postResults, tagResults, projectResults, combinedResults } = useMemo(() => {
     if (!index) {
@@ -261,40 +240,41 @@ export function SearchCommand() {
       const selected = combinedResults[activeIndex];
       if (selected?.type === "post") {
         router.navigate({ to: "/posts/$slug", params: { slug: selected.slug } });
-        setOpen(false);
+        onClose();
       }
       if (selected?.type === "tag") {
         router.navigate({ to: "/tags/$tag", params: { tag: selected.slug } });
-        setOpen(false);
+        onClose();
       }
       if (selected?.type === "project") {
         router.navigate({ to: "/projects", hash: selected.slug });
-        setOpen(false);
+        onClose();
       }
     }
   };
 
-  if (!open) return null;
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center px-4 py-14"
-      role="dialog"
-      aria-modal="true"
+    <dialog
+      ref={dialogRef}
+      aria-label="Search posts, projects, or tags"
+      onCancel={onClose}
+      onKeyDown={(event) => {
+        if (event.key === "Escape") onClose();
+      }}
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+      className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none bg-transparent px-4 py-14 text-white backdrop:bg-black/60 backdrop:backdrop-blur-md open:flex open:items-start open:justify-center"
     >
-      <button
-        type="button"
-        aria-label="Close search"
-        tabIndex={-1}
-        onClick={() => setOpen(false)}
-        className="absolute inset-0 cursor-default bg-black/60 backdrop-blur-md"
-      />
       <div className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-zinc-900/95 shadow-2xl shadow-black/40 backdrop-blur-xl">
         <div className="border-b border-white/10 px-4 py-3">
           <input
             ref={inputRef}
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setActiveIndex(0);
+            }}
             onKeyDown={handleKeyDown}
             placeholder="Search posts, projects, or tags..."
             className="w-full bg-transparent font-mono text-sm text-white outline-none placeholder:text-zinc-400"
@@ -303,7 +283,18 @@ export function SearchCommand() {
         </div>
         <div ref={listRef} className="max-h-[60vh] overflow-y-auto px-4 py-4">
           {loading && <p className="text-sm text-zinc-400">Loading search index…</p>}
-          {error && <p className="text-sm text-red-400">{error}</p>}
+          {error && (
+            <div role="alert">
+              <p className="text-sm text-red-400">{error}</p>
+              <button
+                type="button"
+                onClick={() => setAttempt((value) => value + 1)}
+                className="mt-2 text-sm underline"
+              >
+                Retry search
+              </button>
+            </div>
+          )}
           {!loading && !error && combinedResults.length === 0 && (
             <p className="text-sm text-zinc-400">No results.</p>
           )}
@@ -323,7 +314,7 @@ export function SearchCommand() {
                           <Link
                             to="/tags/$tag"
                             params={{ tag: result.slug }}
-                            onClick={() => setOpen(false)}
+                            onClick={() => onClose()}
                             data-result-index={overallIndex}
                             className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors ${
                               isActive ? "bg-white/10 text-white" : "text-zinc-200 hover:bg-white/5"
@@ -355,7 +346,7 @@ export function SearchCommand() {
                           <Link
                             to="/projects"
                             hash={result.slug}
-                            onClick={() => setOpen(false)}
+                            onClick={() => onClose()}
                             data-result-index={overallIndex}
                             className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
                               isActive ? "bg-white/10 text-white" : "text-zinc-200 hover:bg-white/5"
@@ -389,7 +380,7 @@ export function SearchCommand() {
                           <Link
                             to="/posts/$slug"
                             params={{ slug: result.slug }}
-                            onClick={() => setOpen(false)}
+                            onClick={() => onClose()}
                             data-result-index={overallIndex}
                             className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors ${
                               isActive ? "bg-white/10 text-white" : "text-zinc-200 hover:bg-white/5"
@@ -411,10 +402,12 @@ export function SearchCommand() {
           )}
         </div>
         <div className="flex items-center justify-between border-t border-white/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.12em] text-zinc-500">
-          <span>Press Esc to close</span>
+          <button type="button" onClick={onClose} aria-label="Close search">
+            Close (Esc)
+          </button>
           <span>Use ↑ ↓ to navigate</span>
         </div>
       </div>
-    </div>
+    </dialog>
   );
 }

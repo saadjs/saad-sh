@@ -24,7 +24,7 @@ That last point is important. The raw intermediate work stays outside the parent
 Difference b/w Claude Code & Codex: Claude Code can delegate automatically when a task matches a subagent description. Codex only spawns subagents when explicitly asked to use subagents or parallel agent work.
 
 <figure className="my-8">
-  <img
+  <ContentImage
     src="/static/images/subagent-where-things-run.png"
     alt="Diagram comparing where skills, hooks, and subagents run in relation to the main agent's context window."
     className="w-full rounded-lg border border-border bg-white"
@@ -52,7 +52,7 @@ In exchange:
 A subagent pays off when the work would have cost more context than the summary costs, or when independence (read-only, parallel, second opinion) is worth more than fidelity.
 
 <figure className="my-8">
-  <img
+  <ContentImage
     src="/static/images/subagent-parallel.png"
     alt="Comparison of context usage with and without subagents: without, the main context fills up to 130k of 200k tokens; with, the main context stays at 5k while subagents hold the data and return small summaries."
     className="w-full rounded-lg border border-border bg-white"
@@ -64,7 +64,7 @@ A subagent pays off when the work would have cost more context than the summary 
 </figure>
 
 <figure className="my-8">
-  <img
+  <ContentImage
     src="/static/images/subagent-lifecycle.png"
     alt="Diagram of a non-fork subagent lifecycle: parent sends a delegation message, the subagent works in a fresh context, and one summary returns to the parent."
     className="w-full rounded-lg border border-border bg-white"

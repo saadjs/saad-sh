@@ -150,6 +150,7 @@ export const Route = createFileRoute("/newsletter/confirm")({
     token: typeof search.token === "string" ? search.token : "",
   }),
   loaderDeps: ({ search }) => ({ token: search.token }),
+  remountDeps: ({ search }) => ({ token: search.token }),
   loader: ({ deps }) => getConfirmState({ data: deps.token }),
   head: () => ({
     meta: [
@@ -211,7 +212,7 @@ function ConfirmPage() {
   const [result, setResult] = useState<ConfirmResult | null>(null);
   const [isConfirming, setIsConfirming] = useState(false);
   // The address from the loader pass that asked for a confirm. Copied into
-  // state because a successful POST revalidates the loader to `already-member`,
+  // state because a later loader revalidation can return `already-member`,
   // and `data.email` disappears with it while the in-flight and retry panels
   // still need something to show.
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
@@ -240,7 +241,7 @@ function ConfirmPage() {
   }, [data, confirm]);
 
   // What this browser just did outranks whatever the loader says. A successful
-  // POST triggers loader revalidation, which then correctly reports
+  // POST can be followed by loader revalidation, which correctly reports
   // `already-member` -- correct, but wrong to show: the person who just
   // subscribed would watch "You're subscribed!" turn into "You're already a
   // member" a moment later. These checks run before the loader switch below.

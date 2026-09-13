@@ -1,15 +1,18 @@
+import { createServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getAllTags } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
 
+const loadTags = createServerFn({ method: "GET" }).handler(async () => {
+  const tags = await getAllTags();
+  return {
+    tags: Array.from(tags.entries()).sort((a, b) => a[1].label.localeCompare(b[1].label)),
+  };
+});
+
 export const Route = createFileRoute("/tags/")({
-  loader: async () => {
-    const tags = await getAllTags();
-    return {
-      tags: Array.from(tags.entries()).sort((a, b) => a[1].label.localeCompare(b[1].label)),
-    };
-  },
+  loader: () => loadTags(),
   head: () => ({
     meta: [
       { title: `${siteConfig.tagsPage.title} | ${siteConfig.name}` },

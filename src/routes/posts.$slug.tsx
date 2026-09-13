@@ -1,9 +1,13 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { lazy, Suspense, useMemo, useRef } from "react";
-import { PostHeader, HashAnchor, EditIcon, RelatedPosts, TableOfContents } from "#/components";
+import { Suspense, useRef } from "react";
+import { PostHeader } from "#/components/PostHeader";
+import { EditIcon } from "#/components/icons/EditIcon";
+import { RelatedPosts } from "#/components/RelatedPosts";
+import { TableOfContents } from "#/components/TableOfContents";
 import { ShareMenu } from "#/components/ShareMenu";
-import { getPostBySlug, getPostRawContent, getRelatedPosts } from "#/lib/posts";
+import { getPostBySlug, getRelatedPosts } from "#/lib/posts";
+import { getPostContent } from "#/lib/post-content";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl, getPostImageUrl } from "#/lib/utils";
 
@@ -12,23 +16,15 @@ const loadPostData = createServerFn({ method: "GET" })
   .handler(async ({ data: slug }) => {
     const post = await getPostBySlug(slug);
     if (!post?.metadata?.published) return null;
-    const [rawMarkdown, relatedPosts] = await Promise.all([
-      getPostRawContent(slug),
-      getRelatedPosts(slug),
-    ]);
-    return { post, rawMarkdown, relatedPosts };
+    const relatedPosts = await getRelatedPosts(slug);
+    return { post, relatedPosts };
   });
-
-const mdxModules = import.meta.glob("../content/posts/*.mdx");
-
-function getMdxLoader(slug: string) {
-  const key = `../content/posts/${slug}.mdx`;
-  return mdxModules[key];
-}
 
 export const Route = createFileRoute("/posts/$slug")({
   loader: async ({ params }) => {
-    const data = await loadPostData({ data: params.slug });
+    const content = getPostContent(params.slug);
+    if (!content) throw notFound();
+    const [data] = await Promise.all([loadPostData({ data: params.slug }), content.load()]);
     if (!data) throw notFound();
     return data;
   },
@@ -70,7 +66,7 @@ export const Route = createFileRoute("/posts/$slug")({
 });
 
 function BlogPostPage() {
-  const { rawMarkdown, relatedPosts, post } = Route.useLoaderData();
+  const { relatedPosts, post } = Route.useLoaderData();
   const contentRef = useRef<HTMLDivElement>(null);
   const { metadata } = post;
   const postPath = `${siteConfig.routes.posts}/${post.slug}`;
@@ -78,13 +74,7 @@ function BlogPostPage() {
   const imageUrl = getPostImageUrl(post.slug, metadata.image, siteConfig.url);
   const editUrl = `${siteConfig.github.editPostBaseUrl}/${post.slug}.mdx`;
 
-  const Content = useMemo(() => {
-    const loader = getMdxLoader(post.slug);
-    if (!loader) return () => null;
-    return lazy(() =>
-      loader().then((mod) => ({ default: (mod as { default: React.ComponentType }).default })),
-    );
-  }, [post.slug]);
+  const { Content } = getPostContent(post.slug)!;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -125,18 +115,18 @@ function BlogPostPage() {
 
   return (
     <article className="space-y-8">
-      <HashAnchor />
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PostHeader metadata={metadata}>
         <ShareMenu
-          markdown={rawMarkdown}
+          key={post.slug}
+          slug={post.slug}
           markdownUrl={absoluteUrl(`${postPath}.md`, siteConfig.url)}
         />
       </PostHeader>
-      <TableOfContents contentRef={contentRef} />
+      <TableOfContents key={post.slug} contentRef={contentRef} />
       <div ref={contentRef}>
         <Suspense fallback={<div className="text-muted">Loading…</div>}>
           <Content />

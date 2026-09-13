@@ -1,3 +1,4 @@
+import { createServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { TagList } from "#/components/TagList";
 import { getAllPosts } from "#/lib/posts";
@@ -16,11 +17,13 @@ function groupByYear(posts: Post[]): [string, Post[]][] {
   return Array.from(years.entries()).sort((a, b) => b[0].localeCompare(a[0]));
 }
 
+const loadPostArchive = createServerFn({ method: "GET" }).handler(async () => {
+  const posts = await getAllPosts();
+  return { years: groupByYear(posts), total: posts.length };
+});
+
 export const Route = createFileRoute("/posts/")({
-  loader: async () => {
-    const posts = await getAllPosts();
-    return { years: groupByYear(posts), total: posts.length };
-  },
+  loader: () => loadPostArchive(),
   head: () => ({
     meta: [
       { title: `${siteConfig.postsPage.title} | ${siteConfig.name}` },

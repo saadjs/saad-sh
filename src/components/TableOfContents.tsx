@@ -1,3 +1,4 @@
+import { useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
 import { siteConfig } from "#/site.config";
 
@@ -31,7 +32,10 @@ function readHeadings(root: HTMLElement): TocItem[] {
 
 function sameHeadings(a: TocItem[], b: TocItem[]): boolean {
   return (
-    a.length === b.length && a.every((item, i) => item.id === b[i].id && item.text === b[i].text)
+    a.length === b.length &&
+    a.every(
+      (item, i) => item.id === b[i].id && item.text === b[i].text && item.depth === b[i].depth,
+    )
   );
 }
 
@@ -44,6 +48,7 @@ interface TableOfContentsProps {
 }
 
 export function TableOfContents({ contentRef }: TableOfContentsProps) {
+  const navigate = useNavigate();
   const [items, setItems] = useState<TocItem[]>([]);
   const [activeId, setActiveId] = useState("");
 
@@ -96,16 +101,22 @@ export function TableOfContents({ contentRef }: TableOfContentsProps) {
     };
   }, [items]);
 
-  const handleClick = useCallback((event: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-    const target = document.getElementById(id);
-    if (!target) return;
-    event.preventDefault();
-    target.scrollIntoView({ block: "start", behavior: prefersReducedMotion() ? "auto" : "smooth" });
-    window.history.replaceState(null, "", `#${encodeURIComponent(id)}`);
-    setActiveId(id);
-    event.currentTarget.closest("details")?.removeAttribute("open");
-  }, []);
+  const handleClick = useCallback(
+    (event: React.MouseEvent<HTMLAnchorElement>, id: string) => {
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+      const target = document.getElementById(id);
+      if (!target) return;
+      event.preventDefault();
+      target.scrollIntoView({
+        block: "start",
+        behavior: prefersReducedMotion() ? "auto" : "smooth",
+      });
+      void navigate({ hash: id, replace: true, resetScroll: false, hashScrollIntoView: false });
+      setActiveId(id);
+      event.currentTarget.closest("details")?.removeAttribute("open");
+    },
+    [navigate],
+  );
 
   if (items.length < 2) return null;
 
