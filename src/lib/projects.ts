@@ -163,8 +163,9 @@ export const projects: Project[] = [
   },
   {
     name: "saad.sh",
-    description: "This site: a TanStack Start and MDX blog deployed on Cloudflare Workers.",
-    tags: ["TanStack Start", "MDX", "Cloudflare"],
+    description:
+      "This site: a TanStack Start blog with D1-backed posts and a passkey-protected editor on Cloudflare Workers.",
+    tags: ["TanStack Start", "D1", "Cloudflare"],
     links: [
       { label: "Live", href: "https://saad.sh" },
       { label: "GitHub", href: "https://github.com/saadjs/saad-sh" },
@@ -196,7 +197,6 @@ export const projects: Project[] = [
   },
 ];
 
-// Param-free routes a project link may point at; checked against the route tree.
 const appRoutes = [
   "/",
   "/about",
@@ -213,7 +213,6 @@ export type ProjectLinkTarget =
 
 const siteOrigin = new URL(siteConfig.url).origin;
 
-// Same-origin absolute hrefs resolve to their path so they stay client-side.
 function internalPath(href: string): string | null {
   if (href.startsWith("/")) return href;
 
@@ -259,7 +258,6 @@ function buildProjectSlugs(): Map<string, string> {
 
 const projectSlugs = buildProjectSlugs();
 
-// Stable, unique id for anchors, search results, and structured data.
 export function projectSlug(name: string): string {
   return projectSlugs.get(name) ?? (slugifyTag(name) || fallbackSlug);
 }

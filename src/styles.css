@@ -1,6 +1,5 @@
 @import "tailwindcss";
 
-/* JetBrains Mono 700, subset to the five characters the wordmark uses. */
 @font-face {
   font-family: "Wordmark";
   src: url("/fonts/wordmark.woff2") format("woff2");
@@ -103,7 +102,6 @@ body {
   font-weight: 700;
 }
 
-/* One character cell wide, like a real terminal cursor. */
 .caret {
   display: inline-block;
   width: 0.6em;
@@ -235,6 +233,36 @@ code[class*="language-"] *::selection {
   cursor: help;
 }
 
+.admin-preview :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.admin-preview :is(h1, h2, h3, h4, h5, h6) + :is(h1, h2, h3, h4, h5, h6) {
+  margin-top: 1rem;
+}
+
+.admin-preview :is(h4, h5, h6) {
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.admin-preview h4 {
+  font-size: 1.125rem;
+}
+
+.admin-preview :is(h5, h6) {
+  font-size: 1rem;
+}
+
+.admin-preview hr {
+  margin-block: 1.25rem;
+}
+
+.admin-preview > :first-child {
+  margin-top: 0;
+}
+
 .heading-anchor {
   color: inherit;
   text-decoration: none;
@@ -267,8 +295,6 @@ code[class*="language-"] *::selection {
   outline-offset: 4px;
 }
 
-/* Post table of contents: a fixed rail in the left gutter on wide screens,
-   collapsed inline above the post everywhere else. */
 .toc-rail {
   display: none;
 }

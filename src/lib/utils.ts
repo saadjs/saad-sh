@@ -1,3 +1,5 @@
+import ogManifest from "../../public/og/manifest.json";
+
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -21,10 +23,12 @@ export function absoluteUrl(pathname: string, siteUrl: string): string {
   return new URL(pathname, siteUrl).toString();
 }
 
-// Cards live in public/og, rendered at build time by
-// scripts/generate-og-images.ts.
 export function ogImagePath(name: string): string {
   return `/og/${name}.png`;
+}
+
+function hasOgCard(slug: string): boolean {
+  return Object.hasOwn(ogManifest, slug);
 }
 
 export function getPostImageUrl(
@@ -32,5 +36,6 @@ export function getPostImageUrl(
   customImage: string | undefined,
   siteUrl: string,
 ): string {
-  return absoluteUrl(customImage ?? ogImagePath(slug), siteUrl);
+  if (customImage) return absoluteUrl(customImage, siteUrl);
+  return absoluteUrl(ogImagePath(hasOgCard(slug) ? slug : "site"), siteUrl);
 }

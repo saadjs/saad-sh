@@ -3,14 +3,11 @@ import { siteConfig } from "#/site.config";
 
 export const imageSize = { width: 1200, height: 630 };
 export const ogFontFamily = "Inter";
-// The wordmark and URL are set in mono; the rest stays in Inter for readability.
 export const ogMonoFamily = "JetBrains Mono";
 
-// Pulled from the logo mark so cards, favicon, and logo stay one brand.
 const accent = logoAccent;
 const background = "#0a0a0a";
 
-// "saad.sh" -> ["saad", ".sh"], so the suffix can carry the accent.
 const [nameStem, nameSuffix] = [
   siteConfig.name.slice(0, siteConfig.name.indexOf(".")),
   siteConfig.name.slice(siteConfig.name.indexOf(".")),
@@ -20,14 +17,10 @@ export interface OgImageProps {
   title: string;
   description?: string;
   titleSize?: number;
-  // The site card is the hero variant; every post link gets the compact one.
   variant?: "site" | "post";
-  // Data URI for public/logo.svg, passed in so this file stays free of node builtins.
   logo?: string;
 }
 
-// Satori takes a React-element shape, but plain objects work and keep this
-// file free of JSX so the build script can import it directly.
 export interface OgNode {
   type: string;
   props: {
@@ -135,8 +128,6 @@ function postCard(
   ]);
 }
 
-// Rendered to PNG at build time by scripts/generate-og-images.ts, never at
-// request time: satori is far slower than the Workers CPU budget allows.
 export function generateOgElement({
   title,
   description,

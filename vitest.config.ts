@@ -12,6 +12,7 @@ export default defineConfig({
     ...startPlugins(),
   ],
   test: {
+    include: ["test/*.test.ts"],
     passWithNoTests: true,
   },
 });

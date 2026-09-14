@@ -11,3 +11,7 @@ export interface Post {
   slug: string;
   metadata: PostMetadata;
 }
+
+export interface PostWithBody extends Post {
+  body: string;
+}

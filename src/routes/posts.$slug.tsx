@@ -1,30 +1,39 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { Suspense, useRef } from "react";
+import { useRef } from "react";
 import { PostHeader } from "#/components/PostHeader";
-import { EditIcon } from "#/components/icons/EditIcon";
 import { RelatedPosts } from "#/components/RelatedPosts";
 import { TableOfContents } from "#/components/TableOfContents";
 import { ShareMenu } from "#/components/ShareMenu";
-import { getPostBySlug, getRelatedPosts } from "#/lib/posts";
-import { getPostContent } from "#/lib/post-content";
+import { getRelatedPosts, getRenderedPost } from "#/lib/posts";
+import { getRenderedDraft } from "#/lib/admin-posts";
+import { previewTokenMatches } from "#/lib/preview";
+import { PostBody } from "#/components/PostBody";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl, getPostImageUrl } from "#/lib/utils";
 
 const loadPostData = createServerFn({ method: "GET" })
-  .inputValidator((slug: string) => slug)
-  .handler(async ({ data: slug }) => {
-    const post = await getPostBySlug(slug);
-    if (!post?.metadata?.published) return null;
+  .inputValidator((data: { slug: string; preview: string }) => data)
+  .handler(async ({ data: { slug, preview } }) => {
+    if (preview) {
+      if (!(await previewTokenMatches(preview, slug))) return null;
+      const draft = await getRenderedDraft(slug);
+      if (!draft) return null;
+      return { post: draft.post, hast: draft.hast, relatedPosts: [], preview: true };
+    }
+
+    const rendered = await getRenderedPost(slug);
+    if (!rendered?.post.metadata.published) return null;
     const relatedPosts = await getRelatedPosts(slug);
-    return { post, relatedPosts };
+    return { post: rendered.post, hast: rendered.hast, relatedPosts, preview: false };
   });
 
 export const Route = createFileRoute("/posts/$slug")({
-  loader: async ({ params }) => {
-    const content = getPostContent(params.slug);
-    if (!content) throw notFound();
-    const [data] = await Promise.all([loadPostData({ data: params.slug }), content.load()]);
+  validateSearch: (search: Record<string, unknown>): { preview?: string } =>
+    typeof search.preview === "string" && search.preview ? { preview: search.preview } : {},
+  loaderDeps: ({ search }) => ({ preview: search.preview ?? "" }),
+  loader: async ({ params, deps }) => {
+    const data = await loadPostData({ data: { slug: params.slug, preview: deps.preview } });
     if (!data) throw notFound();
     return data;
   },
@@ -40,6 +49,7 @@ export const Route = createFileRoute("/posts/$slug")({
     return {
       meta: [
         { title: `${metadata.title} | ${siteConfig.name}` },
+        ...(loaderData.preview ? [{ name: "robots", content: "noindex, nofollow" }] : []),
         { name: "description", content: metadata.description },
         { name: "keywords", content: metadata.tags.join(", ") },
         { property: "og:type", content: "article" },
@@ -58,7 +68,9 @@ export const Route = createFileRoute("/posts/$slug")({
       ],
       links: [
         { rel: "canonical", href: postUrl },
-        { rel: "alternate", type: "text/markdown", href: markdownUrl },
+        ...(loaderData.preview
+          ? []
+          : [{ rel: "alternate", type: "text/markdown", href: markdownUrl }]),
       ],
     };
   },
@@ -66,15 +78,12 @@ export const Route = createFileRoute("/posts/$slug")({
 });
 
 function BlogPostPage() {
-  const { relatedPosts, post } = Route.useLoaderData();
+  const { relatedPosts, post, hast, preview } = Route.useLoaderData();
   const contentRef = useRef<HTMLDivElement>(null);
   const { metadata } = post;
   const postPath = `${siteConfig.routes.posts}/${post.slug}`;
   const postUrl = absoluteUrl(postPath, siteConfig.url);
   const imageUrl = getPostImageUrl(post.slug, metadata.image, siteConfig.url);
-  const editUrl = `${siteConfig.github.editPostBaseUrl}/${post.slug}.mdx`;
-
-  const { Content } = getPostContent(post.slug)!;
 
   const jsonLd = {
     "@context": "https://schema.org",
@@ -115,33 +124,27 @@ function BlogPostPage() {
 
   return (
     <article className="space-y-8">
+      {preview && (
+        <p className="rounded-lg border border-accent/40 px-3 py-2 text-sm text-accent">
+          Draft preview — changes are not live until published.
+        </p>
+      )}
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <PostHeader metadata={metadata}>
-        <ShareMenu
-          key={post.slug}
-          slug={post.slug}
-          markdownUrl={absoluteUrl(`${postPath}.md`, siteConfig.url)}
-        />
+        {!preview && (
+          <ShareMenu
+            key={post.slug}
+            slug={post.slug}
+            markdownUrl={absoluteUrl(`${postPath}.md`, siteConfig.url)}
+          />
+        )}
       </PostHeader>
       <TableOfContents key={post.slug} contentRef={contentRef} />
       <div ref={contentRef}>
-        <Suspense fallback={<div className="text-muted">Loading…</div>}>
-          <Content />
-        </Suspense>
-      </div>
-      <div>
-        <a
-          href={editUrl}
-          rel="noreferrer"
-          target="_blank"
-          className="inline-flex items-center gap-1.5 text-sm text-muted transition-colors hover:text-foreground"
-        >
-          <EditIcon className="h-4 w-4" />
-          {siteConfig.postPage.editLabel}
-        </a>
+        <PostBody hast={hast} />
       </div>
       <RelatedPosts posts={relatedPosts} />
     </article>

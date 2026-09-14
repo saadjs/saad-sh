@@ -1,161 +1,89 @@
 # AGENTS.md
 
-Project guide for **saad.sh**.
+**saad.sh** is a personal blog built with TanStack Start, React, TypeScript,
+Tailwind CSS, and Cloudflare Workers. Posts live in D1 and are edited through a
+passkey-protected `/admin`. Cloudflare and Resend are the only deployed
+third-party services.
 
-Personal blog built with TanStack Start on Cloudflare Workers. Content is MDX,
-routes are file-based, and Cloudflare is the only deployed third-party service.
-No database, auth, analytics, or error-tracking service is configured.
+## Working agreements
 
-## Stack
+- Ask clarifying questions when the request is ambiguous; continue independent
+  work while waiting. Use judgment for routine implementation choices.
+- Complete the requested change and relevant verification, including fixing
+  failures caused by the change. Report the result, checks, and any blocker.
+  Local edits and affected test reruns do not need separate approval.
+- Match checks to the change: affected tests for behavior changes, a formatting
+  check for documentation. Before merging code, run `pnpm format`, `pnpm lint`,
+  `pnpm test`, and `pnpm build` when practical.
+- Use atomic Conventional Commits when committing.
 
-- **TanStack Start** with **TanStack Router** file-based routes in `src/routes/`.
-- **React 19**, **TypeScript**, **Vite 8**.
-- **Tailwind CSS 4** via `@tailwindcss/vite`.
-- **MDX** via `@mdx-js/rollup` with `remark-gfm`, `rehype-slug`,
-  `rehype-prism-plus`, and `rehype-autolink-headings` in `vite.shared.ts`.
-- **Cloudflare Workers** via `@cloudflare/vite-plugin`, `wrangler.jsonc`, and
-  the custom Worker entrypoint at `src/server.ts`.
+## Task references
 
-## Commands
+- For local setup, content exports, and social-card generation, use `README.md`.
+  Scripts and dependency versions are in `package.json`.
+- For routing and metadata, use `src/routes/`. Literal dots use bracket escaping
+  (`feed[.]xml.ts`); parameters with a suffix use braces (`posts.{$slug}[.]md.ts`).
+  `src/server.ts` handles redirects, the admin gate, and preview headers before
+  the router.
+- For database or Worker configuration, use `wrangler.jsonc`. Content and auth
+  migrations are in `migrations/content/`; newsletter migrations are in
+  `migrations/`.
 
-```bash
-pnpm install       # Install deps
-pnpm dev           # Dev server on localhost:3000
-pnpm build         # Production build + typecheck
-pnpm preview       # Preview the Workers build locally
-pnpm test          # Vitest
-pnpm lint          # oxlint
-pnpm lint:fix      # oxlint --fix
-pnpm format        # oxfmt check
-pnpm format:fix    # oxfmt write
-pnpm run deploy    # Build and deploy to Cloudflare
-```
+## Content and rendering constraints
 
-## Routes
+- `CONTENT_DB` (`saad-sh-content`) is the source of truth; edit and publish through
+  `/admin`. Read posts through `src/lib/posts.ts` inside a `createServerFn` handler
+  or `server.handlers` block. Bare route loaders also run on the client and cannot
+  access D1.
+- Autosave writes to `drafts`; public reads use `posts`. Publishing renders and
+  copies the draft to `posts`, then deletes the draft. Saves have no revision
+  history. Exports omit editor drafts and are not full database backups.
+- When changing `src/lib/markdown.ts`, bump `RENDER_VERSION` for pipeline changes
+  so cached `hast` re-renders. Keep output aligned with the static-page MDX
+  pipeline in `vite.shared.ts`; MDX is scoped to `src/content/pages/`.
+- Signed previews cover one slug for seven days and must remain `no-store` and
+  `noindex`.
+- OG cards are committed PNGs in `public/og/`. Generation replaces the card set
+  with the selected database's published posts; review and commit generated
+  changes. Preserve the manifest-based site-card fallback for posts without a
+  card. Layout and generation live in `src/lib/og-image.ts` and
+  `scripts/generate-og-images.ts`.
 
-File-based routes live in `src/routes/`.
+## Authentication constraints
 
-| URL                            | File                             | Notes                                           |
-| ------------------------------ | -------------------------------- | ----------------------------------------------- |
-| `/`                            | `index.tsx`                      | Home — lists published posts                    |
-| `/about`                       | `about.tsx`                      | Static MDX page (`src/content/pages/about.mdx`) |
-| `/projects`                    | `projects.tsx`                   | Projects page                                   |
-| `/posts`                       | `posts.index.tsx`                | Full archive, grouped by year                   |
-| `/posts/$slug`                 | `posts.$slug.tsx`                | MDX post, JSON-LD, share menu, related posts    |
-| `/posts/$slug.md`              | `posts.{$slug}[.]md.ts`          | Raw markdown of a post, for agents and LLMs     |
-| `/posts/$slug/opengraph-image` | `posts.$slug.opengraph-image.ts` | Legacy URL, 301s to `/og/$slug.png`             |
-| `/opengraph-image`             | `opengraph-image.ts`             | Legacy URL, 301s to `/og/site.png`              |
-| `/tags`                        | `tags.index.tsx`                 | All tags                                        |
-| `/tags/$tag`                   | `tags.$tag.tsx`                  | Posts for a tag                                 |
-| `/feed.xml`                    | `feed[.]xml.ts`                  | RSS 2.0 feed                                    |
-| `/sitemap.xml`                 | `sitemap[.]xml.ts`               | XML sitemap                                     |
-| `/robots.txt`                  | `robots[.]txt.ts`                | robots.txt                                      |
-| `/search-index.json`           | `search-index[.]json.ts`         | Client-side search payload                      |
-| `/llms.txt`                    | `llms[.]txt.ts`                  | llmstxt.org index linking every post's markdown |
+- Preserve passkey-only auth and the allowed hosts in `src/lib/admin-auth.ts`:
+  `saad.sh` and local development hosts.
+- Unauthenticated admin requests return 404 except for `PUBLIC_ADMIN_PATHS` in
+  `src/server.ts`. Protected handlers also call `denyUnlessAdmin`; mutations
+  require a matching `Origin`.
+- Sessions use opaque random IDs; D1 stores only their SHA-256 hashes.
+- Preserve `counterIsValid` in `src/lib/webauthn.ts`: synced passkeys may always
+  report zero. Require an increasing counter only after a credential has reported
+  a nonzero counter.
+- Refuse removal of the last passkey and warn when only one remains. Prefer two
+  passkeys on different devices.
+- `pnpm admin:enroll [--remote]` creates a single-use, 15-minute enrollment link.
+  Cloudflare account access is the recovery root of trust; recovery after losing
+  all devices requires removing stale credentials and enrolling again.
 
-Literal-dot route filenames use TanStack Router bracket escaping, e.g.
-`feed[.]xml.ts` maps to `/feed.xml`. A param followed by a literal suffix wraps
-the param in braces: `posts.{$slug}[.]md.ts` maps to `/posts/$slug.md`.
+## Cloudflare operations
 
-## Content
+- Use explicit `--local` or `--remote` for Wrangler D1 commands; the databases are
+  separate. `NEWSLETTER_DB` (`saad-sh-newsletter`) stores consent and redeemed
+  tokens. `pnpm content:seed` is local-only; tests use dedicated fixtures.
+- After changing bindings, vars, secret names, or `compatibility_date`, run
+  `pnpm cf-typegen` and include `worker-configuration.d.ts`. Declare secret names
+  in `wrangler.jsonc` under `secrets.required`; document required configuration in
+  `.dev.vars.example`. The experimental-field warning is expected.
+- For a requested deployment, check `pnpm exec wrangler whoami` and log in if
+  needed, apply required remote migrations, and check `wrangler secret list`
+  before setting missing secrets. Run `pnpm run deploy`, which generates
+  production OG cards, builds, and deploys. Plain builds and commit hooks do not
+  query D1.
 
-Blog posts are MDX files in `src/content/posts/`. Each post exports metadata:
+## UI conventions
 
-```typescript
-export const metadata = {
-  title: string;
-  description: string;
-  date: string; // ISO format: "2026-01-31"
-  tags: string[];
-  published: boolean;
-  image?: string;
-};
-```
-
-`src/lib/posts.ts` loads posts with Vite `import.meta.glob`; do not use Node
-`fs` for content loading because the app runs on Cloudflare Workers.
-
-## Database (D1)
-
-The newsletter stores proof-of-consent records and redeemed confirmation
-tokens in the `saad-sh-newsletter` D1 database, bound as `NEWSLETTER_DB`.
-Migrations live in `migrations/`.
-
-A fresh clone must apply them before the confirm flow works locally:
-
-```bash
-pnpm exec wrangler d1 migrations apply saad-sh-newsletter --local
-```
-
-Local and remote are separate databases; local test data never reaches
-production. Inspect either with `d1 execute` plus `--local` or `--remote`.
-
-## Cloudflare types
-
-`worker-configuration.d.ts` is generated by `wrangler types` and committed.
-Regenerate it with `pnpm cf-typegen` after changing bindings, vars, secrets,
-or `compatibility_date`. `pnpm build` runs `wrangler types --check` first and
-fails if it is stale.
-
-Secret names are declared in `wrangler.jsonc` under `secrets.required` (names
-only, never values) so type generation matches on machines without
-`.dev.vars`. Wrangler marks that field experimental and warns on every run.
-
-## Deployment
-
-`wrangler.jsonc` points at `src/server.ts` with `nodejs_compat`. The Worker
-handles canonical-host and trailing-slash redirects before delegating to
-TanStack Start.
-
-Deploy with:
-
-```bash
-pnpm exec wrangler whoami
-pnpm exec wrangler login # if needed
-pnpm run deploy
-```
-
-Before the first deploy of the newsletter, apply migrations remotely and set
-each secret in `.dev.vars.example` (checking `wrangler secret list` first):
-
-```bash
-pnpm exec wrangler d1 migrations apply saad-sh-newsletter --remote
-pnpm exec wrangler secret put RESEND_API_KEY
-pnpm exec wrangler secret put NEWSLETTER_SIGNING_SECRET
-pnpm exec wrangler secret put TURNSTILE_SECRET_KEY
-```
-
-## Notes
-
-- OG cards are PNGs because social platforms do not render an SVG `og:image`.
-  They are committed to `public/og/` and ship as static assets, so serving one
-  costs no Worker CPU — rendering at request time would blow the 10ms limit.
-  `scripts/generate-og-images.ts` (`pnpm run og`) renders them with satori and
-  resvg from the layout in `src/lib/og-image.ts`; Inter is downloaded from
-  Google Fonts and cached under `node_modules/.cache/og-fonts`.
-- Card generation runs on commit, not in `pnpm build`, so no deploy pipeline
-  ever renders one. lint-staged runs `pnpm run og` when a post, the layout, or
-  `site.config.ts` is staged and stages whatever it wrote. Each card is keyed
-  in `public/og/manifest.json` by a hash of its text plus the layout, so only
-  the affected cards re-render and a clean checkout renders nothing. Committing
-  with `--no-verify` skips this; `pnpm run og` afterwards fixes it, and
-  `pnpm run og --force` rebuilds every card.
-- There is no static prerendering configured; dynamic post and tag pages render
-  on demand.
-- `src/mdx-components.tsx` is the MDX component provider referenced by
-  `providerImportSource: "#/mdx-components"`.
-
-## Style
-
-- Keep TypeScript strict and avoid unnecessary runtime dependencies.
-- Use functional React components and hooks.
-- Prefer semantic HTML and accessible interactions.
-- Use Tailwind utilities and existing CSS variables.
-- Preserve the automatic dark/light mode behavior based on
-  `prefers-color-scheme`; there is no manual theme toggle.
-- Use route `head()` metadata and structured data where relevant.
-
-## Git
-
-- Keep commits atomic and use Conventional Commits when committing.
-- Run format, lint, tests, and build before merging when practical.
+Use existing components, Tailwind utilities, and CSS variables. Preserve
+accessible interactions, automatic light/dark mode via `prefers-color-scheme`,
+and appropriate route metadata and structured data. Avoid unnecessary runtime
+dependencies.

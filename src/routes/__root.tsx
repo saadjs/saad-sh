@@ -1,4 +1,10 @@
-import { HeadContent, Link, Scripts, createRootRoute } from "@tanstack/react-router";
+import {
+  HeadContent,
+  Link,
+  Scripts,
+  createRootRoute,
+  useRouterState,
+} from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 
@@ -82,19 +88,37 @@ function NotFound() {
   );
 }
 
+function AdminShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex w-full min-w-0 flex-col px-4 sm:px-6 lg:h-dvh lg:overflow-hidden lg:px-8">
+      <main className="min-w-0 lg:flex lg:min-h-0 lg:flex-1 lg:flex-col">{children}</main>
+    </div>
+  );
+}
+
+function SiteShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="mx-auto flex min-h-screen flex-col px-6 py-12 max-w-2xl sm:px-8 lg:max-w-3xl xl:max-w-4xl">
+      <Header />
+      <main className="flex-1">{children}</main>
+      <Footer />
+      <SearchCommandClient />
+    </div>
+  );
+}
+
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isAdmin = pathname === "/admin" || pathname.startsWith("/admin/");
+  const Shell = isAdmin ? AdminShell : SiteShell;
+
   return (
     <html lang={siteConfig.language}>
       <head>
         <HeadContent />
       </head>
       <body className="antialiased">
-        <div className="mx-auto flex min-h-screen flex-col px-6 py-12 max-w-2xl sm:px-8 lg:max-w-3xl xl:max-w-4xl">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-          <SearchCommandClient />
-        </div>
+        <Shell>{children}</Shell>
         <TanStackDevtools
           config={{ position: "bottom-right" }}
           plugins={[

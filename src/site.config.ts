@@ -16,7 +16,6 @@ export const siteConfig = {
     avatar: "/static/images/avatar.png",
   },
   github: {
-    editPostBaseUrl: "https://github.com/saadjs/saad-sh/edit/main/src/content/posts",
     sourceUrl: "https://github.com/saadjs/saad-sh",
   },
   nav: [
@@ -100,7 +99,6 @@ export const siteConfig = {
   },
   postPage: {
     tagsLabel: "Filed under",
-    editLabel: "Edit on GitHub",
     relatedPostsHeading: "Related posts",
     tocLabel: "On this page",
   },
@@ -126,8 +124,6 @@ export const siteConfig = {
     from: "Saad Bash <newsletter@updates.saad.sh>",
     replyTo: "saadbashdev@gmail.com",
     confirmSubject: "Confirm your subscription to saad.sh",
-    // Owner-facing signup notification. Separate sender from the newsletter
-    // itself so these can be filtered without touching subscriber mail.
     notifications: {
       to: "saadbashdev@gmail.com",
       from: "saad.sh <notify@updates.saad.sh>",

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { projects, projectSlug, resolveProjectLink } from "#/lib/projects";
 import { getPostSlugs } from "#/lib/posts";
+import { seedContent } from "./seed";
 
 describe("project link resolution", () => {
   it("keeps same-origin absolute links client-side", () => {
@@ -22,8 +23,9 @@ describe("project link resolution", () => {
     });
   });
 
-  it("points every internal project link at a post that exists", () => {
-    const slugs = new Set(getPostSlugs());
+  it("points every internal project link at a post that exists", async () => {
+    await seedContent();
+    const slugs = new Set(await getPostSlugs());
 
     for (const project of projects) {
       for (const link of project.links) {

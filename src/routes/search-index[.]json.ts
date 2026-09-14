@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import type { PostMetadata } from "#/lib/types";
 import { siteConfig } from "#/site.config";
-import { getPostModuleBySlug, getPostRawContent, getPostSlugs } from "#/lib/posts";
+import { getAllPostsWithBody } from "#/lib/posts";
 import { projects, projectSlug } from "#/lib/projects";
 
 type SearchIndexEntry = {
@@ -51,15 +50,11 @@ function makeExcerpt(text: string, length = 220): string {
 }
 
 async function buildSearchIndex(): Promise<SearchIndexEntry[]> {
-  const slugs = getPostSlugs();
-  const entries = await Promise.all(
-    slugs.map(async (slug) => {
-      const mod = await getPostModuleBySlug(slug);
-      if (!mod?.metadata?.published) return null;
-      const metadata = mod.metadata as PostMetadata;
-      const raw = await getPostRawContent(slug);
-      const content = stripMarkdown(raw);
-      const excerpt = makeExcerpt(content);
+  const posts = await getAllPostsWithBody();
+
+  return posts
+    .map(({ slug, metadata, body }) => {
+      const content = stripMarkdown(body);
       const searchText =
         `${metadata.title} ${metadata.description ?? ""} ${metadata.tags.join(" ")} ${content}`.toLowerCase();
 
@@ -69,16 +64,12 @@ async function buildSearchIndex(): Promise<SearchIndexEntry[]> {
         description: metadata.description,
         date: metadata.date,
         tags: metadata.tags,
-        excerpt,
+        excerpt: makeExcerpt(content),
         searchText,
       };
       if (metadata.image) entry.image = metadata.image;
       return entry;
-    }),
-  );
-
-  return entries
-    .filter((entry): entry is SearchIndexEntry => entry !== null)
+    })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 }
 

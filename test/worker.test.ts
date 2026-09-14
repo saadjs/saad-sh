@@ -1,9 +1,14 @@
 /// <reference types="@cloudflare/vitest-pool-workers/types" />
 
 import { exports } from "cloudflare:workers";
-import { describe, expect, it } from "vitest";
+import { beforeAll, describe, expect, it } from "vitest";
+import { seedContent } from "./seed";
 
 describe("Cloudflare Worker", () => {
+  beforeAll(async () => {
+    await seedContent();
+  });
+
   it("serves Saad's profile as JSON", async () => {
     const response = await exports.default.fetch("https://saad.sh/me");
 
@@ -79,7 +84,16 @@ describe("Cloudflare Worker", () => {
       { redirect: "manual" },
     );
     expect(post.status).toBe(301);
-    expect(post.headers.get("location")).toBe("/og/subagents-in-practice.png");
+    expect(post.headers.get("location")).toBe("https://saad.sh/og/subagents-in-practice.png");
+  });
+
+  it("uses the site card when a post has no generated social card", async () => {
+    const response = await exports.default.fetch(
+      "https://saad.sh/posts/new-web-post/opengraph-image",
+      { redirect: "manual" },
+    );
+    expect(response.status).toBe(301);
+    expect(response.headers.get("location")).toBe("https://saad.sh/og/site.png");
   });
 
   it("redirects saadbash.com to saad.sh", async () => {

@@ -1,78 +1,107 @@
-import type { ComponentType } from "react";
-import type { Post, PostMetadata } from "./types";
+import { env } from "cloudflare:workers";
+import type { Root } from "hast";
+import { RENDER_VERSION, parseHast, renderMarkdown } from "./markdown";
+import type { Post, PostMetadata, PostWithBody } from "./types";
 import { slugifyTag } from "./utils";
 
-type MdxModule = {
-  default: ComponentType;
-  metadata: PostMetadata;
+type PostRow = {
+  slug: string;
+  title: string;
+  description: string;
+  date: string;
+  tags: string;
+  image: string | null;
+  published: number;
 };
 
-const postModules = import.meta.glob<MdxModule>("../content/posts/*.mdx", {
-  eager: false,
-});
+type PostBodyRow = PostRow & { body: string };
+type RenderRow = PostBodyRow & { hast: string | null; render_version: number | null };
 
-const postRawSources = import.meta.glob<string>("../content/posts/*.mdx", {
-  query: "?raw",
-  import: "default",
-  eager: false,
-});
+const METADATA_COLUMNS = "slug, title, description, date, tags, image, published";
 
-function slugFromPath(path: string): string {
-  const match = path.match(/\/([^/]+)\.mdx$/);
-  return match ? match[1] : "";
+function db(): D1Database {
+  return env.CONTENT_DB;
 }
 
-function modulesBySlug(): Record<string, () => Promise<MdxModule>> {
-  const map: Record<string, () => Promise<MdxModule>> = {};
-  for (const [path, loader] of Object.entries(postModules)) {
-    const slug = slugFromPath(path);
-    if (slug) map[slug] = loader;
-  }
-  return map;
-}
-
-function rawSourcesBySlug(): Record<string, () => Promise<string>> {
-  const map: Record<string, () => Promise<string>> = {};
-  for (const [path, loader] of Object.entries(postRawSources)) {
-    const slug = slugFromPath(path);
-    if (slug) map[slug] = loader;
-  }
-  return map;
-}
-
-const moduleMap = modulesBySlug();
-const rawMap = rawSourcesBySlug();
-
-export async function getPostModuleBySlug(slug: string): Promise<MdxModule | null> {
-  const loader = moduleMap[slug];
-  if (!loader) return null;
-  return loader();
-}
-
-export async function getPostBySlug(slug: string): Promise<Post | null> {
-  const mod = await getPostModuleBySlug(slug);
-  if (!mod) return null;
-  return { slug, metadata: mod.metadata };
+function toPost(row: PostRow): Post {
+  const metadata: PostMetadata = {
+    title: row.title,
+    description: row.description,
+    date: row.date,
+    tags: JSON.parse(row.tags) as string[],
+    published: row.published === 1,
+  };
+  if (row.image) metadata.image = row.image;
+  return { slug: row.slug, metadata };
 }
 
 export async function getAllPosts(): Promise<Post[]> {
-  const slugs = Object.keys(moduleMap);
-  const entries = await Promise.all(slugs.map((slug) => getPostBySlug(slug)));
-  const posts = entries.filter((post): post is Post => Boolean(post && post.metadata.published));
-  return posts.sort(
-    (a, b) => new Date(b.metadata.date).getTime() - new Date(a.metadata.date).getTime(),
-  );
+  const { results } = await db()
+    .prepare(
+      `SELECT ${METADATA_COLUMNS} FROM posts
+       WHERE published = 1 AND deleted_at IS NULL
+       ORDER BY date DESC`,
+    )
+    .all<PostRow>();
+  return results.map(toPost);
+}
+
+export async function getPostBySlug(slug: string): Promise<Post | null> {
+  const row = await db()
+    .prepare(`SELECT ${METADATA_COLUMNS} FROM posts WHERE slug = ? AND deleted_at IS NULL`)
+    .bind(slug)
+    .first<PostRow>();
+  return row ? toPost(row) : null;
 }
 
 export async function getPostRawContent(slug: string): Promise<string> {
-  const loader = rawMap[slug];
-  if (!loader) return "";
-  const raw = await loader();
-  return raw.replace(/^export\s+const\s+metadata\s*=\s*\{[\s\S]*?\};\s*/m, "").trim();
+  const row = await db()
+    .prepare("SELECT body FROM posts WHERE slug = ? AND deleted_at IS NULL")
+    .bind(slug)
+    .first<{ body: string }>();
+  return row?.body ?? "";
 }
 
-export function getPostSlugs(): string[] {
-  return Object.keys(moduleMap);
+export async function getAllPostsWithBody(): Promise<PostWithBody[]> {
+  const { results } = await db()
+    .prepare(
+      `SELECT ${METADATA_COLUMNS}, body FROM posts
+       WHERE published = 1 AND deleted_at IS NULL
+       ORDER BY date DESC`,
+    )
+    .all<PostBodyRow>();
+  return results.map((row) => ({ ...toPost(row), body: row.body }));
+}
+
+export async function getPostSlugs(): Promise<string[]> {
+  const { results } = await db()
+    .prepare("SELECT slug FROM posts WHERE deleted_at IS NULL")
+    .all<{ slug: string }>();
+  return results.map((row) => row.slug);
+}
+
+export async function getRenderedPost(slug: string): Promise<{ post: Post; hast: Root } | null> {
+  const row = await db()
+    .prepare(
+      `SELECT ${METADATA_COLUMNS}, body, hast, render_version FROM posts
+       WHERE slug = ? AND deleted_at IS NULL`,
+    )
+    .bind(slug)
+    .first<RenderRow>();
+  if (!row) return null;
+
+  const post = toPost(row);
+  if (row.hast && row.render_version === RENDER_VERSION) {
+    return { post, hast: parseHast(row.hast) };
+  }
+
+  const hast = await renderMarkdown(row.body);
+  await db()
+    .prepare("UPDATE posts SET hast = ?, render_version = ? WHERE slug = ?")
+    .bind(JSON.stringify(hast), RENDER_VERSION, slug)
+    .run();
+
+  return { post, hast };
 }
 
 export async function getAllTags(): Promise<Map<string, { label: string; count: number }>> {

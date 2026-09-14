@@ -6,32 +6,26 @@ import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
 import { generateOgElement, imageSize, ogFontFamily, ogMonoFamily } from "../src/lib/og-image.ts";
 import { siteConfig } from "../src/site.config.ts";
+import { queryD1 } from "./d1.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const postsDir = join(root, "src/content/posts");
 const outDir = join(root, "public/og");
 const fontCacheDir = join(root, "node_modules/.cache/og-fonts");
 const manifestPath = join(outDir, "manifest.json");
 const logoPath = join(root, "public/logo.svg");
-const force = process.argv.includes("--force");
-
-type PostMetadata = {
-  title: string;
-  description?: string;
-  published: boolean;
-};
+const flags = process.argv.slice(2);
+if (flags.some((flag) => !["--force", "--remote"].includes(flag))) {
+  throw new Error("usage: og [--remote] [--force]");
+}
+const force = flags.includes("--force");
 
 async function loadFont(family: string, weight: number): Promise<Buffer> {
   const cached = join(fontCacheDir, `${family}-${weight}.ttf`);
   try {
     return await readFile(cached);
-  } catch {
-    // not cached yet
-  }
+  } catch {}
 
   const cssUrl = `https://fonts.googleapis.com/css2?family=${family.replace(/ /g, "+")}:wght@${weight}`;
-  // A bare User-Agent makes Google serve truetype; a browser one gets woff2,
-  // which satori cannot read.
   const css = await fetch(cssUrl, { headers: { "User-Agent": "Mozilla/5.0" } });
   if (!css.ok) throw new Error(`Failed to fetch ${family} ${weight}: ${css.status}`);
 
@@ -47,16 +41,6 @@ async function loadFont(family: string, weight: number): Promise<Buffer> {
   return data;
 }
 
-// The metadata export is plain data, so evaluating the literal is enough and
-// avoids pulling the MDX toolchain into a build script.
-function readMetadata(source: string, file: string): PostMetadata {
-  const literal = source.match(/export\s+const\s+metadata\s*=\s*(\{[\s\S]*?\n\});/)?.[1];
-  if (!literal) throw new Error(`No metadata export in ${file}`);
-  return new Function(`return ${literal}`)() as PostMetadata;
-}
-
-// satori cannot resolve a file path, so the mark is inlined as a data URI and
-// resvg rasterises it with the rest of the card.
 async function loadLogo(): Promise<string> {
   const svg = await readFile(logoPath);
   return `data:image/svg+xml;base64,${svg.toString("base64")}`;
@@ -107,10 +91,17 @@ async function readManifest(): Promise<Record<string, string>> {
 }
 
 async function main() {
+  const posts = await queryD1<{ slug: string; title: string; description: string }>(
+    flags.includes("--remote"),
+    "SELECT slug, title, description FROM posts WHERE published = 1 AND deleted_at IS NULL ORDER BY slug",
+  );
+  for (const post of posts) {
+    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(post.slug) || ["site", "projects"].includes(post.slug)) {
+      throw new Error(`Invalid or reserved social-card slug: ${post.slug}`);
+    }
+  }
   await mkdir(outDir, { recursive: true });
 
-  // A layout or config change invalidates every card, not just one post, so it
-  // is part of each card's key.
   const logo = await loadLogo();
   const template = hash(
     (await readFile(join(root, "src/lib/og-image.ts"), "utf8")) +
@@ -118,7 +109,6 @@ async function main() {
       logo,
   );
 
-  const files = (await readdir(postsDir)).filter((file) => file.endsWith(".mdx"));
   const targets: { name: string; props: Parameters<typeof generateOgElement>[0] }[] = [
     {
       name: "site",
@@ -139,12 +129,10 @@ async function main() {
     },
   ];
 
-  for (const file of files) {
-    const metadata = readMetadata(await readFile(join(postsDir, file), "utf8"), file);
-    if (!metadata.published) continue;
+  for (const post of posts) {
     targets.push({
-      name: file.replace(/\.mdx$/, ""),
-      props: { title: metadata.title, description: metadata.description, logo },
+      name: post.slug,
+      props: { title: post.title, description: post.description, logo },
     });
   }
 
