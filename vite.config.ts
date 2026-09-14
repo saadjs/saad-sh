@@ -1,7 +1,7 @@
 import { defineConfig } from "vite";
 import { devtools } from "@tanstack/devtools-vite";
 import { cloudflare } from "@cloudflare/vite-plugin";
-import { startPlugins } from "./vite.shared";
+import { startPlugins } from "./vite.shared.ts";
 
 const config = defineConfig({
   resolve: { tsconfigPaths: true },

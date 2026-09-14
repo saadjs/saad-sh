@@ -11,6 +11,9 @@ import {
   enrollmentTokenValid,
   hasValidOrigin,
   isValidSlug,
+  allowLoginChallenge,
+  storeChallenge,
+  claimChallenge,
 } from "#/lib/admin-auth";
 import { hashToken } from "#/lib/crypto";
 import {
@@ -108,6 +111,10 @@ describe("CSRF origin check", () => {
 
   it("refuses a cross-origin mutation", () => {
     expect(hasValidOrigin(post({ Origin: "https://evil.example" }))).toBe(false);
+  });
+
+  it("refuses a matching host with a different scheme", () => {
+    expect(hasValidOrigin(post({ Origin: "http://saad.sh" }))).toBe(false);
   });
 
   it("refuses a mutation with no Origin at all", () => {
@@ -241,4 +248,154 @@ it("rejects existing sessions after recovery deletes their credential", async ()
   expect(await getSession(request)).toBeNull();
   const response = await exports.default.fetch(request);
   expect(response.status).toBe(404);
+});
+
+describe("login challenge admission", () => {
+  it("limits concurrent anonymous requests even when none attempt verification", async () => {
+    await env.CONTENT_DB.prepare(
+      "INSERT INTO credentials (id, public_key, created_at) VALUES ('rate-limit-key', 'fixture', ?)",
+    )
+      .bind(new Date().toISOString())
+      .run();
+    try {
+      const responses = await Promise.all(
+        Array.from({ length: 15 }, () =>
+          exports.default.fetch("https://saad.sh/admin/api/auth/options", {
+            method: "POST",
+            headers: {
+              Origin: "https://saad.sh",
+              "Content-Type": "application/json",
+              "CF-Connecting-IP": "192.0.2.10",
+            },
+            body: JSON.stringify({ mode: "login" }),
+          }),
+        ),
+      );
+      expect(responses.filter((response) => response.status === 200)).toHaveLength(10);
+      expect(responses.filter((response) => response.status === 429)).toHaveLength(5);
+      const challenges: string[] = [];
+      for (const response of responses) {
+        const body = (await response.json()) as { challenge?: string };
+        if (body.challenge) challenges.push(body.challenge);
+      }
+      expect(new Set(challenges).size).toBe(10);
+      for (const challenge of challenges)
+        expect(await claimChallenge(challenge, "authenticate")).toBe(true);
+    } finally {
+      await env.CONTENT_DB.prepare("DELETE FROM credentials WHERE id = 'rate-limit-key'").run();
+    }
+  });
+
+  it("expires buckets and retains independent limits for other IPs", async () => {
+    const request = new Request("https://saad.sh/admin/api/auth/options", {
+      headers: { "CF-Connecting-IP": "192.0.2.11" },
+    });
+    for (let i = 0; i < 10; i++) expect(await allowLoginChallenge(request)).toBe(true);
+    expect(await allowLoginChallenge(request)).toBe(false);
+    expect(
+      await allowLoginChallenge(
+        new Request(request, { headers: { "CF-Connecting-IP": "192.0.2.12" } }),
+      ),
+    ).toBe(true);
+    await env.CONTENT_DB.prepare("UPDATE login_rate_limits SET expires_at = ? WHERE ip = ?")
+      .bind(Date.now() - 1, "192.0.2.11")
+      .run();
+    expect(await allowLoginChallenge(request)).toBe(true);
+    const bucket = await env.CONTENT_DB.prepare(
+      "SELECT attempts FROM login_rate_limits WHERE ip = ?",
+    )
+      .bind("192.0.2.11")
+      .first<{ attempts: number }>();
+    expect(bucket?.attempts).toBe(1);
+  });
+
+  it("shares a bounded bucket when Cloudflare's IP header is absent", async () => {
+    const request = new Request("http://localhost:3000/admin/api/auth/options");
+    for (let i = 0; i < 10; i++) expect(await allowLoginChallenge(request)).toBe(true);
+    expect(await allowLoginChallenge(request)).toBe(false);
+  });
+
+  it("cleans expired challenges while retaining valid single-use challenges", async () => {
+    await storeChallenge("expired-review-challenge", "authenticate");
+    await env.CONTENT_DB.prepare("UPDATE auth_challenges SET expires_at = ? WHERE challenge = ?")
+      .bind(new Date(Date.now() - 1).toISOString(), "expired-review-challenge")
+      .run();
+    await storeChallenge("live-review-challenge", "authenticate");
+    expect(
+      await env.CONTENT_DB.prepare("SELECT 1 FROM auth_challenges WHERE challenge = ?")
+        .bind("expired-review-challenge")
+        .first(),
+    ).toBeNull();
+    expect(await claimChallenge("live-review-challenge", "authenticate")).toBe(true);
+    expect(await claimChallenge("live-review-challenge", "authenticate")).toBe(false);
+  });
+});
+
+describe("passkey removal", () => {
+  it("preserves one credential and its session during concurrent removals", async () => {
+    // This file's earlier credential fixtures are removed by their own tests.
+    expect(
+      (
+        await env.CONTENT_DB.prepare("SELECT COUNT(*) AS total FROM credentials").first<{
+          total: number;
+        }>()
+      )?.total,
+    ).toBe(0);
+    const ids = ["revoke-a", "revoke-b"];
+    const cookies: string[] = [];
+    for (const id of ids) {
+      await env.CONTENT_DB.prepare(
+        "INSERT INTO credentials (id, public_key, created_at) VALUES (?, 'fixture', ?)",
+      )
+        .bind(id, new Date().toISOString())
+        .run();
+      cookies.push(
+        (await createSession(id, new Request("https://saad.sh/admin"))).cookie.split(";")[0],
+      );
+    }
+    const requests = ids.map(
+      (id, i) =>
+        new Request("https://saad.sh/admin/api/credentials", {
+          method: "DELETE",
+          headers: {
+            Cookie: cookies[i],
+            Origin: "https://saad.sh",
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ id }),
+        }),
+    );
+    const responses = await Promise.all(requests.map((request) => exports.default.fetch(request)));
+    expect(responses.map((response) => response.status).sort()).toEqual([200, 409]);
+    await Promise.all(responses.map((response) => response.text()));
+    const remaining = await env.CONTENT_DB.prepare("SELECT id FROM credentials").all<{
+      id: string;
+    }>();
+    expect(remaining.results).toHaveLength(1);
+    const survivor = ids.indexOf(remaining.results[0].id);
+    expect(
+      await getSession(
+        new Request("https://saad.sh/admin", { headers: { Cookie: cookies[survivor] } }),
+      ),
+    ).not.toBeNull();
+    expect(
+      await getSession(
+        new Request("https://saad.sh/admin", { headers: { Cookie: cookies[1 - survivor] } }),
+      ),
+    ).toBeNull();
+    const last = await exports.default.fetch("https://saad.sh/admin/api/credentials", {
+      method: "DELETE",
+      headers: {
+        Cookie: cookies[survivor],
+        Origin: "https://saad.sh",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ id: ids[survivor] }),
+    });
+    expect(last.status).toBe(409);
+    expect(await last.json()).toEqual({ error: "last_credential" });
+    await env.CONTENT_DB.prepare(
+      "DELETE FROM credentials WHERE id IN ('revoke-a', 'revoke-b')",
+    ).run();
+  });
 });

@@ -6,7 +6,7 @@ import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
 
 const loadTagData = createServerFn({ method: "GET" })
-  .inputValidator((tag: string) => tag)
+  .validator((tag: string) => tag)
   .handler(async ({ data: tag }) => {
     const [tags, posts] = await Promise.all([getAllTags(), getPostsByTag(tag)]);
     const tagEntry = tags.get(tag);

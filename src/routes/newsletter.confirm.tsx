@@ -41,7 +41,7 @@ type ConfirmResult =
 // below, fired from a client effect: scanners fetch HTML but do not run JS, so
 // in practice only a real browser gets that far.
 const getConfirmState = createServerFn({ method: "GET" })
-  .inputValidator((token: string) => token)
+  .validator((token: string) => token)
   .handler(async ({ data: token }): Promise<ConfirmState> => {
     const verified = await verifyToken(token, env.NEWSLETTER_SIGNING_SECRET);
     if (verified.status === "invalid") return { state: "invalid" };
@@ -62,7 +62,7 @@ const getConfirmState = createServerFn({ method: "GET" })
 // Write path: only reachable from a browser that executed JS (or clicked the
 // error-state retry button).
 const confirmSubscription = createServerFn({ method: "POST" })
-  .inputValidator((token: string) => token)
+  .validator((token: string) => token)
   .handler(async ({ data: token }): Promise<ConfirmResult> => {
     const verified = await verifyToken(token, env.NEWSLETTER_SIGNING_SECRET);
     if (verified.status === "invalid") return { state: "invalid" };

@@ -1,5 +1,6 @@
 import startEntry from "@tanstack/react-start/server-entry";
 import { getSession, isAdminHost, notFound } from "#/lib/admin-auth";
+import { PREVIEW_HEADERS } from "#/lib/preview";
 
 const PRIMARY_HOST = "saad.sh";
 const ALTERNATE_HOSTS = new Set(["saadbash.com"]);
@@ -46,6 +47,7 @@ async function guardAdmin(request: Request): Promise<Response | null> {
 
 export default {
   async fetch(request, ...rest) {
+    const isPreview = new URL(request.url).searchParams.has("preview");
     if (request.method === "GET" || request.method === "HEAD") {
       const target = canonicalUrl(request);
       if (target) {
@@ -53,7 +55,9 @@ export default {
           status: 301,
           headers: {
             Location: target.toString(),
-            "Cache-Control": "public, max-age=3600, s-maxage=86400",
+            ...(isPreview
+              ? PREVIEW_HEADERS
+              : { "Cache-Control": "public, max-age=3600, s-maxage=86400" }),
           },
         });
       }
@@ -64,10 +68,9 @@ export default {
 
     const response = await startEntry.fetch(request, ...rest);
 
-    if (new URL(request.url).searchParams.has("preview")) {
+    if (isPreview) {
       const headers = new Headers(response.headers);
-      headers.set("Cache-Control", "private, no-store");
-      headers.set("X-Robots-Tag", "noindex, nofollow");
+      for (const [name, value] of Object.entries(PREVIEW_HEADERS)) headers.set(name, value);
       return new Response(response.body, {
         status: response.status,
         statusText: response.statusText,

@@ -46,6 +46,12 @@ export async function verifyPayload<T>(token: string, secret: string): Promise<V
     return { status: "invalid" };
   }
 
+  // Replay protection hashes the token text. Accept exactly one spelling of
+  // each signature, including its unused trailing bits and lack of padding.
+  if (signatureBytes.length !== 32 || base64urlEncode(signatureBytes) !== encodedSignature) {
+    return { status: "invalid" };
+  }
+
   const key = await importHmacKey(secret);
   let signatureValid: boolean;
   try {

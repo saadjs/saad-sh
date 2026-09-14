@@ -1,5 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
+import { setResponseHeaders } from "@tanstack/react-start/server";
 import { useRef } from "react";
 import { PostHeader } from "#/components/PostHeader";
 import { RelatedPosts } from "#/components/RelatedPosts";
@@ -7,15 +8,16 @@ import { TableOfContents } from "#/components/TableOfContents";
 import { ShareMenu } from "#/components/ShareMenu";
 import { getRelatedPosts, getRenderedPost } from "#/lib/posts";
 import { getRenderedDraft } from "#/lib/admin-posts";
-import { previewTokenMatches } from "#/lib/preview";
+import { PREVIEW_HEADERS, previewTokenMatches } from "#/lib/preview";
 import { PostBody } from "#/components/PostBody";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl, getPostImageUrl } from "#/lib/utils";
 
-const loadPostData = createServerFn({ method: "GET" })
-  .inputValidator((data: { slug: string; preview: string }) => data)
+export const loadPostData = createServerFn({ method: "GET" })
+  .validator((data: { slug: string; preview: string }) => data)
   .handler(async ({ data: { slug, preview } }) => {
     if (preview) {
+      setResponseHeaders(new Headers(PREVIEW_HEADERS));
       if (!(await previewTokenMatches(preview, slug))) return null;
       const draft = await getRenderedDraft(slug);
       if (!draft) return null;
@@ -131,7 +133,7 @@ function BlogPostPage() {
       )}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replaceAll("<", "\\u003c") }}
       />
       <PostHeader metadata={metadata}>
         {!preview && (

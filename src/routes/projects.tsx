@@ -140,7 +140,9 @@ function ProjectsPage() {
     <div>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(buildJsonLd()) }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(buildJsonLd()).replaceAll("<", "\\u003c"),
+        }}
       />
       <section>
         <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">

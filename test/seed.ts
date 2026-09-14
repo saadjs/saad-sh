@@ -4,6 +4,7 @@ import postsSchema from "../migrations/content/0001_posts.sql?raw";
 import authSchema from "../migrations/content/0002_admin_auth.sql?raw";
 import draftVersion from "../migrations/content/0004_draft_version.sql?raw";
 import dropRevisions from "../migrations/content/0003_drop_post_revisions.sql?raw";
+import loginRateLimits from "../migrations/content/0005_login_rate_limits.sql?raw";
 
 const posts = import.meta.glob<string>("./fixtures/posts/*.md", {
   query: "?raw",
@@ -29,6 +30,7 @@ export async function seedContent(): Promise<void> {
     ...statements(authSchema),
     ...statements(dropRevisions),
     ...statements(draftVersion),
+    ...statements(loginRateLimits),
   ]) {
     await env.CONTENT_DB.prepare(statement).run();
   }

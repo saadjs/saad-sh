@@ -1,6 +1,7 @@
 /// <reference types="@cloudflare/vitest-pool-workers/types" />
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { base64urlDecode } from "#/lib/crypto";
 import {
   buildSignupNotification,
   claimToken,
@@ -48,6 +49,23 @@ describe("newsletter token", () => {
 
     const result = await verifyToken(`${payload}.${flipped}`, SECRET);
     expect(result.status).toBe("invalid");
+  });
+
+  it("rejects alternate spellings of a valid signature to prevent replay", async () => {
+    const token = await signToken(EMAIL, SECRET);
+    const [payload, signature] = token.split(".");
+    const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+    const last = alphabet.indexOf(signature.at(-1)!);
+    const variants = [
+      `${signature}=`,
+      `${signature.slice(0, 4)}\n${signature.slice(4)}`,
+      ...[1, 2, 3].map((bits) => signature.slice(0, -1) + alphabet[last + bits]),
+    ];
+    for (const variant of variants) {
+      expect(base64urlDecode(variant)).toEqual(base64urlDecode(signature));
+      expect(await verifyToken(`${payload}.${variant}`, SECRET)).toEqual({ status: "invalid" });
+    }
+    expect((await verifyToken(token, SECRET)).status).toBe("valid");
   });
 
   it("rejects a truncated signature as invalid", async () => {

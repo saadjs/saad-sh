@@ -5,3 +5,10 @@ allowBuilds:
   esbuild: false
   sharp: false
   workerd: false
+
+# Satori pins an older fflate through its font parser. Keep the compatible
+# security patch until upstream updates that dependency.
+overrides:
+  fflate@0.7.3: 0.7.5
+  # The Workers test pool pins a Miniflare release with this older sharp patch.
+  sharp@0.35.2: 0.35.4

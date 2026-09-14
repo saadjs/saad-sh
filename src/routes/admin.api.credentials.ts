@@ -41,15 +41,17 @@ async function handleRevoke(request: Request): Promise<Response> {
   const id = typeof payload.id === "string" ? payload.id : "";
   if (!id) return json({ error: "invalid_id" }, 400);
 
-  const row = await env.CONTENT_DB.prepare("SELECT COUNT(*) AS total FROM credentials").first<{
-    total: number;
-  }>();
-  if ((row?.total ?? 0) <= 1) return json({ error: "last_credential" }, 409);
-
-  const result = await env.CONTENT_DB.prepare("DELETE FROM credentials WHERE id = ?")
+  const result = await env.CONTENT_DB.prepare(
+    "DELETE FROM credentials WHERE id = ? AND (SELECT COUNT(*) FROM credentials) > 1",
+  )
     .bind(id)
     .run();
-  if (result.meta.changes === 0) return notFound();
+  if (result.meta.changes === 0) {
+    const remaining = await env.CONTENT_DB.prepare("SELECT 1 FROM credentials WHERE id = ?")
+      .bind(id)
+      .first();
+    return remaining ? json({ error: "last_credential" }, 409) : notFound();
+  }
 
   await env.CONTENT_DB.prepare("DELETE FROM sessions WHERE credential_id = ?").bind(id).run();
   await audit("passkey_revoked", request, { detail: id });

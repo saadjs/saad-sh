@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   audit,
+  allowLoginChallenge,
   denyUnlessAdmin,
   enrollmentTokenValid,
   credentialCount,
@@ -26,7 +27,7 @@ async function handleOptions(request: Request): Promise<Response> {
   const url = new URL(request.url);
 
   if (payload.mode === "login") {
-    if (await tooManyAttempts(request, "login_failed")) {
+    if (!(await allowLoginChallenge(request)) || (await tooManyAttempts(request, "login_failed"))) {
       return json({ error: "rate_limited" }, 429);
     }
     if ((await credentialCount()) === 0) return notFound();

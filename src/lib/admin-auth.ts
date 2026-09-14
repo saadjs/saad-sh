@@ -57,7 +57,7 @@ export function hasValidOrigin(request: Request): boolean {
   const origin = request.headers.get("Origin");
   if (!origin) return false;
   try {
-    return new URL(origin).host === new URL(request.url).host;
+    return new URL(origin).origin === new URL(request.url).origin;
   } catch {
     return false;
   }
@@ -163,17 +163,40 @@ export async function revokeSession(request: Request): Promise<string> {
 
 export async function storeChallenge(challenge: string, purpose: string): Promise<void> {
   const now = Date.now();
-  await db()
-    .prepare(
-      "INSERT OR REPLACE INTO auth_challenges (challenge, purpose, created_at, expires_at) VALUES (?, ?, ?, ?)",
-    )
-    .bind(
-      challenge,
-      purpose,
-      new Date(now).toISOString(),
-      new Date(now + CHALLENGE_TTL_MS).toISOString(),
-    )
-    .run();
+  await db().batch([
+    db()
+      .prepare("DELETE FROM auth_challenges WHERE expires_at <= ?")
+      .bind(new Date(now).toISOString()),
+    db()
+      .prepare(
+        "INSERT OR REPLACE INTO auth_challenges (challenge, purpose, created_at, expires_at) VALUES (?, ?, ?, ?)",
+      )
+      .bind(
+        challenge,
+        purpose,
+        new Date(now).toISOString(),
+        new Date(now + CHALLENGE_TTL_MS).toISOString(),
+      ),
+  ]);
+}
+
+export async function allowLoginChallenge(request: Request): Promise<boolean> {
+  const now = Date.now();
+  // Cloudflare supplies this header. Requests without it share a bucket rather
+  // than bypassing the limit (including local development).
+  const ip = request.headers.get("CF-Connecting-IP") ?? "unknown";
+  const [, admitted] = await db().batch([
+    db().prepare("DELETE FROM login_rate_limits WHERE expires_at <= ?").bind(now),
+    db()
+      .prepare(
+        `INSERT INTO login_rate_limits (ip, attempts, expires_at) VALUES (?, 1, ?)
+         ON CONFLICT(ip) DO UPDATE SET attempts = attempts + 1
+         WHERE attempts < 10
+         RETURNING ip`,
+      )
+      .bind(ip, now + 10 * 60 * 1000),
+  ]);
+  return admitted.results.length === 1;
 }
 
 export async function claimChallenge(challenge: string, purpose: string): Promise<boolean> {
