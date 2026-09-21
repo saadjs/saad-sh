@@ -223,9 +223,9 @@ export function NewsletterSignup() {
   );
 
   const successBlock = (
-    <p role="status" aria-live="polite" className="text-sm text-foreground">
+    <output aria-live="polite" className="block text-sm text-foreground">
       {newsletter.successMessage}
-    </p>
+    </output>
   );
 
   // The surrounding page owns the eyebrow/heading/description copy.

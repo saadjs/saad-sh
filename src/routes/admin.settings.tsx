@@ -33,6 +33,8 @@ function SettingsPage() {
   }, []);
 
   useEffect(() => {
+    // Loading passkeys synchronizes with the server; state updates follow the fetch.
+    // oxlint-disable-next-line react/set-state-in-effect
     void load();
   }, [load]);
 

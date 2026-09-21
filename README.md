@@ -7,7 +7,14 @@ MDX is used for static pages such as About.
 
 ## Local development
 
-With Node.js and pnpm installed:
+With Node.js and pnpm installed (the project pins pnpm 12.5.1 in `package.json`):
+
+Cloudflare Builds should use `PNPM_VERSION=12.5.1` to match the project. Older
+pnpm versions may ignore workspace overrides and reject the frozen lockfile;
+`.npmrc` enables version switching for pnpm 9 using the `packageManager` pin.
+Vitest stays on 4.x until the Cloudflare Workers test adapter supports 5.x.
+TypeScript stays on 6.x because 7.x rejects the recursive HAST types returned
+through TanStack Start server functions.
 
 ```bash
 pnpm install

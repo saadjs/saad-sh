@@ -115,6 +115,8 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
       inputRef.current?.focus();
     } else {
       dialog.close();
+      // Reset the search when the native dialog is closed by its parent.
+      // oxlint-disable-next-line react/set-state-in-effect
       setQuery("");
       setActiveIndex(0);
     }
@@ -208,11 +210,9 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
     return { postResults, tagResults, projectResults, combinedResults };
   }, [index, query]);
 
-  useEffect(() => {
-    if (activeIndex >= combinedResults.length) {
-      setActiveIndex(0);
-    }
-  }, [activeIndex, combinedResults.length]);
+  if (activeIndex !== 0 && activeIndex >= combinedResults.length) {
+    setActiveIndex(0);
+  }
 
   useEffect(() => {
     const list = listRef.current;
@@ -254,6 +254,8 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
   };
 
   return (
+    // Native dialogs handle Escape and backdrop clicks; the element is interactive.
+    // oxlint-disable-next-line jsx-a11y/no-noninteractive-element-interactions
     <dialog
       ref={dialogRef}
       aria-label="Search posts, projects, or tags"
