@@ -65,12 +65,21 @@ Omit `--remote` to export local D1.
 
 ### Social cards
 
-Social cards remain static PNGs in `public/og/`. Generate them directly from
+Social cards remain static PNGs in `public/og/`. Their generated manifest lives in
+`src/og/manifest.json` so application code can import it through Vite. Generate cards from
 production D1 metadata with `pnpm run og --remote` (omit `--remote` for local D1).
 Generation replaces the card set with the selected database's published posts.
 `pnpm run deploy` generates production cards before building and deploying;
 plain builds and commit hooks do not query D1. Review and commit changed cards
 after generation. Production generation requires Cloudflare account access.
+
+The site self-hosts Geist and Geist Mono variable fonts from
+[Vercel's Geist v1.7.2 release](https://github.com/vercel/geist-font/releases/tag/v1.7.2)
+in `public/fonts/`. Social cards use the matching static TTF files in
+`scripts/fonts/`, so generation needs no system fonts or font downloads. The
+[SIL Open Font License](public/fonts/OFL.txt) covers the Geist and Geist Mono
+files in both directories. After updating these font files, regenerate cards
+with `pnpm run og --remote --force`.
 
 Publishing updates the post immediately. New or changed social cards reach the
 website on the next deployment; posts without cards use the site card meanwhile.

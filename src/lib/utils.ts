@@ -1,4 +1,4 @@
-import ogManifest from "../../public/og/manifest.json";
+import ogManifest from "#/og/manifest.json";
 
 export function formatDate(dateString: string): string {
   const date = new Date(dateString);

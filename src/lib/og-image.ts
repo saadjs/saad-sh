@@ -2,8 +2,8 @@ import { logoAccent } from "#/lib/logo";
 import { siteConfig } from "#/site.config";
 
 export const imageSize = { width: 1200, height: 630 };
-export const ogFontFamily = "Inter";
-export const ogMonoFamily = "JetBrains Mono";
+export const ogFontFamily = "Geist";
+export const ogMonoFamily = "Geist Mono";
 
 const accent = logoAccent;
 const background = "#0a0a0a";

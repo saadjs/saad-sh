@@ -10,36 +10,13 @@ import { queryD1 } from "./d1.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "public/og");
-const fontCacheDir = join(root, "node_modules/.cache/og-fonts");
-const manifestPath = join(outDir, "manifest.json");
+const manifestPath = join(root, "src/og/manifest.json");
 const logoPath = join(root, "public/logo.svg");
 const flags = process.argv.slice(2);
 if (flags.some((flag) => !["--force", "--remote"].includes(flag))) {
   throw new Error("usage: og [--remote] [--force]");
 }
 const force = flags.includes("--force");
-
-async function loadFont(family: string, weight: number): Promise<Buffer> {
-  const cached = join(fontCacheDir, `${family}-${weight}.ttf`);
-  try {
-    return await readFile(cached);
-  } catch {}
-
-  const cssUrl = `https://fonts.googleapis.com/css2?family=${family.replace(/ /g, "+")}:wght@${weight}`;
-  const css = await fetch(cssUrl, { headers: { "User-Agent": "Mozilla/5.0" } });
-  if (!css.ok) throw new Error(`Failed to fetch ${family} ${weight}: ${css.status}`);
-
-  const fontUrl = (await css.text()).match(/url\((https:\/\/[^)]+\.ttf)\)/)?.[1];
-  if (!fontUrl) throw new Error(`No truetype URL for ${family} ${weight}`);
-
-  const font = await fetch(fontUrl);
-  if (!font.ok) throw new Error(`Failed to download ${family} ${weight}: ${font.status}`);
-
-  const data = Buffer.from(await font.arrayBuffer());
-  await mkdir(fontCacheDir, { recursive: true });
-  await writeFile(cached, data);
-  return data;
-}
 
 async function loadLogo(): Promise<string> {
   const svg = await readFile(logoPath);
@@ -58,9 +35,9 @@ async function renderPng(
 
 async function loadFonts() {
   const [regular, semibold, mono] = await Promise.all([
-    loadFont(ogFontFamily, 400),
-    loadFont(ogFontFamily, 600),
-    loadFont(ogMonoFamily, 500),
+    readFile(join(root, "scripts/fonts/Geist-Regular.ttf")),
+    readFile(join(root, "scripts/fonts/Geist-SemiBold.ttf")),
+    readFile(join(root, "scripts/fonts/GeistMono-Medium.ttf")),
   ]);
   return [
     { name: ogFontFamily, data: regular, weight: 400 as const, style: "normal" as const },
@@ -158,6 +135,7 @@ async function main() {
     if (file.endsWith(".png") && !expected.has(file)) await unlink(join(outDir, file));
   }
 
+  await mkdir(dirname(manifestPath), { recursive: true });
   await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   console.log(`og images: ${written} rendered, ${targets.length - written} up to date`);
 }
