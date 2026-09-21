@@ -15,9 +15,12 @@ import { siteConfig } from "#/site.config";
 import { absoluteUrl, ogImagePath } from "#/lib/utils";
 import { logoAccent } from "#/lib/logo";
 
+import { getFeatures } from "#/lib/features";
+
 import appCss from "#/styles.css?url";
 
 export const Route = createRootRoute({
+  beforeLoad: async () => ({ features: await getFeatures() }),
   head: () => ({
     meta: [
       { charSet: "utf-8" },

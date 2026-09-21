@@ -2,6 +2,8 @@ import { env } from "cloudflare:workers";
 import { createFileRoute } from "@tanstack/react-router";
 import { isValidEmail, sendConfirmationEmail, signToken, verifyTurnstile } from "#/lib/newsletter";
 
+import { newsletterEnabled } from "#/lib/features.server";
+
 type SubscribeBody = {
   email?: unknown;
   website?: unknown;
@@ -16,6 +18,12 @@ function json(body: unknown, status: number): Response {
 }
 
 async function handleSubscribe(request: Request): Promise<Response> {
+  if (!newsletterEnabled()) {
+    return new Response(JSON.stringify({ ok: false, error: "newsletter_disabled" }), {
+      status: 503,
+      headers: { "Content-Type": "application/json", "Cache-Control": "no-store" },
+    });
+  }
   let payload: SubscribeBody;
   try {
     payload = (await request.json()) as SubscribeBody;

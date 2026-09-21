@@ -1,5 +1,5 @@
 import { env } from "cloudflare:workers";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import type { ReactNode } from "react";
@@ -14,6 +14,7 @@ import {
   upsertContact,
   verifyToken,
 } from "#/lib/newsletter";
+import { newsletterEnabled } from "#/lib/features.server";
 import { siteConfig } from "#/site.config";
 
 const { confirmPage } = siteConfig.newsletter;
@@ -43,6 +44,7 @@ type ConfirmResult =
 const getConfirmState = createServerFn({ method: "GET" })
   .validator((token: string) => token)
   .handler(async ({ data: token }): Promise<ConfirmState> => {
+    if (!newsletterEnabled()) throw notFound();
     const verified = await verifyToken(token, env.NEWSLETTER_SIGNING_SECRET);
     if (verified.status === "invalid") return { state: "invalid" };
     if (verified.status === "expired") return { state: "expired" };
@@ -64,6 +66,7 @@ const getConfirmState = createServerFn({ method: "GET" })
 const confirmSubscription = createServerFn({ method: "POST" })
   .validator((token: string) => token)
   .handler(async ({ data: token }): Promise<ConfirmResult> => {
+    if (!newsletterEnabled()) throw notFound();
     const verified = await verifyToken(token, env.NEWSLETTER_SIGNING_SECRET);
     if (verified.status === "invalid") return { state: "invalid" };
     if (verified.status === "expired") return { state: "expired" };

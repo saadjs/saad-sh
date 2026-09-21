@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { newsletterEnabled } from "#/lib/features.server";
 import { getAllPosts, getAllTags } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl, slugifyTag } from "#/lib/utils";
@@ -99,13 +100,20 @@ async function renderSitemap(): Promise<Response> {
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${entries.map(toXmlEntry).join("\n")}
+${entries
+  .filter(
+    (entry) =>
+      newsletterEnabled() ||
+      entry.url !== absoluteUrl(siteConfig.routes.newsletter, siteConfig.url),
+  )
+  .map(toXmlEntry)
+  .join("\n")}
 </urlset>`;
 
   return new Response(xml, {
     headers: {
       "Content-Type": "application/xml; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=3600",
+      "Cache-Control": "no-store",
     },
   });
 }

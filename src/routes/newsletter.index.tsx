@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, notFound } from "@tanstack/react-router";
 import { NewsletterSignup } from "#/components/NewsletterSignup";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
@@ -6,6 +6,9 @@ import { absoluteUrl } from "#/lib/utils";
 const { newsletter } = siteConfig;
 
 export const Route = createFileRoute("/newsletter/")({
+  beforeLoad: ({ context }) => {
+    if (!context.features.newsletter) throw notFound();
+  },
   head: () => ({
     meta: [
       { title: siteConfig.titleTemplate.replace("%s", newsletter.page.title) },

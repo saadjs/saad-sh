@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { useRouteContext } from "@tanstack/react-router";
 import { siteConfig } from "#/site.config";
 
 declare global {
@@ -53,6 +54,11 @@ type Status = "idle" | "submitting" | "success" | "error";
 type ErrorKind = "invalid_email" | "server" | null;
 
 export function NewsletterSignup() {
+  const { features } = useRouteContext({ from: "__root__" });
+  return features.newsletter ? <NewsletterSignupForm /> : null;
+}
+
+function NewsletterSignupForm() {
   const { newsletter } = siteConfig;
   // const siteKey = import.meta.env.DEV ? "1x00000000000000000000AA" : newsletter.turnstileSiteKey;
   const siteKey = import.meta.env.DEV ? "3x00000000000000000000FF" : newsletter.turnstileSiteKey;

@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useRouterState, useRouteContext } from "@tanstack/react-router";
 import { siteConfig } from "#/site.config";
 import { LogoMark } from "./LogoMark";
 import { SearchButton } from "./SearchButton";
@@ -9,6 +9,7 @@ const nameStem = siteConfig.name.slice(0, dot);
 const nameSuffix = siteConfig.name.slice(dot);
 
 export function Header() {
+  const { features } = useRouteContext({ from: "__root__" });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
@@ -34,18 +35,20 @@ export function Header() {
           <div className="hidden sm:block">
             <SearchButton />
           </div>
-          {siteConfig.nav.map((item) => (
-            <Link
-              key={item.href}
-              to={item.href}
-              aria-current={pathname === item.href ? "page" : undefined}
-              className={`transition-colors ${
-                pathname === item.href ? "text-foreground" : "text-muted hover:text-foreground"
-              }`}
-            >
-              {item.label}
-            </Link>
-          ))}
+          {siteConfig.nav
+            .filter((item) => features.newsletter || item.href !== siteConfig.routes.newsletter)
+            .map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                aria-current={pathname === item.href ? "page" : undefined}
+                className={`transition-colors ${
+                  pathname === item.href ? "text-foreground" : "text-muted hover:text-foreground"
+                }`}
+              >
+                {item.label}
+              </Link>
+            ))}
         </div>
       </nav>
     </header>

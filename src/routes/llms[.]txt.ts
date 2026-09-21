@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { newsletterEnabled } from "#/lib/features.server";
 import { getAllPosts } from "#/lib/posts";
 import { projects, projectSlug } from "#/lib/projects";
 import { siteConfig } from "#/site.config";
@@ -37,7 +38,11 @@ async function renderLlmsTxt(): Promise<Response> {
     `- [About](${absoluteUrl(routes.about, siteConfig.url)}): ${siteConfig.aboutPage.description}`,
     `- [Projects](${absoluteUrl(routes.projects, siteConfig.url)}): ${siteConfig.projectsPage.description}`,
     `- [Tags](${absoluteUrl(routes.tags, siteConfig.url)}): ${siteConfig.tagsPage.description}`,
-    `- [Newsletter](${absoluteUrl(routes.newsletter, siteConfig.url)}): ${siteConfig.newsletter.page.description}`,
+    ...(newsletterEnabled()
+      ? [
+          `- [Newsletter](${absoluteUrl(routes.newsletter, siteConfig.url)}): ${siteConfig.newsletter.page.description}`,
+        ]
+      : []),
     "",
     "## Optional",
     "",
@@ -49,7 +54,7 @@ async function renderLlmsTxt(): Promise<Response> {
   return new Response(lines.join("\n"), {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
-      "Cache-Control": "public, max-age=3600, s-maxage=86400",
+      "Cache-Control": "no-store",
     },
   });
 }
