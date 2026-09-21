@@ -20,8 +20,8 @@ export const siteConfig = {
   },
   nav: [
     { label: "Posts", href: "/posts" },
-    { label: "Projects", href: "/projects" },
     { label: "Tags", href: "/tags" },
+    { label: "Projects", href: "/projects" },
     { label: "Newsletter", href: "/newsletter" },
     { label: "About", href: "/about" },
   ],
