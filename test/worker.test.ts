@@ -41,7 +41,7 @@ describe("Cloudflare Worker", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/html");
-    await expect(response.text()).resolves.toContain("All posts");
+    await expect(response.text()).resolves.toContain("All writing.");
   });
 
   it("serves llms.txt with markdown links for every post", async () => {

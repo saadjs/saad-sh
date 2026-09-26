@@ -1,6 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PostCard } from "#/components/PostCard";
+import { PostList } from "#/components/PostList";
 import { getAllPosts } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
@@ -28,24 +28,35 @@ function HomePage() {
 
   return (
     <div>
-      <div className="mb-4">
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-          {siteConfig.homePage.postsEyebrow}
-        </p>
-      </div>
+      <header className="max-w-[29.375rem]">
+        <h1 className="page-title mb-4">{siteConfig.homePage.heading}</h1>
+        <p>{siteConfig.homePage.intro}</p>
+        <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[0.8125rem] text-accent">
+          <Link to="/about" className="touch-target underline-offset-4 hover:underline">
+            More about me →
+          </Link>
+          <Link to="/projects" className="touch-target underline-offset-4 hover:underline">
+            Projects →
+          </Link>
+        </div>
+      </header>
       {posts.length === 0 ? (
-        <p className="text-muted">{siteConfig.homePage.emptyMessage}</p>
+        <p className="mt-10 text-muted">{siteConfig.homePage.emptyMessage}</p>
       ) : (
-        <div>
-          {posts.map((post) => (
-            <PostCard key={post.slug} post={post} />
-          ))}
+        <section className="mt-10" aria-labelledby="latest-writing">
+          <h2 id="latest-writing" className="mb-4 font-mono text-xs font-normal text-muted">
+            {siteConfig.homePage.postsHeading}
+          </h2>
+          <PostList posts={posts} />
           {total > posts.length && (
-            <Link to="/posts" className="mt-8 inline-block text-sm text-accent hover:underline">
+            <Link
+              to="/posts"
+              className="touch-target mt-6 inline-block text-[0.8125rem] text-accent underline-offset-4 hover:underline"
+            >
               {siteConfig.homePage.allPostsLabel} →
             </Link>
           )}
-        </div>
+        </section>
       )}
     </div>
   );

@@ -12,11 +12,11 @@ import { absoluteUrl, ogImagePath } from "#/lib/utils";
 
 const projectsUrl = absoluteUrl(siteConfig.routes.projects, siteConfig.url);
 const projectsImage = absoluteUrl(ogImagePath("projects"), siteConfig.url);
-const linkClass = "text-accent transition-colors hover:underline";
+const linkClass = "touch-target text-accent underline-offset-4 transition-colors hover:underline";
 
 function ProjectLinks({ links }: { links: ProjectLink[] }) {
   return (
-    <div className="mt-4 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+    <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-2 text-[0.8125rem]">
       {links.map((link) => {
         const key = `${link.label}-${link.href}`;
         const target = resolveProjectLink(link.href);
@@ -46,7 +46,7 @@ function ProjectLinks({ links }: { links: ProjectLink[] }) {
             {...getLinkNavigationProps({ href: target.href })}
             className={linkClass}
           >
-            {link.label}
+            {link.label} <span aria-hidden="true">↗</span>
           </a>
         );
       })}
@@ -144,46 +144,24 @@ function ProjectsPage() {
           __html: JSON.stringify(buildJsonLd()).replaceAll("<", "\\u003c"),
         }}
       />
-      <section>
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-          {siteConfig.projectsPage.eyebrow}
-        </p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-          {siteConfig.projectsPage.heading}
-        </h1>
-        <p className="mt-3 max-w-2xl text-muted">{siteConfig.projectsPage.intro}</p>
-      </section>
-
-      <ol className="mt-10 divide-y divide-border">
-        {projects.map((project, index) => (
-          <li
-            key={project.name}
-            id={projectSlug(project.name)}
-            className="grid gap-4 py-7 scroll-mt-24 md:grid-cols-[4rem_1fr]"
-          >
-            <div aria-hidden="true" className="font-mono text-sm text-faint">
-              {String(index + 1).padStart(2, "0")}
-            </div>
+      <header>
+        <h1 className="page-title">{siteConfig.projectsPage.heading}</h1>
+        <p className="mt-3 text-[0.9375rem] text-muted">{siteConfig.projectsPage.intro}</p>
+      </header>
+      <ul className="mt-10 space-y-9">
+        {projects.map((project) => (
+          <li key={project.name} id={projectSlug(project.name)} className="scroll-mt-24">
             <article>
-              <h2 className="text-xl font-semibold tracking-tight text-foreground">
-                {project.name}
-              </h2>
-              <p className="mt-2 text-muted">{project.description}</p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                {project.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-border px-2.5 py-1 text-xs text-muted"
-                  >
-                    {tag}
-                  </span>
-                ))}
+              <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                <h2 className="text-[1.0625rem] font-medium tracking-tight">{project.name}</h2>
+                <p className="font-mono text-xs text-muted">{project.tags.join(" · ")}</p>
               </div>
+              <p className="mt-1.5 text-[0.9375rem] leading-7 text-muted">{project.description}</p>
               <ProjectLinks links={project.links} />
             </article>
           </li>
         ))}
-      </ol>
+      </ul>
     </div>
   );
 }

@@ -68,24 +68,22 @@ export function ShareMenu({ slug, markdownUrl }: ShareMenuProps) {
     [markdownUrl],
   );
 
-  const btnBase =
-    "font-mono text-xs uppercase tracking-[0.14em] text-zinc-600 transition-colors hover:text-zinc-900 dark:text-zinc-400 dark:hover:text-zinc-100";
-  const btnBorder =
-    "border border-zinc-200/80 bg-white/80 hover:border-zinc-300 dark:border-zinc-800 dark:bg-zinc-950/60 dark:hover:border-zinc-700";
+  const itemClass =
+    "flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-muted transition-colors hover:bg-border/50 hover:text-foreground";
 
   return (
-    <div ref={menuRef} className="relative inline-flex">
+    <div ref={menuRef} className="relative ml-auto inline-flex items-center">
       <button
         type="button"
         onClick={handleCopy}
-        className={`inline-flex items-center gap-1.5 rounded-l-full py-2 pr-3 pl-4 ${btnBase} ${btnBorder} border-r-0`}
+        className="inline-flex items-center gap-1.5 py-1 transition-colors hover:text-foreground"
       >
         {copied ? (
-          <CheckIcon className="h-4 w-4 text-green-500" />
+          <CheckIcon className="h-3.5 w-3.5 text-green-500" />
         ) : (
-          <CopyIcon className="h-4 w-4" />
+          <CopyIcon className="h-3.5 w-3.5" />
         )}
-        {copied ? "Copied!" : status === "copying" ? "Copying…" : "Copy Page"}
+        {copied ? "Copied" : status === "copying" ? "Copying…" : "Copy page"}
       </button>
       <button
         type="button"
@@ -94,25 +92,28 @@ export function ShareMenu({ slug, markdownUrl }: ShareMenuProps) {
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
-        className={`inline-flex items-center rounded-r-full py-2 pr-3 pl-2 ${btnBase} ${btnBorder}`}
+        className="ml-1 inline-flex items-center p-1 transition-colors hover:text-foreground"
       >
         <ChevronDownIcon className="h-3 w-3" />
       </button>
 
       {status === "error" && (
-        <p role="alert" className="absolute top-full right-0 mt-2 w-64 text-sm text-red-500">
+        <p
+          role="alert"
+          className="absolute top-full right-0 mt-2 w-64 font-sans text-sm text-red-500"
+        >
           Could not copy. Try again or use View as Markdown.
         </p>
       )}
       {open && (
         <div
           id={menuId}
-          className="absolute top-full right-0 z-50 mt-2 w-52 overflow-hidden rounded-xl border border-zinc-200/80 bg-white/95 shadow-lg backdrop-blur-md dark:border-zinc-800 dark:bg-zinc-900/95"
+          className="absolute top-full right-0 z-50 mt-2 w-52 overflow-hidden rounded-md border border-border bg-background py-1 font-sans shadow-sm"
         >
           <button
             type="button"
             onClick={() => openInLLM("https://chatgpt.com", "prompt")}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            className={itemClass}
           >
             <ChatGPTIcon className="h-4 w-4 shrink-0" />
             Open in ChatGPT
@@ -120,15 +121,12 @@ export function ShareMenu({ slug, markdownUrl }: ShareMenuProps) {
           <button
             type="button"
             onClick={() => openInLLM("https://claude.ai/new", "q")}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
+            className={itemClass}
           >
             <ClaudeIcon className="h-4 w-4 shrink-0" />
             Open in Claude
           </button>
-          <a
-            href={markdownUrl}
-            className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-zinc-700 transition-colors hover:bg-zinc-100 dark:text-zinc-300 dark:hover:bg-zinc-800"
-          >
+          <a href={markdownUrl} className={itemClass}>
             <MarkdownIcon className="h-4 w-4 shrink-0" />
             View as Markdown
           </a>

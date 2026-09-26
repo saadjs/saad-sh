@@ -33,28 +33,33 @@ function TagsPage() {
 
   return (
     <div>
-      <section>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          {siteConfig.tagsPage.heading}
-        </h1>
-        <p className="mt-2 text-muted">{siteConfig.tagsPage.intro}</p>
-      </section>
+      <header className="flex items-baseline justify-between gap-4">
+        <h1 className="page-title">{siteConfig.tagsPage.heading}</h1>
+        <p className="font-mono text-[0.8125rem] text-muted">
+          {siteConfig.tagsPage.tagCountLabel(tags.length)}
+        </p>
+      </header>
       {tags.length === 0 ? (
-        <p className="mt-10 text-muted">{siteConfig.tagsPage.emptyMessage}</p>
+        <p className="mt-16 text-muted">{siteConfig.tagsPage.emptyMessage}</p>
       ) : (
-        <div className="mt-10 flex flex-wrap gap-x-4 gap-y-3">
+        <ul className="mt-10">
           {tags.map(([slug, tag]) => (
-            <Link
-              key={slug}
-              to="/tags/$tag"
-              params={{ tag: slug }}
-              className="inline-flex items-baseline gap-1 whitespace-nowrap text-accent transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40"
-            >
-              <span>{tag.label.toUpperCase()}</span>
-              <span className="text-muted">({tag.count})</span>
-            </Link>
+            <li key={slug}>
+              <Link
+                to="/tags/$tag"
+                params={{ tag: slug }}
+                className="group flex items-baseline justify-between gap-8 py-2"
+              >
+                <span className="text-[0.9375rem] leading-6 text-foreground transition-colors group-hover:text-accent">
+                  {tag.label}
+                </span>
+                <span className="shrink-0 font-mono text-[0.8125rem] leading-6 text-muted tabular-nums">
+                  {siteConfig.tagsPage.countLabel(tag.count)}
+                </span>
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       )}
     </div>
   );

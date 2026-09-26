@@ -9,7 +9,7 @@ const defaultComponents: MDXComponents = {
   h1: ({ children, ...props }) => (
     <h1
       {...props}
-      className={`mt-12 mb-5 scroll-mt-24 text-3xl font-semibold tracking-tight text-foreground ${props.className ?? ""}`.trim()}
+      className={`mt-12 mb-4 scroll-mt-24 text-2xl font-semibold tracking-tight text-foreground ${props.className ?? ""}`.trim()}
     >
       {children}
     </h1>
@@ -17,7 +17,7 @@ const defaultComponents: MDXComponents = {
   h2: ({ children, ...props }) => (
     <h2
       {...props}
-      className={`mt-12 mb-5 scroll-mt-24 text-2xl font-semibold tracking-tight text-foreground ${props.className ?? ""}`.trim()}
+      className={`mt-12 mb-3 scroll-mt-24 text-xl font-semibold tracking-tight text-foreground ${props.className ?? ""}`.trim()}
     >
       {children}
     </h2>
@@ -25,20 +25,18 @@ const defaultComponents: MDXComponents = {
   h3: ({ children, ...props }) => (
     <h3
       {...props}
-      className={`mt-10 mb-4 scroll-mt-24 text-xl font-semibold tracking-tight text-foreground ${props.className ?? ""}`.trim()}
+      className={`mt-8 mb-2 scroll-mt-24 text-base font-semibold text-foreground ${props.className ?? ""}`.trim()}
     >
       {children}
     </h3>
   ),
-  p: ({ children }) => (
-    <p className="my-5 text-[1.0625rem] leading-[1.8] text-foreground">{children}</p>
-  ),
+  p: ({ children }) => <p className="my-5 leading-[1.75] text-foreground">{children}</p>,
   a: ContentLink,
   ul: ({ children }) => (
-    <ul className="my-5 ml-6 list-disc space-y-2 text-foreground">{children}</ul>
+    <ul className="my-5 ml-5 list-disc space-y-1.5 text-foreground">{children}</ul>
   ),
   ol: ({ children }) => (
-    <ol className="my-5 ml-6 list-decimal space-y-2 text-foreground">{children}</ol>
+    <ol className="my-5 ml-5 list-decimal space-y-1.5 text-foreground">{children}</ol>
   ),
   li: ({ children }) => <li className="leading-7">{children}</li>,
   blockquote: ({ children }) => (
@@ -54,7 +52,7 @@ const defaultComponents: MDXComponents = {
         className={
           isBlockCode
             ? `font-mono text-sm ${className ?? ""}`.trim()
-            : `rounded bg-border px-1.5 py-0.5 font-mono text-sm text-foreground ${className ?? ""}`.trim()
+            : `rounded bg-[var(--code-bg)] px-1.5 py-0.5 font-mono text-[0.875em] text-foreground ${className ?? ""}`.trim()
         }
       >
         {children}

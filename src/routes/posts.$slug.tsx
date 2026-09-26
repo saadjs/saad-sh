@@ -3,10 +3,10 @@ import { createServerFn } from "@tanstack/react-start";
 import { setResponseHeaders } from "@tanstack/react-start/server";
 import { useRef } from "react";
 import { PostHeader } from "#/components/PostHeader";
-import { RelatedPosts } from "#/components/RelatedPosts";
+import { PostPager } from "#/components/PostPager";
 import { TableOfContents } from "#/components/TableOfContents";
 import { ShareMenu } from "#/components/ShareMenu";
-import { getRelatedPosts, getRenderedPost } from "#/lib/posts";
+import { getAdjacentPosts, getRenderedPost } from "#/lib/posts";
 import { getRenderedDraft } from "#/lib/admin-posts";
 import { PREVIEW_HEADERS, previewTokenMatches } from "#/lib/preview";
 import { PostBody } from "#/components/PostBody";
@@ -21,13 +21,13 @@ export const loadPostData = createServerFn({ method: "GET" })
       if (!(await previewTokenMatches(preview, slug))) return null;
       const draft = await getRenderedDraft(slug);
       if (!draft) return null;
-      return { post: draft.post, hast: draft.hast, relatedPosts: [], preview: true };
+      return { post: draft.post, hast: draft.hast, older: null, newer: null, preview: true };
     }
 
     const rendered = await getRenderedPost(slug);
     if (!rendered?.post.metadata.published) return null;
-    const relatedPosts = await getRelatedPosts(slug);
-    return { post: rendered.post, hast: rendered.hast, relatedPosts, preview: false };
+    const { older, newer } = await getAdjacentPosts(slug);
+    return { post: rendered.post, hast: rendered.hast, older, newer, preview: false };
   });
 
 export const Route = createFileRoute("/posts/$slug")({
@@ -80,7 +80,7 @@ export const Route = createFileRoute("/posts/$slug")({
 });
 
 function BlogPostPage() {
-  const { relatedPosts, post, hast, preview } = Route.useLoaderData();
+  const { older, newer, post, hast, preview } = Route.useLoaderData();
   const contentRef = useRef<HTMLDivElement>(null);
   const { metadata } = post;
   const postPath = `${siteConfig.routes.posts}/${post.slug}`;
@@ -125,30 +125,32 @@ function BlogPostPage() {
   };
 
   return (
-    <article className="space-y-8">
-      {preview && (
-        <p className="rounded-lg border border-accent/40 px-3 py-2 text-sm text-accent">
-          Draft preview — changes are not live until published.
-        </p>
-      )}
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replaceAll("<", "\\u003c") }}
-      />
-      <PostHeader metadata={metadata}>
-        {!preview && (
-          <ShareMenu
-            key={post.slug}
-            slug={post.slug}
-            markdownUrl={absoluteUrl(`${postPath}.md`, siteConfig.url)}
-          />
+    <>
+      <article className="space-y-10">
+        {preview && (
+          <p className="rounded-lg border border-accent/40 px-3 py-2 text-sm text-accent">
+            Draft preview — changes are not live until published.
+          </p>
         )}
-      </PostHeader>
-      <TableOfContents key={post.slug} contentRef={contentRef} />
-      <div ref={contentRef}>
-        <PostBody hast={hast} />
-      </div>
-      <RelatedPosts posts={relatedPosts} />
-    </article>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replaceAll("<", "\\u003c") }}
+        />
+        <PostHeader metadata={metadata}>
+          {!preview && (
+            <ShareMenu
+              key={post.slug}
+              slug={post.slug}
+              markdownUrl={absoluteUrl(`${postPath}.md`, siteConfig.url)}
+            />
+          )}
+        </PostHeader>
+        <TableOfContents key={post.slug} contentRef={contentRef} />
+        <div ref={contentRef}>
+          <PostBody hast={hast} />
+        </div>
+      </article>
+      <PostPager older={older} newer={newer} />
+    </>
   );
 }

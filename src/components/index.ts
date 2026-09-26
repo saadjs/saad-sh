@@ -1,12 +1,12 @@
 export { Header } from "./Header";
 export { LogoMark } from "./LogoMark";
 export { Footer } from "./Footer";
-export { PostCard } from "./PostCard";
+export { PostList } from "./PostList";
+export { PostPager } from "./PostPager";
 export { PostHeader } from "./PostHeader";
 export { TagList } from "./TagList";
 export { SearchCommand } from "./SearchCommand";
 export { SearchButton } from "./SearchButton";
-export { RelatedPosts } from "./RelatedPosts";
 export { NewsletterSignup } from "./NewsletterSignup";
 export { TableOfContents } from "./TableOfContents";
 export { CheckIcon } from "./icons/CheckIcon";

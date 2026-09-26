@@ -80,10 +80,17 @@ Generation replaces the card set with the selected database's published posts.
 plain builds and commit hooks do not query D1. Review and commit changed cards
 after generation. Production generation requires Cloudflare account access.
 
-The site self-hosts Geist and Geist Mono variable fonts from
-[Vercel's Geist v1.7.2 release](https://github.com/vercel/geist-font/releases/tag/v1.7.2)
-in `public/fonts/`. Social cards use the matching static TTF files in
-`scripts/fonts/`, so generation needs no system fonts or font downloads. The
+The site self-hosts DM Sans and IBM Plex Mono in `public/fonts/`, including
+italic faces. The WOFF2 files are Latin subsets from Google Fonts; other scripts
+use the system fallbacks. Their licenses are included as
+[DM Sans OFL](public/fonts/DMSans-OFL.txt) and
+[IBM Plex Mono OFL](public/fonts/IBMPlexMono-OFL.txt). No font requests go to
+third-party services at runtime.
+
+Social cards use Geist and Geist Mono from
+[Vercel's Geist v1.7.2 release](https://github.com/vercel/geist-font/releases/tag/v1.7.2),
+using the static TTF files in `scripts/fonts/`, so generation needs no system fonts or
+font downloads. The original web fonts remain in `public/fonts/`. The
 [SIL Open Font License](public/fonts/OFL.txt) covers the Geist and Geist Mono
 files in both directories. After updating these font files, regenerate cards
 with `pnpm run og --remote --force`.

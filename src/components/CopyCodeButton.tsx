@@ -23,7 +23,7 @@ export function CodeBlock({ children, className, ...props }: React.ComponentProp
       <pre
         ref={preRef}
         {...props}
-        className={`overflow-x-auto rounded-lg bg-zinc-100 p-4 font-mono text-sm dark:bg-zinc-800 [&_code]:bg-transparent [&_code]:p-0 ${
+        className={`overflow-x-auto rounded-md bg-[var(--code-bg)] p-4 font-mono text-[0.8125rem] text-[var(--code-fg)] [&_code]:bg-transparent [&_code]:p-0 ${
           wrapped ? "[&_code]:whitespace-pre-wrap [&_code]:break-all" : ""
         } ${className ?? ""}`.trim()}
       >

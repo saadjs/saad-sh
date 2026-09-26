@@ -1,54 +1,26 @@
-import { Link } from "@tanstack/react-router";
+import { Link, useRouteContext } from "@tanstack/react-router";
 import { siteConfig } from "#/site.config";
-import { RssIcon } from "#/components/icons/RssIcon";
-import { CodeIcon } from "#/components/icons/CodeIcon";
-import { GitHubIcon } from "#/components/icons/GitHubIcon";
-import { LinkedInIcon } from "#/components/icons/LinkedInIcon";
+
+const linkClass =
+  "touch-target underline-offset-4 transition-colors hover:text-foreground hover:underline";
 
 export function Footer() {
+  const { features } = useRouteContext({ from: "__root__" });
   return (
-    <footer className="mt-16 border-t border-border pt-8 pb-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-faint">
-          &copy; {new Date().getFullYear()} {siteConfig.footer.copyrightOwner}
-        </p>
-        <div className="flex gap-3 text-muted">
-          <Link
-            to={siteConfig.routes.feed}
-            aria-label={siteConfig.footer.links.feed}
-            className="transition-colors hover:text-foreground"
-            reloadDocument
-          >
-            <RssIcon className="h-4 w-4" />
+    <footer className="mt-16 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 text-xs text-muted">
+      <p>{siteConfig.footer.description}</p>
+      <div className="flex flex-wrap gap-x-5 gap-y-2">
+        {features.newsletter && (
+          <Link to="/newsletter" className={linkClass}>
+            Newsletter
           </Link>
-          <a
-            href={siteConfig.github.sourceUrl}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={siteConfig.footer.links.source}
-            className="transition-colors hover:text-foreground"
-          >
-            <CodeIcon className="h-4 w-4" />
-          </a>
-          <a
-            href={siteConfig.author.github}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={siteConfig.footer.links.github}
-            className="transition-colors hover:text-foreground"
-          >
-            <GitHubIcon className="h-4 w-4" />
-          </a>
-          <a
-            href={siteConfig.author.linkedin}
-            target="_blank"
-            rel="noreferrer"
-            aria-label={siteConfig.footer.links.linkedin}
-            className="transition-colors hover:text-foreground"
-          >
-            <LinkedInIcon className="h-4 w-4" />
-          </a>
-        </div>
+        )}
+        <Link to={siteConfig.routes.feed} className={linkClass} reloadDocument>
+          {siteConfig.footer.links.feed}
+        </Link>
+        <a href={siteConfig.author.github} target="_blank" rel="noreferrer" className={linkClass}>
+          {siteConfig.footer.links.github}
+        </a>
       </div>
     </footer>
   );

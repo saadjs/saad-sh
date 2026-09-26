@@ -19,10 +19,8 @@ export const siteConfig = {
     sourceUrl: "https://github.com/saadjs/saad-sh",
   },
   nav: [
-    { label: "Posts", href: "/posts" },
-    { label: "Tags", href: "/tags" },
+    { label: "Writing", href: "/posts" },
     { label: "Projects", href: "/projects" },
-    { label: "Newsletter", href: "/newsletter" },
     { label: "About", href: "/about" },
   ],
   header: {
@@ -47,7 +45,7 @@ export const siteConfig = {
   },
   footer: {
     eyebrow: "saad.sh",
-    description: "Personal blog for software notes, patterns, and experiments.",
+    description: "Thanks for stopping by.",
     links: {
       feed: "RSS",
       source: "Source",
@@ -59,20 +57,20 @@ export const siteConfig = {
   },
   homePage: {
     eyebrow: "Personal blog",
-    heading: "Software Development.",
+    heading: "Hey, I’m Saad.",
+    intro:
+      "I’m a software engineer. This is where I share things I’ve built, tools I use, and what I’m learning along the way.",
     emptyMessage: "No posts yet.",
-    postsEyebrow: "Recent posts",
-    postsHeading: "Latest writing",
+    postsHeading: "Lately, on the blog",
     postsCountLabel: (count: number) => `${count} published`,
-    postsLimit: 10,
-    allPostsLabel: "See all posts",
+    postsLimit: 5,
+    allPostsLabel: "More writing",
   },
   postsPage: {
     title: "Posts",
     description: "Every post on saad.sh, newest first.",
-    heading: "All posts",
-    eyebrow: "Archive",
-    intro: "Everything I have written, newest first.",
+    heading: "All writing.",
+    intro: "Notes, experiments, and things I learned along the way.",
     emptyMessage: "No posts yet.",
     countLabel: (count: number) => `${count} ${count === 1 ? "post" : "posts"}`,
   },
@@ -82,24 +80,26 @@ export const siteConfig = {
     heading: "Tags",
     emptyMessage: "No tags yet.",
     eyebrow: "Tag index",
-    intro: "Explore posts by topic.",
     countLabel: (count: number) => `${count} ${count === 1 ? "post" : "posts"}`,
+    tagCountLabel: (count: number) => `${count} ${count === 1 ? "tag" : "tags"}`,
   },
   aboutPage: {
     title: "About",
+    heading: "A little about me.",
     description: "Learn more about Saad Bash.",
     kicker: "About the author",
   },
   projectsPage: {
     title: "Projects",
     description: "Side projects and recent things built by Saad Bash.",
-    heading: "Projects",
+    heading: "Things I’ve built.",
     eyebrow: "Side projects",
-    intro: "A few things I have built/been building lately.",
+    intro: "Small tools, side projects, and ongoing experiments.",
   },
   postPage: {
     tagsLabel: "Filed under",
-    relatedPostsHeading: "Related posts",
+    olderLabel: "Older",
+    newerLabel: "Newer",
     tocLabel: "On this page",
   },
   tagPage: {
@@ -107,8 +107,6 @@ export const siteConfig = {
     description: (tag: string) => `All posts tagged with ${tag}`,
     heading: (tag: string) => `Posts tagged "${tag}"`,
     eyebrow: "Filtered archive",
-    summary: (count: number) =>
-      `${count} ${count === 1 ? "post" : "posts"} filed under this topic.`,
   },
   newsletter: {
     eyebrow: "Newsletter",

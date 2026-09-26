@@ -1,7 +1,7 @@
 import { Link, useRouter } from "@tanstack/react-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent as ReactKeyboardEvent } from "react";
-import { slugifyTag } from "#/lib/utils";
+import { formatDate, slugifyTag } from "#/lib/utils";
 
 type SearchIndexEntry = {
   slug: string;
@@ -41,6 +41,8 @@ type PostResult = SearchIndexEntry & { type: "post"; score: number };
 type ProjectResult = SearchIndexProject & { type: "project"; score: number };
 
 const RESULTS_LIMIT = 10;
+const resultClassName =
+  "group min-h-11 px-3 py-3 text-[0.9375rem] leading-6 transition-colors hover:bg-border/40 hover:text-accent focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px]";
 
 function normalizeQuery(value: string) {
   return value.toLowerCase().replace(/\s+/g, " ").trim();
@@ -224,19 +226,21 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
   }, [activeIndex, combinedResults.length]);
 
   const handleKeyDown = (event: ReactKeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "ArrowDown") {
+    const controlKey = event.ctrlKey && !event.altKey && !event.metaKey;
+    if (event.key === "ArrowDown" || (controlKey && event.key.toLowerCase() === "n")) {
       event.preventDefault();
       if (combinedResults.length > 0) {
         setActiveIndex((prev) => Math.min(prev + 1, combinedResults.length - 1));
       }
     }
-    if (event.key === "ArrowUp") {
+    if (event.key === "ArrowUp" || (controlKey && event.key.toLowerCase() === "p")) {
       event.preventDefault();
       if (combinedResults.length > 0) {
         setActiveIndex((prev) => Math.max(prev - 1, 0));
       }
     }
     if (event.key === "Enter") {
+      event.preventDefault();
       const selected = combinedResults[activeIndex];
       if (selected?.type === "post") {
         router.navigate({ to: "/posts/$slug", params: { slug: selected.slug } });
@@ -266,10 +270,11 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
-      className="fixed inset-0 m-0 h-full max-h-none w-full max-w-none bg-transparent px-4 py-14 text-white backdrop:bg-black/60 backdrop:backdrop-blur-md open:flex open:items-start open:justify-center"
+      className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-transparent px-4 py-6 font-sans text-foreground backdrop:bg-foreground/20 open:flex open:items-start open:justify-center sm:py-[12vh]"
     >
-      <div className="relative w-full max-w-2xl rounded-2xl border border-white/10 bg-zinc-900/95 shadow-2xl shadow-black/40 backdrop-blur-xl">
-        <div className="border-b border-white/10 px-4 py-3">
+      <div className="flex max-h-full w-full max-w-[35.625rem] flex-col overflow-hidden rounded-md border border-border bg-background shadow-xl shadow-black/10">
+        <div className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-4 focus-within:border-accent sm:px-6">
+          <span className="size-2 shrink-0 bg-accent" aria-hidden="true" />
           <input
             ref={inputRef}
             value={query}
@@ -278,36 +283,38 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
               setActiveIndex(0);
             }}
             onKeyDown={handleKeyDown}
-            placeholder="Search posts, projects, or tags..."
-            className="w-full bg-transparent font-mono text-sm text-white outline-none placeholder:text-zinc-400"
+            placeholder="Search posts, projects, or tags…"
+            className="min-w-0 flex-1 bg-transparent text-base text-foreground outline-none placeholder:text-muted"
             aria-label="Search posts, projects, or tags"
           />
         </div>
-        <div ref={listRef} className="max-h-[60vh] overflow-y-auto px-4 py-4">
-          {loading && <p className="text-sm text-zinc-400">Loading search index…</p>}
+        <div ref={listRef} className="min-h-0 overflow-y-auto overscroll-contain px-2 py-5 sm:px-3">
+          {loading && (
+            <output className="block px-3 text-sm text-muted">Loading search index…</output>
+          )}
           {error && (
-            <div role="alert">
-              <p className="text-sm text-red-400">{error}</p>
+            <div role="alert" className="px-3">
+              <p className="text-sm text-foreground">{error}</p>
               <button
                 type="button"
                 onClick={() => setAttempt((value) => value + 1)}
-                className="mt-2 text-sm underline"
+                className="touch-target mt-2 text-sm text-accent underline underline-offset-4"
               >
                 Retry search
               </button>
             </div>
           )}
           {!loading && !error && combinedResults.length === 0 && (
-            <p className="text-sm text-zinc-400">No results.</p>
+            <output className="block px-3 text-sm text-muted">
+              No results. Try another search.
+            </output>
           )}
           {!loading && !error && combinedResults.length > 0 && (
             <div className="space-y-6">
               {tagResults.length > 0 && (
                 <div>
-                  <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                    Tags
-                  </p>
-                  <ul className="space-y-2">
+                  <p className="mb-2 px-3 font-mono text-xs font-normal text-muted">Tags</p>
+                  <ul>
                     {tagResults.map((result, index) => {
                       const overallIndex = index;
                       const isActive = overallIndex === activeIndex;
@@ -318,15 +325,16 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                             params={{ tag: result.slug }}
                             onClick={() => onClose()}
                             data-result-index={overallIndex}
-                            className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors ${
-                              isActive ? "bg-white/10 text-white" : "text-zinc-200 hover:bg-white/5"
+                            className={`${resultClassName} flex items-baseline justify-between gap-4 ${
+                              isActive ? "bg-accent/10 text-accent" : "text-foreground"
                             }`}
                           >
-                            <span className="flex items-center gap-2">
-                              <span className="text-zinc-400">→</span>
+                            <span className="min-w-0 break-words underline-offset-4 group-hover:underline">
                               {result.label}
                             </span>
-                            <span className="font-mono text-xs text-zinc-500">{result.count}</span>
+                            <span className="shrink-0 font-mono text-xs text-muted tabular-nums">
+                              {result.count}
+                            </span>
                           </Link>
                         </li>
                       );
@@ -336,10 +344,8 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
               )}
               {projectResults.length > 0 && (
                 <div>
-                  <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                    Projects
-                  </p>
-                  <ul className="space-y-2">
+                  <p className="mb-2 px-3 font-mono text-xs font-normal text-muted">Projects</p>
+                  <ul>
                     {projectResults.map((result, index) => {
                       const overallIndex = tagResults.length + index;
                       const isActive = overallIndex === activeIndex;
@@ -350,15 +356,14 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                             hash={result.slug}
                             onClick={() => onClose()}
                             data-result-index={overallIndex}
-                            className={`flex items-center justify-between gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
-                              isActive ? "bg-white/10 text-white" : "text-zinc-200 hover:bg-white/5"
+                            className={`${resultClassName} flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 ${
+                              isActive ? "bg-accent/10 text-accent" : "text-foreground"
                             }`}
                           >
-                            <span className="flex items-center gap-2">
-                              <span className="text-zinc-400">→</span>
+                            <span className="min-w-0 break-words underline-offset-4 group-hover:underline">
                               {result.name}
                             </span>
-                            <span className="truncate font-mono text-xs text-zinc-500">
+                            <span className="font-mono text-xs text-muted">
                               {result.tags.slice(0, 2).join(" · ")}
                             </span>
                           </Link>
@@ -370,10 +375,8 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
               )}
               {postResults.length > 0 && (
                 <div>
-                  <p className="mb-2 font-mono text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500">
-                    Posts
-                  </p>
-                  <ul className="space-y-2">
+                  <p className="mb-2 px-3 font-mono text-xs font-normal text-muted">Posts</p>
+                  <ul>
                     {postResults.map((result, index) => {
                       const overallIndex = tagResults.length + projectResults.length + index;
                       const isActive = overallIndex === activeIndex;
@@ -384,15 +387,19 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
                             params={{ slug: result.slug }}
                             onClick={() => onClose()}
                             data-result-index={overallIndex}
-                            className={`flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-colors ${
-                              isActive ? "bg-white/10 text-white" : "text-zinc-200 hover:bg-white/5"
+                            className={`${resultClassName} flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4 ${
+                              isActive ? "bg-accent/10 text-accent" : "text-foreground"
                             }`}
                           >
-                            <span className="flex items-center gap-2">
-                              <span className="text-zinc-400">→</span>
+                            <span className="min-w-0 break-words underline-offset-4 group-hover:underline">
                               {result.title}
                             </span>
-                            <span className="font-mono text-xs text-zinc-500">{result.date}</span>
+                            <time
+                              dateTime={result.date}
+                              className="shrink-0 font-mono text-xs text-muted tabular-nums"
+                            >
+                              {formatDate(result.date)}
+                            </time>
                           </Link>
                         </li>
                       );
@@ -403,11 +410,19 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
             </div>
           )}
         </div>
-        <div className="flex items-center justify-between border-t border-white/10 px-4 py-2 font-mono text-xs uppercase tracking-[0.12em] text-zinc-500">
-          <button type="button" onClick={onClose} aria-label="Close search">
+        <div className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-t border-border px-5 py-3 font-mono text-[0.6875rem] text-muted sm:px-6">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close search"
+            className="touch-target underline-offset-4 transition-colors hover:text-foreground hover:underline"
+          >
             Close (Esc)
           </button>
-          <span>Use ↑ ↓ to navigate</span>
+          <span className="flex flex-wrap gap-x-3 gap-y-1">
+            <span>↑ ↓ or Ctrl+N/P navigate</span>
+            <span>Enter open</span>
+          </span>
         </div>
       </div>
     </dialog>

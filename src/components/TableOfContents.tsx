@@ -146,13 +146,11 @@ export function TableOfContents({ contentRef }: TableOfContentsProps) {
   return (
     <>
       <nav aria-label={siteConfig.postPage.tocLabel} className="toc-rail">
-        <p className="mb-3 text-xs font-medium tracking-wide text-faint uppercase">
-          {siteConfig.postPage.tocLabel}
-        </p>
+        <p className="mb-3 font-mono text-xs text-muted">{siteConfig.postPage.tocLabel}</p>
         {list}
       </nav>
-      <details className="toc-inline rounded-lg border border-border px-4 py-3">
-        <summary className="cursor-pointer text-sm font-medium text-muted marker:text-faint">
+      <details className="toc-inline">
+        <summary className="cursor-pointer font-mono text-[0.8125rem] text-muted marker:text-faint">
           {siteConfig.postPage.tocLabel}
         </summary>
         <div className="mt-3">{list}</div>

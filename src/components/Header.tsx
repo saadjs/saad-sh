@@ -1,54 +1,45 @@
-import { Link, useRouterState, useRouteContext } from "@tanstack/react-router";
+import { Link, useRouterState } from "@tanstack/react-router";
 import { siteConfig } from "#/site.config";
-import { LogoMark } from "./LogoMark";
 import { SearchButton } from "./SearchButton";
 
-// "saad.sh" -> ["saad", ".sh"], so the suffix can carry the accent.
-const dot = siteConfig.name.indexOf(".");
-const nameStem = siteConfig.name.slice(0, dot);
-const nameSuffix = siteConfig.name.slice(dot);
-
 export function Header() {
-  const { features } = useRouteContext({ from: "__root__" });
   const pathname = useRouterState({ select: (s) => s.location.pathname });
 
   return (
-    <header className="mb-14">
-      <nav className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center justify-between gap-4">
-          <Link
-            to="/"
-            className="wordmark flex shrink-0 items-center gap-2.5 text-lg tracking-tight text-foreground"
-          >
-            <LogoMark width={22} height={22} />
-            <span>
-              {nameStem}
-              <span className="text-accent">{nameSuffix}</span>
-              <span className="caret" aria-hidden="true" />
-            </span>
-          </Link>
-          <div className="sm:hidden">
-            <SearchButton />
-          </div>
-        </div>
-        <div className="flex items-center gap-5 text-sm">
-          <div className="hidden sm:block">
-            <SearchButton />
-          </div>
-          {siteConfig.nav
-            .filter((item) => features.newsletter || item.href !== siteConfig.routes.newsletter)
-            .map((item) => (
+    <header className="mb-11 sm:mb-[3.375rem]">
+      <nav
+        aria-label="Main navigation"
+        className="flex flex-wrap items-center justify-between gap-x-7 gap-y-5"
+      >
+        <Link
+          to="/"
+          aria-label={`${siteConfig.name} home`}
+          className="flex shrink-0 items-center gap-3.5 font-mono text-lg font-medium tracking-[-0.05em] text-foreground"
+        >
+          <span className="size-2.5 bg-accent" aria-hidden="true" />
+          {siteConfig.name}
+        </Link>
+        <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[0.8125rem] text-muted">
+          {siteConfig.nav.map((item) => {
+            const active =
+              pathname === item.href ||
+              pathname.startsWith(`${item.href}/`) ||
+              (item.href === siteConfig.routes.posts &&
+                pathname.startsWith(siteConfig.routes.tags));
+            return (
               <Link
                 key={item.href}
                 to={item.href}
-                aria-current={pathname === item.href ? "page" : undefined}
-                className={`transition-colors ${
-                  pathname === item.href ? "text-foreground" : "text-muted hover:text-foreground"
+                aria-current={active ? "page" : undefined}
+                className={`touch-target underline-offset-4 transition-colors ${
+                  active ? "text-foreground underline" : "hover:text-foreground hover:underline"
                 }`}
               >
                 {item.label}
               </Link>
-            ))}
+            );
+          })}
+          <SearchButton />
         </div>
       </nav>
     </header>

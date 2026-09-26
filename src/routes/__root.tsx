@@ -52,7 +52,7 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      ...["Geist", "GeistMono"].map((font) => ({
+      ...["DMSans", "IBMPlexMono"].map((font) => ({
         rel: "preload",
         href: `/fonts/${font}.woff2`,
         as: "font",
@@ -101,9 +101,9 @@ function AdminShell({ children }: { children: React.ReactNode }) {
 
 function SiteShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto flex min-h-screen flex-col px-6 py-12 max-w-2xl sm:px-8 lg:max-w-3xl xl:max-w-4xl">
+    <div className="mx-auto w-full max-w-[39.625rem] px-5 pt-7 pb-12 sm:px-8 sm:pt-11">
       <Header />
-      <main className="flex-1">{children}</main>
+      <main className="min-w-0">{children}</main>
       <Footer />
       <SearchCommandClient />
     </div>

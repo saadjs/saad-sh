@@ -116,7 +116,7 @@ export async function getAllTags(): Promise<Map<string, { label: string; count: 
       if (existing) {
         existing.count += 1;
       } else {
-        tagCounts.set(slug, { label: tag.toUpperCase(), count: 1 });
+        tagCounts.set(slug, { label: tag.toLowerCase(), count: 1 });
       }
     }
   }
@@ -124,23 +124,13 @@ export async function getAllTags(): Promise<Map<string, { label: string; count: 
   return tagCounts;
 }
 
-export async function getRelatedPosts(slug: string, limit = 3): Promise<Post[]> {
-  const current = await getPostBySlug(slug);
-  if (!current) return [];
-
-  const all = await getAllPosts();
-  const currentTags = current.metadata.tags.map(slugifyTag);
-
-  const scored = all
-    .filter((p) => p.slug !== slug)
-    .map((post) => {
-      const shared = post.metadata.tags.filter((t) => currentTags.includes(slugifyTag(t))).length;
-      return { post, shared };
-    })
-    .filter((entry) => entry.shared > 0)
-    .sort((a, b) => b.shared - a.shared);
-
-  return scored.slice(0, limit).map((entry) => entry.post);
+export async function getAdjacentPosts(
+  slug: string,
+): Promise<{ older: Post | null; newer: Post | null }> {
+  const posts = await getAllPosts();
+  const index = posts.findIndex((post) => post.slug === slug);
+  if (index === -1) return { older: null, newer: null };
+  return { older: posts[index + 1] ?? null, newer: posts[index - 1] ?? null };
 }
 
 export async function getPostsByTag(tag: string): Promise<Post[]> {

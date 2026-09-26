@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { PostCard } from "#/components/PostCard";
+import { PostList } from "#/components/PostList";
 import { getAllTags, getPostsByTag } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
@@ -45,16 +45,14 @@ function TagPage() {
 
   return (
     <div>
-      <section>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Posts tagged &ldquo;{label}&rdquo;
-        </h1>
-        <p className="mt-2 text-muted">{siteConfig.tagPage.summary(posts.length)}</p>
-      </section>
+      <header className="flex items-baseline justify-between gap-4">
+        <h1 className="page-title">Posts tagged &ldquo;{label}&rdquo;</h1>
+        <p className="font-mono text-[0.8125rem] text-muted">
+          {siteConfig.postsPage.countLabel(posts.length)}
+        </p>
+      </header>
       <div className="mt-10">
-        {posts.map((post) => (
-          <PostCard key={post.slug} post={post} />
-        ))}
+        <PostList posts={posts} showYear />
       </div>
     </div>
   );

@@ -19,13 +19,11 @@ export function SearchButton() {
     <button
       type="button"
       onClick={() => window.dispatchEvent(new Event("search:open"))}
-      className="inline-flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-sm text-muted transition-colors hover:border-faint hover:text-foreground"
+      className="touch-target text-[0.8125rem] text-muted underline-offset-4 transition-colors hover:text-foreground hover:underline"
       aria-label="Open search"
+      title={`Search (${hint})`}
     >
-      <span>Search</span>
-      <span className="text-xs text-faint" aria-hidden="true">
-        {hint}
-      </span>
+      Search
     </button>
   );
 }

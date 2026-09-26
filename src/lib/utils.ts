@@ -1,13 +1,9 @@
 import ogManifest from "#/og/manifest.json";
 
-export function formatDate(dateString: string): string {
-  const date = new Date(dateString);
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-    timeZone: "UTC",
-  });
+// Full date labels use YYYY-MM-DD in UTC; post lists use a shorter display label.
+export function formatDate(value: string): string {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString().slice(0, 10);
 }
 
 export function slugifyTag(tag: string): string {

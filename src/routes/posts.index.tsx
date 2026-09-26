@@ -1,9 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { TagList } from "#/components/TagList";
+import { PostList } from "#/components/PostList";
 import { getAllPosts } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
-import { absoluteUrl, formatDate } from "#/lib/utils";
+import { absoluteUrl } from "#/lib/utils";
 import type { Post } from "#/lib/types";
 
 function groupByYear(posts: Post[]): [string, Post[]][] {
@@ -44,50 +44,29 @@ function PostsPage() {
 
   return (
     <div>
-      <section>
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-          {siteConfig.postsPage.eyebrow}
+      <header className="flex items-baseline justify-between gap-4">
+        <h1 className="page-title">{siteConfig.postsPage.heading}</h1>
+        <p className="shrink-0 font-mono text-xs text-muted">
+          {siteConfig.postsPage.countLabel(total)}
         </p>
-        <h1 className="mt-3 text-2xl font-semibold tracking-tight text-foreground">
-          {siteConfig.postsPage.heading}
-        </h1>
-        <p className="mt-2 text-muted">
-          {siteConfig.postsPage.intro} {siteConfig.postsPage.countLabel(total)}.
-        </p>
-      </section>
+      </header>
+      <p className="mt-3 text-[0.9375rem] text-muted">{siteConfig.postsPage.intro}</p>
+      <Link
+        to="/tags"
+        className="touch-target mt-3 inline-block text-[0.8125rem] text-accent underline-offset-4 hover:underline"
+      >
+        Browse by topic →
+      </Link>
       {total === 0 ? (
-        <p className="mt-10 text-muted">{siteConfig.postsPage.emptyMessage}</p>
+        <p className="mt-16 text-muted">{siteConfig.postsPage.emptyMessage}</p>
       ) : (
-        <div className="mt-10 flex flex-col gap-10">
+        <div className="mt-9 flex flex-col gap-9">
           {years.map(([year, posts]) => (
-            <section key={year}>
-              <h2 className="text-sm font-medium text-faint">{year}</h2>
-              <ul className="mt-3">
-                {posts.map((post) => (
-                  <li key={post.slug} className="border-b border-border py-3 last:border-0">
-                    <div className="flex flex-col gap-1 sm:flex-row sm:items-baseline sm:justify-between sm:gap-6">
-                      <Link
-                        to="/posts/$slug"
-                        params={{ slug: post.slug }}
-                        className="text-foreground hover:underline"
-                      >
-                        {post.metadata.title}
-                      </Link>
-                      <time
-                        dateTime={post.metadata.date}
-                        className="shrink-0 text-sm text-muted tabular-nums"
-                      >
-                        {formatDate(post.metadata.date)}
-                      </time>
-                    </div>
-                    {post.metadata.tags.length > 0 && (
-                      <div className="mt-1.5">
-                        <TagList tags={post.metadata.tags} />
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
+            <section key={year} aria-labelledby={`year-${year}`}>
+              <h2 id={`year-${year}`} className="mb-3 font-mono text-xs font-normal text-muted">
+                {year}
+              </h2>
+              <PostList posts={posts} />
             </section>
           ))}
         </div>

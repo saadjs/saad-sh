@@ -1,6 +1,7 @@
 import { startRegistration } from "@simplewebauthn/browser";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useCallback, useEffect, useState } from "react";
+import { formatDate } from "#/lib/utils";
 
 export const Route = createFileRoute("/admin/settings")({
   head: () => ({
@@ -135,9 +136,9 @@ function SettingsPage() {
                 {credential.nickname}
               </span>
               <span className="block text-xs text-faint">
-                added {new Date(credential.createdAt).toLocaleDateString()}
+                added {formatDate(credential.createdAt)}
                 {credential.lastUsedAt
-                  ? ` · last used ${new Date(credential.lastUsedAt).toLocaleDateString()}`
+                  ? ` · last used ${formatDate(credential.lastUsedAt)}`
                   : " · never used"}
               </span>
             </span>

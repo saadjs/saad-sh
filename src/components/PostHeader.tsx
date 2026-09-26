@@ -9,19 +9,24 @@ interface PostHeaderProps {
 
 export function PostHeader({ metadata, children }: PostHeaderProps) {
   return (
-    <header className="mb-12">
-      <div className="flex items-center justify-between gap-4">
-        <time dateTime={metadata.date} className="text-sm text-muted">
-          {formatDate(metadata.date)}
-        </time>
-        {children}
-      </div>
-      <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
+    <header>
+      <h1 className="text-[2rem] leading-[1.15] font-medium tracking-tight text-foreground sm:text-[2.375rem]">
         {metadata.title}
       </h1>
-      <p className="mt-4 text-lg text-muted leading-relaxed">{metadata.description}</p>
-      <div className="mt-4">
-        <TagList tags={metadata.tags} />
+      {metadata.description && (
+        <p className="mt-4 leading-relaxed text-muted">{metadata.description}</p>
+      )}
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 font-mono text-[0.8125rem] text-muted">
+        <div className="flex flex-wrap items-center gap-x-2.5">
+          <time dateTime={metadata.date}>{formatDate(metadata.date)}</time>
+          {metadata.tags.length > 0 && (
+            <>
+              <span aria-hidden="true">·</span>
+              <TagList tags={metadata.tags} />
+            </>
+          )}
+        </div>
+        {children}
       </div>
     </header>
   );
