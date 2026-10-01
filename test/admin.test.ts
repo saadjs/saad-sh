@@ -21,6 +21,7 @@ import {
   createPost,
   getAdminPost,
   publishPost,
+  renamePost,
   saveDraft,
   deletePost,
 } from "#/lib/admin-posts";
@@ -229,6 +230,35 @@ describe("publication concurrency", () => {
     await deletePost(slug);
     expect(await commitPublication(snapshot, tree)).toBe("conflict");
     expect(await getAdminPost(slug)).toBeNull();
+  });
+});
+
+describe("slug rename", () => {
+  it("moves the live post and its draft to the new slug", async () => {
+    await createPost("rename-before", "Before");
+    await publishPost("rename-before");
+    const live = await getAdminPost("rename-before");
+    if (!live) throw new Error("Missing fixture");
+    await saveDraft("rename-before", { ...live.live, title: "After", body: "Draft body" });
+
+    expect(await renamePost("rename-before", "rename-after")).toBe("renamed");
+    expect(await getAdminPost("rename-before")).toBeNull();
+    const renamed = await getAdminPost("rename-after");
+    expect(renamed?.published).toBe(true);
+    expect(renamed?.live.title).toBe("Before");
+    expect(renamed?.draft?.title).toBe("After");
+    expect(await publishPost("rename-after")).toBe("published");
+  });
+
+  it("refuses a slug held by another post, including a deleted one", async () => {
+    await createPost("rename-source", "Source");
+    await createPost("rename-taken", "Taken");
+    await createPost("rename-deleted", "Deleted");
+    await deletePost("rename-deleted");
+
+    expect(await renamePost("rename-source", "rename-taken")).toBe("slug_taken");
+    expect(await renamePost("rename-source", "rename-deleted")).toBe("slug_taken");
+    expect((await getAdminPost("rename-source"))?.draft?.title).toBe("Source");
   });
 });
 

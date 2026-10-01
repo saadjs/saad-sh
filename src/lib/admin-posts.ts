@@ -134,6 +134,30 @@ export async function createPost(slug: string, title: string): Promise<void> {
   ]);
 }
 
+export async function renamePost(
+  from: string,
+  to: string,
+): Promise<"renamed" | "not_found" | "slug_taken"> {
+  if (await slugExists(to)) return "slug_taken";
+
+  try {
+    const [updated] = await db().batch([
+      db()
+        .prepare("UPDATE posts SET slug = ?, updated_at = ? WHERE slug = ? AND deleted_at IS NULL")
+        .bind(to, new Date().toISOString(), from),
+      db()
+        .prepare(
+          "UPDATE drafts SET slug = ? WHERE slug = ? AND EXISTS (SELECT 1 FROM posts WHERE slug = ?)",
+        )
+        .bind(to, from, to),
+    ]);
+    return updated.meta.changes === 1 ? "renamed" : "not_found";
+  } catch (error) {
+    if (await slugExists(to)) return "slug_taken";
+    throw error;
+  }
+}
+
 export async function saveDraft(slug: string, fields: PostFields): Promise<void> {
   const now = new Date().toISOString();
 

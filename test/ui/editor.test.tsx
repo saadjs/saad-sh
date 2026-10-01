@@ -162,3 +162,25 @@ it("serializes overlapping saves so the latest edit is written last", async () =
   const writes = fetchMock.mock.calls.filter(([, init]) => init?.method === "PATCH");
   expect(JSON.parse(String(writes[1][1]?.body)).body).toBe("Second edit");
 });
+
+it("saves pending edits before renaming the post", async () => {
+  const { fetchMock, router } = await openEditor();
+  vi.stubGlobal(
+    "confirm",
+    vi.fn(() => true),
+  );
+  fetchMock.mockImplementation(async (url, init) => {
+    if (String(url).endsWith("/action")) return Response.json({ slug: "renamed" });
+    if (init?.method === "PATCH") return Response.json({ savedAt: new Date().toISOString() });
+    return Response.json({ post, hast: { type: "root", children: [] } });
+  });
+  edit("Unsaved text");
+  fireEvent.change(screen.getByLabelText("Slug"), { target: { value: "renamed" } });
+  fireEvent.click(screen.getByRole("button", { name: "Rename" }));
+  await waitFor(() => expect(router.state.location.pathname).toBe("/admin/posts/renamed"));
+  const requests = fetchMock.mock.calls.map(([url, init]) =>
+    String(url).endsWith("/action") ? "rename" : init?.method,
+  );
+  expect(requests.indexOf("PATCH")).toBeGreaterThan(-1);
+  expect(requests.indexOf("rename")).toBeGreaterThan(requests.indexOf("PATCH"));
+});

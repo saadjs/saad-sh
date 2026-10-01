@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { audit, denyUnlessAdmin, isValidSlug, json, notFound } from "#/lib/admin-auth";
-import { getAdminPost, publishPost, setPublished } from "#/lib/admin-posts";
+import { getAdminPost, publishPost, renamePost, setPublished } from "#/lib/admin-posts";
 import { signPreviewToken } from "#/lib/preview";
+import { slugifyTag } from "#/lib/utils";
 
 async function handleAction(request: Request, slug: string): Promise<Response> {
   const denied = await denyUnlessAdmin(request, true);
@@ -9,9 +10,9 @@ async function handleAction(request: Request, slug: string): Promise<Response> {
   if (!isValidSlug(slug)) return notFound();
   if (!(await getAdminPost(slug))) return notFound();
 
-  let payload: { action?: unknown };
+  let payload: { action?: unknown; slug?: unknown };
   try {
-    payload = (await request.json()) as { action?: unknown };
+    payload = (await request.json()) as { action?: unknown; slug?: unknown };
   } catch {
     return json({ error: "invalid_body" }, 400);
   }
@@ -28,6 +29,16 @@ async function handleAction(request: Request, slug: string): Promise<Response> {
       await setPublished(slug, false);
       await audit("unpublish", request, { slug });
       return json({ ok: true });
+    }
+    case "rename": {
+      const next = slugifyTag(typeof payload.slug === "string" ? payload.slug : "");
+      if (!isValidSlug(next)) return json({ error: "invalid_slug" }, 400);
+      if (next === slug) return json({ slug });
+      const result = await renamePost(slug, next);
+      if (result === "not_found") return notFound();
+      if (result === "slug_taken") return json({ error: "slug_taken" }, 409);
+      await audit("rename", request, { slug: next, detail: `from ${slug}` });
+      return json({ slug: next });
     }
     case "preview": {
       const token = await signPreviewToken(slug);

@@ -3,6 +3,7 @@ import { createFileRoute, useBlocker, useNavigate } from "@tanstack/react-router
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { PostBody } from "#/components/PostBody";
 import type { AdminPostDetail, PostFields } from "#/lib/admin-posts";
+import { slugifyTag } from "#/lib/utils";
 
 export const Route = createFileRoute("/admin/posts/$slug")({
   head: () => ({
@@ -54,6 +55,7 @@ export function PostEditor({ slug }: { slug: string }) {
   const [preview, setPreview] = useState<Root | null>(null);
   const [tab, setTab] = useState<"write" | "preview">("write");
   const [notice, setNotice] = useState("");
+  const [slugInput, setSlugInput] = useState(slug);
   const [, forceTick] = useState(0);
 
   const dirty = Boolean(fields && savedFields && !fieldsEqual(fields, savedFields));
@@ -217,6 +219,48 @@ export function PostEditor({ slug }: { slug: string }) {
     }
   }, [act, fields, save]);
 
+  const rename = useCallback(async () => {
+    const next = slugifyTag(slugInput);
+    if (!fields || !next || next === slug || actionInFlight.current) return;
+    if (
+      detail?.published &&
+      !window.confirm(`Rename to /posts/${next}? Links to /posts/${slug} will stop working.`)
+    ) {
+      return;
+    }
+    actionInFlight.current = true;
+    setActing(true);
+    try {
+      if ((dirty || saving) && !(await save(fields, true))) return;
+      setError("");
+      const response = await fetch(`/admin/api/posts/${slug}/action`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "rename", slug: next }),
+      });
+      if (!response.ok) {
+        setError(
+          response.status === 409
+            ? "A post with that slug already exists."
+            : response.status === 400
+              ? "Slugs use lowercase letters, numbers, and single hyphens."
+              : "Could not rename.",
+        );
+        return;
+      }
+      const { slug: renamed } = (await response.json()) as { slug: string };
+      await navigate({
+        to: "/admin/posts/$slug",
+        params: { slug: renamed },
+        replace: true,
+        ignoreBlocker: true,
+      });
+    } finally {
+      actionInFlight.current = false;
+      setActing(false);
+    }
+  }, [detail, dirty, fields, navigate, save, saving, slug, slugInput]);
+
   useEffect(() => {
     function onKeyDown(event: KeyboardEvent) {
       const meta = event.metaKey || event.ctrlKey;
@@ -329,6 +373,38 @@ export function PostEditor({ slug }: { slug: string }) {
             className="w-full rounded-lg border border-border bg-transparent px-3 py-2 text-foreground outline-none focus:border-accent"
           />
         </label>
+        <div className="min-w-0 sm:col-span-2">
+          <label htmlFor="post-slug" className="mb-1 block text-xs font-medium text-muted">
+            Slug
+          </label>
+          <div className="flex gap-2">
+            <input
+              id="post-slug"
+              value={slugInput}
+              onChange={(event) => setSlugInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") void rename();
+              }}
+              spellCheck={false}
+              className="w-full rounded-lg border border-border bg-transparent px-3 py-2 font-mono text-sm text-foreground outline-none focus:border-accent"
+            />
+            <button
+              type="button"
+              onClick={() => setSlugInput(slugifyTag(fields.title))}
+              className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-sm text-muted transition-colors hover:text-foreground"
+            >
+              Use title
+            </button>
+            <button
+              type="button"
+              disabled={acting || !slugifyTag(slugInput) || slugifyTag(slugInput) === slug}
+              onClick={() => void rename()}
+              className="shrink-0 rounded-lg border border-border px-3 py-1.5 text-sm text-muted transition-colors hover:text-foreground disabled:opacity-50 disabled:hover:text-muted"
+            >
+              Rename
+            </button>
+          </div>
+        </div>
         <label className="sm:col-span-2">
           <span className="mb-1 block text-xs font-medium text-muted">Description</span>
           <input
