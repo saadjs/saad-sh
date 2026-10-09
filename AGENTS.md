@@ -53,9 +53,10 @@ third-party services.
 
 - Preserve passkey-only auth and the allowed hosts in `src/lib/admin-auth.ts`:
   `saad.sh` and local development hosts.
-- Unauthenticated admin requests return 404 except for `PUBLIC_ADMIN_PATHS` in
-  `src/server.ts`. Protected handlers also call `denyUnlessAdmin`; mutations
-  require a matching `Origin`.
+- Unauthenticated admin page GET/HEAD requests redirect to `/admin/login`.
+  Protected API requests and other methods return 404; `PUBLIC_ADMIN_PATHS` in
+  `src/server.ts` remain accessible. Protected handlers also call `denyUnlessAdmin`;
+  mutations require a matching `Origin`.
 - Sessions use opaque random IDs; D1 stores only their SHA-256 hashes.
 - Preserve `counterIsValid` in `src/lib/webauthn.ts`: synced passkeys may always
   report zero. Require an increasing counter only after a credential has reported

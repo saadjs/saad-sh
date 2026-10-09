@@ -43,8 +43,9 @@ pnpm admin:enroll
 ```
 
 Open the printed link on the device holding the passkey. It is single-use and
-expires after 15 minutes. Sign in at `/admin/login` to access `/admin`; protected
-admin routes return 404 when signed out. Manage passkeys at `/admin/settings`.
+expires after 15 minutes. Visiting an admin page while signed out redirects to
+`/admin/login`; protected API requests still return 404. Manage passkeys at
+`/admin/settings`.
 
 ## Editing content
 

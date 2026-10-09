@@ -65,22 +65,47 @@ it("saves drafts in place and publishes without a revision table", async () => {
 });
 
 describe("admin gate", () => {
-  it("hides every admin surface from an unauthenticated caller", async () => {
-    for (const path of [
-      "/admin",
-      "/admin/posts/subagents-in-practice",
-      "/admin/api/posts",
-      "/admin/api/preview",
-      "/admin/api/posts/anything/action",
-    ]) {
-      const response = await exports.default.fetch(`https://saad.sh${path}`);
-      expect(response.status, path).toBe(404);
+  it("redirects signed-out admin page requests to sign-in without caching", async () => {
+    for (const path of ["/admin", "/admin/settings", "/admin/posts/subagents-in-practice"]) {
+      for (const method of ["GET", "HEAD"]) {
+        const response = await exports.default.fetch(`https://saad.sh${path}`, {
+          method,
+          redirect: "manual",
+        });
+        expect(response.status, `${method} ${path}`).toBe(302);
+        expect(response.headers.get("Location")).toBe("/admin/login");
+        expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+        expect(response.headers.get("X-Robots-Tag")).toContain("noindex");
+      }
     }
   });
 
-  it("answers 404 rather than 401, so the surface is not advertised", async () => {
-    const response = await exports.default.fetch("https://saad.sh/admin");
+  it("hides protected admin APIs from an unauthenticated caller", async () => {
+    for (const path of [
+      "/admin/api",
+      "/admin/api/posts",
+      "/admin/api/credentials",
+      "/admin/api/preview",
+      "/admin/api/posts/anything/action",
+    ]) {
+      for (const method of ["GET", "HEAD", "POST", "PATCH", "DELETE"]) {
+        const response = await exports.default.fetch(`https://saad.sh${path}`, {
+          method,
+          redirect: "manual",
+        });
+        expect(response.status, `${method} ${path}`).toBe(404);
+        expect(response.headers.get("Location")).toBeNull();
+      }
+    }
+  });
+
+  it("does not redirect unauthenticated mutations to the login page", async () => {
+    const response = await exports.default.fetch("https://saad.sh/admin", {
+      method: "POST",
+      redirect: "manual",
+    });
     expect(response.status).toBe(404);
+    expect(response.headers.get("Location")).toBeNull();
     expect(response.headers.get("WWW-Authenticate")).toBeNull();
     expect(response.headers.get("X-Robots-Tag")).toContain("noindex");
   });
@@ -90,9 +115,43 @@ describe("admin gate", () => {
     expect(response.status).toBe(200);
   });
 
+  it("redirects expired sessions to sign-in while allowing valid sessions", async () => {
+    const id = "admin-gate-credential";
+    await env.CONTENT_DB.prepare(
+      "INSERT INTO credentials (id, public_key, created_at) VALUES (?, 'fixture', ?)",
+    )
+      .bind(id, new Date().toISOString())
+      .run();
+    try {
+      const { cookie } = await createSession(id, new Request("https://saad.sh/admin"));
+      const request = new Request("https://saad.sh/admin", {
+        headers: { Cookie: cookie.split(";")[0] },
+        redirect: "manual",
+      });
+      const signedIn = await exports.default.fetch(request);
+      expect(signedIn.status).toBe(200);
+      expect(signedIn.headers.get("Location")).toBeNull();
+      await signedIn.text();
+
+      await env.CONTENT_DB.prepare("UPDATE sessions SET expires_at = ? WHERE credential_id = ?")
+        .bind(new Date(Date.now() - 1000).toISOString(), id)
+        .run();
+      const expired = await exports.default.fetch(request);
+      expect(expired.status).toBe(302);
+      expect(expired.headers.get("Location")).toBe("/admin/login");
+    } finally {
+      await env.CONTENT_DB.prepare("DELETE FROM credentials WHERE id = ?").bind(id).run();
+    }
+  });
+
   it("does not exist at all on the non-canonical hosts the worker also serves", async () => {
-    const response = await exports.default.fetch("https://saadbash.dev/admin/login");
-    expect(response.status).toBe(404);
+    for (const path of ["/admin", "/admin/login", "/admin/settings"]) {
+      const response = await exports.default.fetch(`https://saadbash.dev${path}`, {
+        redirect: "manual",
+      });
+      expect(response.status).toBe(404);
+      expect(response.headers.get("Location")).toBeNull();
+    }
   });
 
   it("leaves the public site reachable", async () => {
@@ -276,8 +335,9 @@ it("rejects existing sessions after recovery deletes their credential", async ()
   expect(await getSession(request)).not.toBeNull();
   await env.CONTENT_DB.prepare("DELETE FROM credentials WHERE id = ?").bind(id).run();
   expect(await getSession(request)).toBeNull();
-  const response = await exports.default.fetch(request);
-  expect(response.status).toBe(404);
+  const response = await exports.default.fetch(new Request(request, { redirect: "manual" }));
+  expect(response.status).toBe(302);
+  expect(response.headers.get("Location")).toBe("/admin/login");
 });
 
 describe("login challenge admission", () => {

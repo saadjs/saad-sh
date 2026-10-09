@@ -42,7 +42,21 @@ async function guardAdmin(request: Request): Promise<Response | null> {
   if (PUBLIC_ADMIN_PATHS.has(url.pathname)) return null;
 
   const session = await getSession(request);
-  return session ? null : notFound();
+  if (session) return null;
+
+  const isApi = url.pathname === "/admin/api" || url.pathname.startsWith("/admin/api/");
+  if (!isApi && (request.method === "GET" || request.method === "HEAD")) {
+    return new Response(null, {
+      status: 302,
+      headers: {
+        Location: "/admin/login",
+        "Cache-Control": "private, no-store",
+        "X-Robots-Tag": "noindex, nofollow",
+      },
+    });
+  }
+
+  return notFound();
 }
 
 export default {
