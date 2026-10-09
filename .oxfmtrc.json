@@ -19,6 +19,7 @@
     "src/routeTree.gen.ts",
     "worker-configuration.d.ts",
     ".tanstack",
-    ".wrangler"
+    ".wrangler",
+    "src/content/posts"
   ]
 }

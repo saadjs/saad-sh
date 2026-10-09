@@ -2,13 +2,10 @@
 
 import worker from "#/server";
 import { env, exports, withEnv } from "cloudflare:workers";
-import { beforeAll, describe, expect, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import { newsletterEnabled } from "#/lib/features.server";
-import { seedContent } from "./seed";
 
 describe("newsletter feature flag", () => {
-  beforeAll(seedContent);
-
   it.each([undefined, "false", "", "TRUE", "1", "true"])(
     "only enables signup for the exact string true (%s)",
     (value) => {

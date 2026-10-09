@@ -8,8 +8,6 @@ import remarkParse from "remark-parse";
 import remarkRehype from "remark-rehype";
 import { unified } from "unified";
 
-export const RENDER_VERSION = 1;
-
 type Parent = Root | Element;
 
 type RawNode = { type: "raw"; value: string };
@@ -82,8 +80,4 @@ const processor = unified()
 
 export async function renderMarkdown(body: string): Promise<Root> {
   return processor.run(processor.parse(body)) as Promise<Root>;
-}
-
-export function parseHast(serialized: string): Root {
-  return JSON.parse(serialized) as Root;
 }

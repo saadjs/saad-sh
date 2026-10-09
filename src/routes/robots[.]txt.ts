@@ -8,7 +8,6 @@ export const Route = createFileRoute("/robots.txt")({
         const lines = [
           "User-agent: *",
           "Allow: /",
-          "Disallow: /admin",
           "Disallow: /opengraph-image",
           "Disallow: /posts/*/opengraph-image",
           "Disallow: /search-index.json",

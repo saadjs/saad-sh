@@ -2,7 +2,8 @@
 
 Personal blog built with TanStack Start, React, TypeScript, Tailwind CSS, and
 Cloudflare Workers.
-Posts live in D1 and are edited through a passkey-protected `/admin` editor.
+Posts are Markdown files in `src/content/posts/`. Commit and push changes to
+trigger the Cloudflare build and deployment that makes them live.
 MDX is used for static pages such as About.
 
 ## Local development
@@ -20,61 +21,57 @@ through TanStack Start server functions.
 pnpm install
 cp .dev.vars.example .dev.vars
 pnpm exec wrangler d1 migrations apply saad-sh-newsletter --local
-pnpm exec wrangler d1 migrations apply saad-sh-content --local
-pnpm content:seed
 pnpm dev
 ```
 
-Open <http://localhost:3000>. Local D1 is separate from production;
-`pnpm content:seed` adds sample posts without overwriting existing posts and
-refuses `--remote`.
+Open <http://localhost:3000>. Local newsletter D1 is separate from production.
 
-Worker secrets belong in the git-ignored `.dev.vars` file. Replace the signing
-secret placeholders with separate random strings. Newsletter email delivery
+Worker secrets belong in the git-ignored `.dev.vars` file. Replace the newsletter signing
+secret placeholder with a random string. Newsletter email delivery
 requires a real `RESEND_API_KEY`; the example Turnstile key is for testing.
 `RESEND_AUDIENCE_ID` is configured in [wrangler.jsonc](wrangler.jsonc), and
 newsletter sender addresses and the production Turnstile site key are in
 [src/site.config.ts](src/site.config.ts).
 
-In another terminal, create a local passkey enrollment link:
-
-```bash
-pnpm admin:enroll
-```
-
-Open the printed link on the device holding the passkey. It is single-use and
-expires after 15 minutes. Visiting an admin page while signed out redirects to
-`/admin/login`; protected API requests still return 404. Manage passkeys at
-`/admin/settings`.
-
 ## Editing content
 
-D1 is the source of truth. Create, edit, and publish Markdown posts in `/admin`.
-Production posts are not stored in the repository. Edits autosave to a separate
-draft; publishing makes that draft live and removes it from the drafts table.
-Saves have no revision history. Shareable preview links cover one post, expire
-after seven days, and are excluded from caching and search indexing.
+Write posts in `src/content/posts/<slug>.md`. The filename determines the URL
+(`/posts/<slug>`); keep existing filenames to preserve links. Each post starts
+with frontmatter whose values use JSON syntax:
+
+```markdown
+---
+title: "My new post"
+description: "A short summary."
+date: "2026-10-08"
+tags: ["TypeScript", "Tools"]
+published: true
+---
+
+Write the post in Markdown here.
+```
+
+`title`, `description`, `date`, `tags`, and `published` are required. `image` is
+an optional string. Use a valid `YYYY-MM-DD` date. Set `published: false` to
+exclude a post from public pages, Markdown downloads, search, feeds, and sitemap.
+Files committed to the public repository remain visible there, so keep private
+drafts outside the repository. Post files are excluded from automatic formatting
+to preserve their Markdown and code samples as authored.
+
+Run `pnpm dev` to review locally, run the checks, then commit and push.
+Builds validate post filenames, frontmatter, and Markdown before deployment. Cloudflare
+Builds deploys the repo content; posts need no database writes or editor login.
+The archive, tags, feed, sitemap, search, and Markdown endpoints read the same
+bundled files. To unpublish, set `published: false`; to remove a post, delete its
+file and deploy.
 
 Static pages such as About use MDX in `src/content/pages/`. Site copy and metadata
 live in `src/site.config.ts`, and project entries live in `src/lib/projects.ts`.
 
-### Exports
-
-Export current, non-deleted posts as Markdown for portability:
-
-```bash
-pnpm content:export --remote
-```
-
-Each export creates a new directory under git-ignored `exports/`. It includes
-unpublished posts, but not editor drafts, deleted posts, or authentication data;
-it is not a full database backup. There is no production import/sync command.
-Omit `--remote` to export local D1.
-
 ### Social cards
 
 Every page uses the same committed PNG at `public/og/site.png`. Publishing posts
-needs no image generation or deployment. Builds and deployments use the existing
+uses the deployment workflow and needs no image generation. Builds and deployments use the existing
 file and do not query D1 for social cards.
 
 To update the shared artwork after changing the site branding or card layout,
@@ -111,7 +108,6 @@ date, run `pnpm cf-typegen` and commit `worker-configuration.d.ts`.
 ## Deployment
 
 The Worker and D1 bindings are configured in [wrangler.jsonc](wrangler.jsonc).
-`CONTENT_DB` stores posts, drafts, and admin authentication;
 `NEWSLETTER_DB` stores newsletter consent and redeemed tokens. Resend handles
 newsletter email and contacts, and Cloudflare Turnstile protects signup.
 
@@ -121,7 +117,6 @@ remote migrations, and inspect the configured secrets:
 ```bash
 pnpm exec wrangler whoami
 pnpm exec wrangler d1 migrations apply saad-sh-newsletter --remote
-pnpm exec wrangler d1 migrations apply saad-sh-content --remote
 pnpm exec wrangler secret list
 ```
 
@@ -130,9 +125,8 @@ Set any missing secrets with `pnpm exec wrangler secret put <NAME>`:
 - `RESEND_API_KEY`
 - `NEWSLETTER_SIGNING_SECRET`
 - `TURNSTILE_SECRET_KEY`
-- `PREVIEW_SIGNING_SECRET`
 
-Use production credentials and separate random signing secrets. Run the checks
+Use production credentials and a random newsletter signing secret. Run the checks
 above, then deploy:
 
 ```bash
@@ -140,8 +134,3 @@ pnpm run deploy
 ```
 
 This builds and deploys the Worker, including the committed shared social card.
-
-For production admin access, run `pnpm admin:enroll --remote` and open the printed
-link. Keep two passkeys on different devices; the app refuses removal of the
-last passkey. Recovery after losing all devices requires Cloudflare account
-access to remove stale credentials and enroll again.

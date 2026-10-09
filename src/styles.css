@@ -251,36 +251,6 @@ code[class*="language-"] *::selection {
   cursor: help;
 }
 
-.admin-preview :is(h1, h2, h3, h4, h5, h6) {
-  margin-top: 1.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.admin-preview :is(h1, h2, h3, h4, h5, h6) + :is(h1, h2, h3, h4, h5, h6) {
-  margin-top: 1rem;
-}
-
-.admin-preview :is(h4, h5, h6) {
-  font-weight: 600;
-  line-height: 1.5;
-}
-
-.admin-preview h4 {
-  font-size: 1.125rem;
-}
-
-.admin-preview :is(h5, h6) {
-  font-size: 1rem;
-}
-
-.admin-preview hr {
-  margin-block: 1.25rem;
-}
-
-.admin-preview > :first-child {
-  margin-top: 0;
-}
-
 .heading-anchor {
   color: inherit;
   text-decoration: none;

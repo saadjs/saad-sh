@@ -164,7 +164,7 @@ export const projects: Project[] = [
   {
     name: "saad.sh",
     description:
-      "This site: a TanStack Start blog with D1-backed posts and a passkey-protected editor on Cloudflare Workers.",
+      "This site: a TanStack Start blog with Markdown posts published from the repository on Cloudflare Workers.",
     tags: ["TanStack Start", "D1", "Cloudflare"],
     links: [
       { label: "Live", href: "https://saad.sh" },

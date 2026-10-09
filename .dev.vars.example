@@ -4,7 +4,5 @@ NEWSLETTER_SIGNING_SECRET=replace_with_a_long_random_string
 
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
 
-PREVIEW_SIGNING_SECRET=replace_with_a_long_random_string
-
 # Only the exact value true enables newsletter signup.
 NEWSLETTER_ENABLED=false

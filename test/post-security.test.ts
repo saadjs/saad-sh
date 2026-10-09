@@ -1,104 +1,83 @@
 import { exports } from "cloudflare:workers";
-import { beforeAll, expect, it } from "vitest";
-import { toJSONAsync, fromCrossJSON } from "seroval";
-import { createPost, saveDraft, publishPost } from "#/lib/admin-posts";
-import { PREVIEW_HEADERS, signPreviewToken } from "#/lib/preview";
-import { loadPostData } from "#/routes/posts.$slug";
-import { seedContent } from "./seed";
+import { expect, it, vi } from "vitest";
+import { getAllPosts, getPostBySlug, getPostRawContent, getRenderedPost } from "#/lib/posts";
 
-const slug = "security-private-draft";
-const maliciousText = "</script><script>globalThis.__reviewXss=1</script>";
+vi.mock("../src/content/posts/get-complete-file-path.md?raw", () => ({
+  default:
+    '---\ntitle: "Private draft"\ndescription: "Hidden"\ndate: "2026-10-08"\ntags: ["secret"]\npublished: false\n---\nPRIVATE_SECURITY_MARKER',
+}));
 
-beforeAll(async () => {
-  await seedContent();
-  await createPost(slug, "Private draft");
-  await saveDraft(slug, {
-    title: maliciousText,
-    description: maliciousText,
-    date: "2026-09-14",
-    tags: [maliciousText],
-    image: null,
-    body: "PRIVATE_SECURITY_MARKER",
-  });
-});
+vi.mock("../src/content/posts/git-undo-last-commit.md?raw", () => ({
+  default:
+    '---\ntitle: "</script><script>globalThis.__reviewXss=1</script>"\ndescription: "Test"\ndate: "2026-10-08"\ntags: []\npublished: true\nimage: "/custom.png"\n---\nPublic body',
+}));
 
-function expectPrivate(headers: Headers) {
-  for (const [name, value] of Object.entries(PREVIEW_HEADERS))
-    expect(headers.get(name)).toBe(value);
-}
-
-it("escapes script boundaries in metadata on previews and published pages", async () => {
-  const token = await signPreviewToken(slug);
-  const preview = await exports.default.fetch(
-    `https://saad.sh/posts/${slug}?preview=${encodeURIComponent(token)}`,
-  );
-  expect(preview.status).toBe(200);
-  expectPrivate(preview.headers);
-  const previewHtml = await preview.text();
-  expect(previewHtml).not.toContain(maliciousText);
-  const structuredData = previewHtml.match(
-    /<script type="application\/ld\+json">(.*?)<\/script>/s,
-  )?.[1];
-  expect(structuredData).toBeDefined();
-  const jsonLd = JSON.parse(structuredData!);
-  expect(jsonLd["@graph"][0].headline).toBe(maliciousText);
-  expect(jsonLd["@graph"][0].description).toBe(maliciousText);
-  expect(jsonLd["@graph"][0].keywords).toBe(maliciousText);
-
-  await publishPost(slug);
-  const published = await exports.default.fetch(`https://saad.sh/posts/${slug}`);
-  expect(published.status).toBe(200);
-  expect(await published.text()).not.toContain(maliciousText);
-  // Keep a draft distinct from the now-public content for the RPC tests.
-  await saveDraft(slug, {
-    title: "Private draft",
-    description: "",
-    date: "2026-09-14",
-    tags: [],
-    image: null,
-    body: "RPC_PRIVATE_MARKER",
-  });
-});
-
-it("protects preview redirects and invalid-token responses", async () => {
-  for (const [path, status] of [
-    [`/posts/${slug}/?preview=invalid`, 301],
-    [`/posts/${slug}?preview=invalid`, 404],
-  ] as const) {
-    const response = await exports.default.fetch(`https://saad.sh${path}`, { redirect: "manual" });
-    expect(response.status).toBe(status);
-    expectPrivate(response.headers);
-    expect(await response.text()).not.toContain("RPC_PRIVATE_MARKER");
+it("excludes unpublished files from every public post read", async () => {
+  expect(await getPostBySlug("get-complete-file-path")).toBeNull();
+  expect(await getRenderedPost("get-complete-file-path")).toBeNull();
+  expect(await getPostRawContent("get-complete-file-path")).toBe("");
+  expect((await getAllPosts()).map((post) => post.slug)).not.toContain("get-complete-file-path");
+  for (const path of [
+    "/posts/get-complete-file-path",
+    "/posts/get-complete-file-path.md",
+    "/posts/get-complete-file-path?preview=old-token",
+  ]) {
+    const response = await exports.default.fetch(`https://saad.sh${path}`);
+    expect(response.status).toBe(404);
+    expect(await response.text()).not.toContain("PRIVATE_SECURITY_MARKER");
+  }
+  for (const path of [
+    "/",
+    "/posts",
+    "/feed.xml",
+    "/sitemap.xml",
+    "/llms.txt",
+    "/search-index.json",
+    "/tags",
+    "/tags/secret",
+  ]) {
+    const response = await exports.default.fetch(`https://saad.sh${path}`);
+    const body = await response.text();
+    expect(body).not.toContain("get-complete-file-path");
+    expect(body).not.toContain("PRIVATE_SECURITY_MARKER");
   }
 });
 
-it("protects preview RPC responses when the token is nested inside payload", async () => {
-  for (const { preview, allowed } of [
-    { preview: await signPreviewToken(slug), allowed: true },
-    { preview: "invalid", allowed: false },
-    { preview: await signPreviewToken("different-slug"), allowed: false },
-  ]) {
-    const requestUrl = new URL(loadPostData.url, "https://saad.sh");
-    requestUrl.searchParams.set(
-      "payload",
-      JSON.stringify(await toJSONAsync({ data: { slug, preview } })),
-    );
-    expect(requestUrl.searchParams.has("preview")).toBe(false);
-    const response = await exports.default.fetch(requestUrl.toString(), {
-      headers: { Origin: "https://saad.sh", "x-tsr-serverFn": "true", Accept: "application/json" },
+it("escapes script boundaries and uses the shared card despite a custom post image", async () => {
+  const response = await exports.default.fetch("https://saad.sh/posts/git-undo-last-commit");
+  expect(response.status).toBe(200);
+  const html = await response.text();
+  expect(html).not.toContain("</script><script>globalThis.__reviewXss=1</script>");
+  const structuredData = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/s)?.[1];
+  expect(structuredData).toBeDefined();
+  expect(JSON.parse(structuredData!)["@graph"][0].headline).toBe(
+    "</script><script>globalThis.__reviewXss=1</script>",
+  );
+  expect(html).toContain('property="og:image" content="https://saad.sh/og/site.png"');
+  expect(html).toContain('"image":["https://saad.sh/og/site.png"]');
+});
+
+it.each([
+  "/admin",
+  "/admin/login",
+  "/admin/enroll",
+  "/admin/settings",
+  "/admin/posts/subagents-in-practice",
+  "/admin/api/auth/options",
+  "/admin/api/auth/verify",
+  "/admin/api/auth/logout",
+  "/admin/api/posts",
+  "/admin/api/credentials",
+  "/admin/api/preview",
+  "/admin/api/posts/example",
+  "/admin/api/posts/example/action",
+])("removes %s", async (path) => {
+  for (const method of ["GET", "HEAD", "POST", "DELETE"]) {
+    const response = await exports.default.fetch(`https://saad.sh${path}`, {
+      method,
+      redirect: "manual",
     });
-    expect(response.status, requestUrl.pathname).toBe(200);
-    expectPrivate(response.headers);
-    // The RPC serializer returns an envelope around this server function's result.
-    const envelope = fromCrossJSON(await response.json(), { refs: new Map() }) as {
-      result: Awaited<ReturnType<typeof loadPostData>>;
-    };
-    const result = envelope.result;
-    if (allowed) {
-      expect(result?.preview).toBe(true);
-      expect(JSON.stringify(result)).toContain("RPC_PRIVATE_MARKER");
-    } else {
-      expect(result).toBeNull();
-    }
+    expect(response.status).toBe(404);
+    expect(response.headers.get("location")).toBeNull();
   }
 });

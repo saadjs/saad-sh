@@ -1,41 +1,27 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
-import { setResponseHeaders } from "@tanstack/react-start/server";
 import { useRef } from "react";
 import { PostHeader } from "#/components/PostHeader";
 import { PostPager } from "#/components/PostPager";
 import { TableOfContents } from "#/components/TableOfContents";
 import { ShareMenu } from "#/components/ShareMenu";
 import { getAdjacentPosts, getRenderedPost } from "#/lib/posts";
-import { getRenderedDraft } from "#/lib/admin-posts";
-import { PREVIEW_HEADERS, previewTokenMatches } from "#/lib/preview";
 import { PostBody } from "#/components/PostBody";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl, ogImagePath } from "#/lib/utils";
 
 export const loadPostData = createServerFn({ method: "GET" })
-  .validator((data: { slug: string; preview: string }) => data)
-  .handler(async ({ data: { slug, preview } }) => {
-    if (preview) {
-      setResponseHeaders(new Headers(PREVIEW_HEADERS));
-      if (!(await previewTokenMatches(preview, slug))) return null;
-      const draft = await getRenderedDraft(slug);
-      if (!draft) return null;
-      return { post: draft.post, hast: draft.hast, older: null, newer: null, preview: true };
-    }
-
+  .validator((data: { slug: string }) => data)
+  .handler(async ({ data: { slug } }) => {
     const rendered = await getRenderedPost(slug);
     if (!rendered?.post.metadata.published) return null;
     const { older, newer } = await getAdjacentPosts(slug);
-    return { post: rendered.post, hast: rendered.hast, older, newer, preview: false };
+    return { post: rendered.post, hast: rendered.hast, older, newer };
   });
 
 export const Route = createFileRoute("/posts/$slug")({
-  validateSearch: (search: Record<string, unknown>): { preview?: string } =>
-    typeof search.preview === "string" && search.preview ? { preview: search.preview } : {},
-  loaderDeps: ({ search }) => ({ preview: search.preview ?? "" }),
-  loader: async ({ params, deps }) => {
-    const data = await loadPostData({ data: { slug: params.slug, preview: deps.preview } });
+  loader: async ({ params }) => {
+    const data = await loadPostData({ data: { slug: params.slug } });
     if (!data) throw notFound();
     return data;
   },
@@ -51,7 +37,6 @@ export const Route = createFileRoute("/posts/$slug")({
     return {
       meta: [
         { title: `${metadata.title} | ${siteConfig.name}` },
-        ...(loaderData.preview ? [{ name: "robots", content: "noindex, nofollow" }] : []),
         { name: "description", content: metadata.description },
         { name: "keywords", content: metadata.tags.join(", ") },
         { property: "og:type", content: "article" },
@@ -70,9 +55,7 @@ export const Route = createFileRoute("/posts/$slug")({
       ],
       links: [
         { rel: "canonical", href: postUrl },
-        ...(loaderData.preview
-          ? []
-          : [{ rel: "alternate", type: "text/markdown", href: markdownUrl }]),
+        { rel: "alternate", type: "text/markdown", href: markdownUrl },
       ],
     };
   },
@@ -80,7 +63,7 @@ export const Route = createFileRoute("/posts/$slug")({
 });
 
 function BlogPostPage() {
-  const { older, newer, post, hast, preview } = Route.useLoaderData();
+  const { older, newer, post, hast } = Route.useLoaderData();
   const contentRef = useRef<HTMLDivElement>(null);
   const { metadata } = post;
   const postPath = `${siteConfig.routes.posts}/${post.slug}`;
@@ -127,23 +110,16 @@ function BlogPostPage() {
   return (
     <>
       <article className="space-y-10">
-        {preview && (
-          <p className="rounded-lg border border-accent/40 px-3 py-2 text-sm text-accent">
-            Draft preview — changes are not live until published.
-          </p>
-        )}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replaceAll("<", "\\u003c") }}
         />
         <PostHeader metadata={metadata}>
-          {!preview && (
-            <ShareMenu
-              key={post.slug}
-              slug={post.slug}
-              markdownUrl={absoluteUrl(`${postPath}.md`, siteConfig.url)}
-            />
-          )}
+          <ShareMenu
+            key={post.slug}
+            slug={post.slug}
+            markdownUrl={absoluteUrl(`${postPath}.md`, siteConfig.url)}
+          />
         </PostHeader>
         <TableOfContents key={post.slug} contentRef={contentRef} />
         <div ref={contentRef}>

@@ -10,8 +10,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "og": "tsx scripts/generate-og-images.ts",
-    "admin:enroll": "tsx scripts/admin-enroll.ts",
-    "build": "wrangler types --check && vite build && tsc --noEmit",
+    "build": "tsx scripts/validate-posts.ts && wrangler types --check && vite build && tsc --noEmit",
     "cf-typegen": "wrangler types",
     "preview": "vite preview",
     "test": "vitest run && vitest run --config vitest.ui.config.ts",
@@ -20,15 +19,11 @@
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
     "deploy": "pnpm run build && wrangler deploy",
-    "prepare": "husky",
-    "content:seed": "tsx scripts/content.ts seed",
-    "content:export": "tsx scripts/content.ts export"
+    "prepare": "husky"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.56.0",
     "@mdx-js/rollup": "^3.1.1",
-    "@simplewebauthn/browser": "^14.0.0",
-    "@simplewebauthn/server": "^14.0.2",
     "@tailwindcss/vite": "^4.3.3",
     "@tanstack/react-devtools": "^0.10.12",
     "@tanstack/react-router": "^1.170.38",
@@ -68,7 +63,6 @@
     "oxfmt": "^0.68.0",
     "oxlint": "1.83.0",
     "satori": "^0.33.4",
-    "seroval": "^1.6.7",
     "tsx": "^4.23.14",
     "typescript": "^6.0.3",
     "vite": "^8.3.0",
