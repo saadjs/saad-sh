@@ -19,7 +19,7 @@
     "format:fix": "oxfmt",
     "lint": "oxlint",
     "lint:fix": "oxlint --fix",
-    "deploy": "pnpm run og --remote && pnpm run build && wrangler deploy",
+    "deploy": "pnpm run build && wrangler deploy",
     "prepare": "husky",
     "content:seed": "tsx scripts/content.ts seed",
     "content:export": "tsx scripts/content.ts export"

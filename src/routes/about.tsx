@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { siteConfig } from "#/site.config";
 import { ContentLink } from "#/components/ContentLink";
 import Content from "#/content/pages/about.mdx";
-import { absoluteUrl } from "#/lib/utils";
+import { absoluteUrl, ogImagePath } from "#/lib/utils";
 
 const { author, aboutPage } = siteConfig;
 
@@ -31,10 +31,10 @@ export const Route = createFileRoute("/about")({
       { property: "og:title", content: aboutPage.title },
       { property: "og:description", content: aboutPage.description },
       { property: "og:url", content: `${siteConfig.url}${siteConfig.routes.about}` },
-      { property: "og:image", content: author.avatar },
+      { property: "og:image", content: absoluteUrl(ogImagePath(), siteConfig.url) },
       { name: "twitter:title", content: aboutPage.title },
       { name: "twitter:description", content: aboutPage.description },
-      { name: "twitter:image", content: author.avatar },
+      { name: "twitter:image", content: absoluteUrl(ogImagePath(), siteConfig.url) },
     ],
     links: [{ rel: "canonical", href: absoluteUrl(siteConfig.routes.about, siteConfig.url) }],
   }),

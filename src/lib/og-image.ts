@@ -13,14 +13,6 @@ const [nameStem, nameSuffix] = [
   siteConfig.name.slice(siteConfig.name.indexOf(".")),
 ];
 
-export interface OgImageProps {
-  title: string;
-  description?: string;
-  titleSize?: number;
-  variant?: "site" | "post";
-  logo?: string;
-}
-
 export interface OgNode {
   type: string;
   props: {
@@ -93,49 +85,6 @@ function siteCard(description: string | undefined, logo: string | undefined): Og
   ]);
 }
 
-function postCard(
-  title: string,
-  description: string | undefined,
-  titleSize: number,
-  logo: string | undefined,
-): OgNode {
-  const body: OgNode[] = [
-    box(
-      {
-        fontSize: titleSize,
-        fontWeight: 600,
-        lineHeight: 1.1,
-        letterSpacing: -titleSize * 0.02,
-        color: "#fafafa",
-      },
-      truncate(title, 110),
-    ),
-  ];
-
-  if (description) {
-    body.push(
-      box(
-        { marginTop: 26, fontSize: 28, lineHeight: 1.4, color: "#a1a1a1" },
-        truncate(description, 170),
-      ),
-    );
-  }
-
-  return frame([
-    box({ alignItems: "center", gap: 16 }, [logoMark(logo, 44), siteName(28, -0.6)]),
-    box({ flexDirection: "column" }, body),
-    box({ fontSize: 22, fontFamily: ogMonoFamily, color: "#737373" }, siteConfig.url),
-  ]);
-}
-
-export function generateOgElement({
-  title,
-  description,
-  titleSize = 64,
-  variant = "post",
-  logo,
-}: OgImageProps): OgNode {
-  return variant === "site"
-    ? siteCard(description, logo)
-    : postCard(title, description, titleSize, logo);
+export function generateOgElement(logo: string): OgNode {
+  return siteCard(siteConfig.description, logo);
 }

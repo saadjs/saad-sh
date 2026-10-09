@@ -1,6 +1,6 @@
 /// <reference types="@cloudflare/vitest-pool-workers/types" />
 
-import { exports } from "cloudflare:workers";
+import { env, exports } from "cloudflare:workers";
 import { beforeAll, describe, expect, it } from "vitest";
 import { seedContent } from "./seed";
 
@@ -72,7 +72,38 @@ describe("Cloudflare Worker", () => {
     expect(response.status).toBe(404);
   });
 
-  it("redirects legacy opengraph-image URLs to the static cards", async () => {
+  it.each(["/", "/about", "/projects", "/posts/subagents-in-practice"])(
+    "uses the shared card in social metadata for %s",
+    async (path) => {
+      const response = await exports.default.fetch(`https://saad.sh${path}`);
+      expect(response.status).toBe(200);
+      const html = await response.text();
+      for (const attribute of ['property="og:image"', 'name="twitter:image"']) {
+        const images = [...html.matchAll(new RegExp(`<meta ${attribute} content="([^"]+)"`, "g"))];
+        expect(images.length).toBeGreaterThan(0);
+        expect(images.map((match) => match[1])).toEqual(
+          images.map(() => "https://saad.sh/og/site.png"),
+        );
+      }
+    },
+  );
+
+  it("uses the shared card even when a published post has a custom image", async () => {
+    await env.CONTENT_DB.prepare(
+      `INSERT INTO posts (slug, title, date, image, published, body, created_at, updated_at)
+       VALUES ('custom-image-post', 'Custom image post', '2026-10-08', '/custom.png', 1, '', ?, ?)`,
+    )
+      .bind(new Date().toISOString(), new Date().toISOString())
+      .run();
+    const response = await exports.default.fetch("https://saad.sh/posts/custom-image-post");
+    expect(response.status).toBe(200);
+    const html = await response.text();
+    expect(html).toContain('property="og:image" content="https://saad.sh/og/site.png"');
+    expect(html).toContain('"image":["https://saad.sh/og/site.png"]');
+    expect(html).toContain('name="twitter:image" content="https://saad.sh/og/site.png"');
+  });
+
+  it("redirects legacy opengraph-image URLs to the shared site card", async () => {
     const site = await exports.default.fetch("https://saad.sh/opengraph-image", {
       redirect: "manual",
     });
@@ -84,10 +115,10 @@ describe("Cloudflare Worker", () => {
       { redirect: "manual" },
     );
     expect(post.status).toBe(301);
-    expect(post.headers.get("location")).toBe("https://saad.sh/og/subagents-in-practice.png");
+    expect(post.headers.get("location")).toBe("https://saad.sh/og/site.png");
   });
 
-  it("uses the site card when a post has no generated social card", async () => {
+  it("uses the shared card for new posts without a deployment", async () => {
     const response = await exports.default.fetch(
       "https://saad.sh/posts/new-web-post/opengraph-image",
       { redirect: "manual" },

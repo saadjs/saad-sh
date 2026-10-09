@@ -1,143 +1,30 @@
-import { createHash } from "node:crypto";
-import { mkdir, readFile, readdir, unlink, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Resvg } from "@resvg/resvg-js";
 import satori from "satori";
 import { generateOgElement, imageSize, ogFontFamily, ogMonoFamily } from "../src/lib/og-image.ts";
-import { siteConfig } from "../src/site.config.ts";
-import { queryD1 } from "./d1.ts";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const outDir = join(root, "public/og");
-const manifestPath = join(root, "src/og/manifest.json");
-const logoPath = join(root, "public/logo.svg");
-const flags = process.argv.slice(2);
-if (flags.some((flag) => !["--force", "--remote"].includes(flag))) {
-  throw new Error("usage: og [--remote] [--force]");
-}
-const force = flags.includes("--force");
+if (process.argv.length > 2) throw new Error("usage: og");
 
-async function loadLogo(): Promise<string> {
-  const svg = await readFile(logoPath);
-  return `data:image/svg+xml;base64,${svg.toString("base64")}`;
-}
-
-async function renderPng(
-  props: Parameters<typeof generateOgElement>[0],
-  fonts: Awaited<ReturnType<typeof loadFonts>>,
-): Promise<Buffer> {
-  const svg = await satori(generateOgElement(props) as never, { ...imageSize, fonts });
-  return Buffer.from(
-    new Resvg(svg, { fitTo: { mode: "width", value: imageSize.width } }).render().asPng(),
-  );
-}
-
-async function loadFonts() {
-  const [regular, semibold, mono] = await Promise.all([
-    readFile(join(root, "scripts/fonts/Geist-Regular.ttf")),
-    readFile(join(root, "scripts/fonts/Geist-SemiBold.ttf")),
-    readFile(join(root, "scripts/fonts/GeistMono-Medium.ttf")),
-  ]);
-  return [
-    { name: ogFontFamily, data: regular, weight: 400 as const, style: "normal" as const },
-    { name: ogFontFamily, data: semibold, weight: 600 as const, style: "normal" as const },
-    { name: ogMonoFamily, data: mono, weight: 500 as const, style: "normal" as const },
-  ];
-}
-
-function hash(value: string): string {
-  return createHash("sha256").update(value).digest("hex").slice(0, 16);
-}
-
-async function exists(path: string): Promise<boolean> {
-  try {
-    await readFile(path);
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-async function readManifest(): Promise<Record<string, string>> {
-  try {
-    return JSON.parse(await readFile(manifestPath, "utf8")) as Record<string, string>;
-  } catch {
-    return {};
-  }
-}
-
-async function main() {
-  const posts = await queryD1<{ slug: string; title: string; description: string }>(
-    flags.includes("--remote"),
-    "SELECT slug, title, description FROM posts WHERE published = 1 AND deleted_at IS NULL ORDER BY slug",
-  );
-  for (const post of posts) {
-    if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(post.slug) || ["site", "projects"].includes(post.slug)) {
-      throw new Error(`Invalid or reserved social-card slug: ${post.slug}`);
-    }
-  }
-  await mkdir(outDir, { recursive: true });
-
-  const logo = await loadLogo();
-  const template = hash(
-    (await readFile(join(root, "src/lib/og-image.ts"), "utf8")) +
-      (await readFile(join(root, "src/site.config.ts"), "utf8")) +
-      logo,
-  );
-
-  const targets: { name: string; props: Parameters<typeof generateOgElement>[0] }[] = [
-    {
-      name: "site",
-      props: {
-        title: siteConfig.name,
-        description: siteConfig.description,
-        variant: "site",
-        logo,
-      },
-    },
-    {
-      name: "projects",
-      props: {
-        title: siteConfig.projectsPage.heading,
-        description: siteConfig.projectsPage.description,
-        logo,
-      },
-    },
-  ];
-
-  for (const post of posts) {
-    targets.push({
-      name: post.slug,
-      props: { title: post.title, description: post.description, logo },
-    });
-  }
-
-  const previous = await readManifest();
-  const manifest: Record<string, string> = {};
-  let fonts: Awaited<ReturnType<typeof loadFonts>> | null = null;
-  let written = 0;
-
-  for (const target of targets) {
-    const key = hash(`${template}:${JSON.stringify(target.props)}`);
-    const out = join(outDir, `${target.name}.png`);
-    manifest[target.name] = key;
-
-    if (!force && previous[target.name] === key && (await exists(out))) continue;
-
-    fonts ??= await loadFonts();
-    await writeFile(out, await renderPng(target.props, fonts));
-    written += 1;
-  }
-
-  const expected = new Set(targets.map((target) => `${target.name}.png`));
-  for (const file of await readdir(outDir)) {
-    if (file.endsWith(".png") && !expected.has(file)) await unlink(join(outDir, file));
-  }
-
-  await mkdir(dirname(manifestPath), { recursive: true });
-  await writeFile(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
-  console.log(`og images: ${written} rendered, ${targets.length - written} up to date`);
-}
-
-await main();
+const [logo, regular, mono] = await Promise.all([
+  readFile(join(root, "public/logo.svg")),
+  readFile(join(root, "scripts/fonts/Geist-Regular.ttf")),
+  readFile(join(root, "scripts/fonts/GeistMono-Medium.ttf")),
+]);
+const svg = await satori(
+  generateOgElement(`data:image/svg+xml;base64,${logo.toString("base64")}`) as never,
+  {
+    ...imageSize,
+    fonts: [
+      { name: ogFontFamily, data: regular, weight: 400, style: "normal" },
+      { name: ogMonoFamily, data: mono, weight: 500, style: "normal" },
+    ],
+  },
+);
+const png = new Resvg(svg, { fitTo: { mode: "width", value: imageSize.width } }).render().asPng();
+await mkdir(outDir, { recursive: true });
+await writeFile(join(outDir, "site.png"), png);
+console.log("og image: rendered public/og/site.png");

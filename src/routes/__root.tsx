@@ -40,7 +40,7 @@ export const Route = createRootRoute({
       { property: "og:url", content: siteConfig.url },
       { property: "og:locale", content: siteConfig.locale },
       { property: "og:type", content: "website" },
-      { property: "og:image", content: absoluteUrl(ogImagePath("site"), siteConfig.url) },
+      { property: "og:image", content: absoluteUrl(ogImagePath(), siteConfig.url) },
       { property: "og:image:width", content: "1200" },
       { property: "og:image:height", content: "630" },
       { property: "og:image:type", content: "image/png" },
@@ -48,7 +48,7 @@ export const Route = createRootRoute({
       { name: "twitter:card", content: siteConfig.twitterCard },
       { name: "twitter:title", content: siteConfig.name },
       { name: "twitter:description", content: siteConfig.description },
-      { name: "twitter:image", content: absoluteUrl(ogImagePath("site"), siteConfig.url) },
+      { name: "twitter:image", content: absoluteUrl(ogImagePath(), siteConfig.url) },
     ],
     links: [
       { rel: "stylesheet", href: appCss },

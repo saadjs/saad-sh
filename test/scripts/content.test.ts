@@ -131,50 +131,31 @@ it("seeds only the local database", async () => {
 async function ogFixture() {
   const setup = await fixture();
   await mkdir(join(setup.root, "public/og"), { recursive: true });
-  await mkdir(join(setup.root, "src/og"), { recursive: true });
   await mkdir(join(setup.root, "scripts/fonts"), { recursive: true });
   await symlink(resolve("node_modules"), join(setup.root, "node_modules"), "dir");
   await Promise.all(
     [
       "scripts/generate-og-images.ts",
       "scripts/fonts/Geist-Regular.ttf",
-      "scripts/fonts/Geist-SemiBold.ttf",
       "scripts/fonts/GeistMono-Medium.ttf",
       "src/lib/og-image.ts",
       "src/lib/logo.ts",
       "src/site.config.ts",
       "tsconfig.json",
       "public/logo.svg",
-      "src/og/manifest.json",
       "public/og/site.png",
-      "public/og/projects.png",
     ].map((path) => copyFile(resolve(path), join(setup.root, path))),
   );
-  await writeFile(join(setup.root, "public/og/obsolete.png"), "Old card");
   return setup;
 }
 
-it("generates cards from a successful D1 query and prunes obsolete cards", async () => {
+it("generates only the shared site PNG without invoking Wrangler", async () => {
   const { root, command } = await ogFixture();
-  await command(["--remote", "--force"], [post], 0, "generate-og-images.ts");
-  expect((await readdir(join(root, "public/og"))).sort()).toEqual([
-    "current-post.png",
-    "projects.png",
-    "site.png",
-  ]);
-  const manifest = JSON.parse(await readFile(join(root, "src/og/manifest.json"), "utf8"));
-  expect(Object.keys(manifest).sort()).toEqual(["current-post", "projects", "site"]);
-  const args = JSON.parse(await readFile(join(root, "call.json"), "utf8"));
-  expect(args).toContain("--remote");
-  expect(args).toContain(
-    "--command=SELECT slug, title, description FROM posts WHERE published = 1 AND deleted_at IS NULL ORDER BY slug",
-  );
-});
-
-it("preserves cards and manifest when D1 fails", async () => {
-  const { root, command } = await ogFixture();
-  const before = await readFile(join(root, "src/og/manifest.json"), "utf8");
-  await expect(command(["--remote"], [], 1, "generate-og-images.ts")).rejects.toThrow();
-  expect(await readFile(join(root, "src/og/manifest.json"), "utf8")).toBe(before);
-  expect(await readFile(join(root, "public/og/obsolete.png"), "utf8")).toBe("Old card");
+  await command([], [], 1, "generate-og-images.ts");
+  expect(await readdir(join(root, "public/og"))).toEqual(["site.png"]);
+  const png = await readFile(join(root, "public/og/site.png"));
+  expect(png.subarray(0, 8).toString("hex")).toBe("89504e470d0a1a0a");
+  expect(png.readUInt32BE(16)).toBe(1200);
+  expect(png.readUInt32BE(20)).toBe(630);
+  await expect(readFile(join(root, "call.json"))).rejects.toThrow();
 });

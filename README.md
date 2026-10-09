@@ -73,13 +73,13 @@ Omit `--remote` to export local D1.
 
 ### Social cards
 
-Social cards remain static PNGs in `public/og/`. Their generated manifest lives in
-`src/og/manifest.json` so application code can import it through Vite. Generate cards from
-production D1 metadata with `pnpm run og --remote` (omit `--remote` for local D1).
-Generation replaces the card set with the selected database's published posts.
-`pnpm run deploy` generates production cards before building and deploying;
-plain builds and commit hooks do not query D1. Review and commit changed cards
-after generation. Production generation requires Cloudflare account access.
+Every page uses the same committed PNG at `public/og/site.png`. Publishing posts
+needs no image generation or deployment. Builds and deployments use the existing
+file and do not query D1 for social cards.
+
+To update the shared artwork after changing the site branding or card layout,
+run `pnpm og`, review and commit `public/og/site.png`, then deploy. Generation runs
+locally and requires no Cloudflare account access.
 
 The site self-hosts DM Sans and IBM Plex Mono in `public/fonts/`, including
 italic faces. The WOFF2 files are Latin subsets from Google Fonts; other scripts
@@ -93,11 +93,8 @@ Social cards use Geist and Geist Mono from
 using the static TTF files in `scripts/fonts/`, so generation needs no system fonts or
 font downloads. The original web fonts remain in `public/fonts/`. The
 [SIL Open Font License](public/fonts/OFL.txt) covers the Geist and Geist Mono
-files in both directories. After updating these font files, regenerate cards
-with `pnpm run og --remote --force`.
-
-Publishing updates the post immediately. New or changed social cards reach the
-website on the next deployment; posts without cards use the site card meanwhile.
+files in both directories. After updating these font files, regenerate the shared card
+with `pnpm og`.
 
 ## Checks
 
@@ -142,8 +139,7 @@ above, then deploy:
 pnpm run deploy
 ```
 
-This generates production social cards, builds, and deploys the Worker. Review
-and commit any generated card changes.
+This builds and deploys the Worker, including the committed shared social card.
 
 For production admin access, run `pnpm admin:enroll --remote` and open the printed
 link. Keep two passkeys on different devices; the app refuses removal of the

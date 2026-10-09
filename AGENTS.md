@@ -43,11 +43,10 @@ third-party services.
   pipeline in `vite.shared.ts`; MDX is scoped to `src/content/pages/`.
 - Signed previews cover one slug for seven days and must remain `no-store` and
   `noindex`.
-- OG cards are committed PNGs in `public/og/`. Generation replaces the card set
-  with the selected database's published posts; review and commit generated
-  changes. Preserve the manifest-based site-card fallback for posts without a
-  card. Layout and generation live in `src/lib/og-image.ts` and
-  `scripts/generate-og-images.ts`.
+- All pages use the shared committed PNG in `public/og/site.png`. Publishing posts
+  requires no card generation or deployment. `pnpm og` regenerates only this card
+  locally from site configuration; review and commit changes. Layout and generation
+  live in `src/lib/og-image.ts` and `scripts/generate-og-images.ts`.
 
 ## Authentication constraints
 
@@ -78,9 +77,8 @@ third-party services.
   `.dev.vars.example`. The experimental-field warning is expected.
 - For a requested deployment, check `pnpm exec wrangler whoami` and log in if
   needed, apply required remote migrations, and check `wrangler secret list`
-  before setting missing secrets. Run `pnpm run deploy`, which generates
-  production OG cards, builds, and deploys. Plain builds and commit hooks do not
-  query D1.
+  before setting missing secrets. Run `pnpm run deploy`, which builds and deploys the committed assets. Builds,
+  deployments, and commit hooks do not query D1 for social cards.
 
 ## UI conventions
 

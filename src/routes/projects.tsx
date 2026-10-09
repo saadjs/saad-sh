@@ -11,7 +11,7 @@ import { getLinkNavigationProps } from "#/lib/links";
 import { absoluteUrl, ogImagePath } from "#/lib/utils";
 
 const projectsUrl = absoluteUrl(siteConfig.routes.projects, siteConfig.url);
-const projectsImage = absoluteUrl(ogImagePath("projects"), siteConfig.url);
+const projectsImage = absoluteUrl(ogImagePath(), siteConfig.url);
 const linkClass = "touch-target text-accent underline-offset-4 transition-colors hover:underline";
 
 function ProjectLinks({ links }: { links: ProjectLink[] }) {

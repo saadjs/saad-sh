@@ -9,7 +9,7 @@ export const Route = createFileRoute("/opengraph-image")({
         new Response(null, {
           status: 301,
           headers: {
-            Location: ogImagePath("site"),
+            Location: ogImagePath(),
             "Cache-Control": "public, max-age=3600, s-maxage=86400",
           },
         }),

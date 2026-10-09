@@ -11,7 +11,7 @@ import { getRenderedDraft } from "#/lib/admin-posts";
 import { PREVIEW_HEADERS, previewTokenMatches } from "#/lib/preview";
 import { PostBody } from "#/components/PostBody";
 import { siteConfig } from "#/site.config";
-import { absoluteUrl, getPostImageUrl } from "#/lib/utils";
+import { absoluteUrl, ogImagePath } from "#/lib/utils";
 
 export const loadPostData = createServerFn({ method: "GET" })
   .validator((data: { slug: string; preview: string }) => data)
@@ -45,7 +45,7 @@ export const Route = createFileRoute("/posts/$slug")({
     const { metadata } = post;
     const postPath = `${siteConfig.routes.posts}/${post.slug}`;
     const postUrl = absoluteUrl(postPath, siteConfig.url);
-    const imageUrl = getPostImageUrl(post.slug, metadata.image, siteConfig.url);
+    const imageUrl = absoluteUrl(ogImagePath(), siteConfig.url);
     const markdownUrl = absoluteUrl(`${postPath}.md`, siteConfig.url);
 
     return {
@@ -62,7 +62,7 @@ export const Route = createFileRoute("/posts/$slug")({
         { property: "og:image", content: imageUrl },
         { property: "og:image:width", content: "1200" },
         { property: "og:image:height", content: "630" },
-        ...(metadata.image ? [] : [{ property: "og:image:type", content: "image/png" }]),
+        { property: "og:image:type", content: "image/png" },
         { name: "twitter:card", content: siteConfig.twitterCard },
         { name: "twitter:title", content: metadata.title },
         { name: "twitter:description", content: metadata.description },
@@ -85,7 +85,7 @@ function BlogPostPage() {
   const { metadata } = post;
   const postPath = `${siteConfig.routes.posts}/${post.slug}`;
   const postUrl = absoluteUrl(postPath, siteConfig.url);
-  const imageUrl = getPostImageUrl(post.slug, metadata.image, siteConfig.url);
+  const imageUrl = absoluteUrl(ogImagePath(), siteConfig.url);
 
   const jsonLd = {
     "@context": "https://schema.org",

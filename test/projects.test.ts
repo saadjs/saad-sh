@@ -17,9 +17,9 @@ describe("project link resolution", () => {
       kind: "external",
       href: "https://github.com/saadjs/hush",
     });
-    expect(resolveProjectLink("/og/projects.png")).toEqual({
+    expect(resolveProjectLink("/og/site.png")).toEqual({
       kind: "external",
-      href: "/og/projects.png",
+      href: "/og/site.png",
     });
   });
 
