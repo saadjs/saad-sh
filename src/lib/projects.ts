@@ -16,6 +16,19 @@ export type Project = {
 
 export const projects: Project[] = [
   {
+    name: "Pane",
+    description:
+      "Native macOS menu-bar app for switching apps and arranging windows with customizable keyboard shortcuts.",
+    tags: ["Swift", "SwiftUI", "macOS"],
+    links: [
+      { label: "GitHub", href: "https://github.com/saadjs/pane-wm" },
+      {
+        label: "Homebrew",
+        href: "https://github.com/saadjs/homebrew-tap/blob/main/Casks/pane.rb",
+      },
+    ],
+  },
+  {
     name: "Hush",
     description:
       "Ultra-minimal native Safari content blocker for iPhone, iPad, and Mac that ships its rules offline and makes no network requests.",
