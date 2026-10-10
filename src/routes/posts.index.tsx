@@ -1,7 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PostList } from "#/components/PostList";
-import { getAllPosts } from "#/lib/posts";
+import { HandNote, MarkedTitle } from "#/components/Sketch";
+import { countTags, getAllPosts } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
 import type { Post } from "#/lib/types";
@@ -19,7 +20,10 @@ function groupByYear(posts: Post[]): [string, Post[]][] {
 
 const loadPostArchive = createServerFn({ method: "GET" }).handler(async () => {
   const posts = await getAllPosts();
-  return { years: groupByYear(posts), total: posts.length };
+  const topTags = Array.from(countTags(posts).entries())
+    .sort((a, b) => b[1].count - a[1].count || a[1].label.localeCompare(b[1].label))
+    .slice(0, siteConfig.postsPage.topTagsLimit);
+  return { years: groupByYear(posts), total: posts.length, topTags };
 });
 
 export const Route = createFileRoute("/posts/")({
@@ -40,33 +44,57 @@ export const Route = createFileRoute("/posts/")({
 });
 
 function PostsPage() {
-  const { years, total } = Route.useLoaderData();
+  const { years, total, topTags } = Route.useLoaderData();
+  const { postsPage } = siteConfig;
 
   return (
     <div>
-      <header className="flex items-baseline justify-between gap-4">
-        <h1 className="page-title">{siteConfig.postsPage.heading}</h1>
-        <p className="shrink-0 font-mono text-xs text-muted">
-          {siteConfig.postsPage.countLabel(total)}
-        </p>
+      <header>
+        <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
+          <MarkedTitle text={postsPage.heading} />
+          <HandNote arrow="down-left" tilt="-rotate-[4deg]" className="pb-2 text-[1.625rem]">
+            {postsPage.countLabel(total)}
+          </HandNote>
+        </div>
+        <p className="mt-3.5 max-w-[32.5rem]">{postsPage.intro}</p>
+        <div className="mt-2 flex flex-wrap items-center gap-x-[1.125rem] font-mono text-[0.8125rem] text-muted">
+          {topTags.map(([slug, tag]) => (
+            <Link
+              key={slug}
+              to="/tags/$tag"
+              params={{ tag: slug }}
+              className="inline-flex min-h-11 items-center transition-colors hover:text-accent"
+            >
+              {tag.label} {tag.count}
+            </Link>
+          ))}
+          <Link to="/tags" className="pen-link inline-flex min-h-11 items-center text-foreground">
+            {postsPage.allTagsLabel} →
+          </Link>
+        </div>
       </header>
-      <p className="mt-3 text-[0.9375rem] text-muted">{siteConfig.postsPage.intro}</p>
-      <Link
-        to="/tags"
-        className="touch-target mt-3 inline-block text-[0.8125rem] text-accent underline-offset-4 hover:underline"
-      >
-        Browse by topic →
-      </Link>
       {total === 0 ? (
-        <p className="mt-16 text-muted">{siteConfig.postsPage.emptyMessage}</p>
+        <p className="mt-16 text-muted">{postsPage.emptyMessage}</p>
       ) : (
-        <div className="mt-9 flex flex-col gap-9">
-          {years.map(([year, posts]) => (
+        <div className="mt-9 flex flex-col gap-11">
+          {years.map(([year, posts], index) => (
             <section key={year} aria-labelledby={`year-${year}`}>
-              <h2 id={`year-${year}`} className="mb-3 font-mono text-xs font-normal text-muted">
-                {year}
-              </h2>
-              <PostList posts={posts} />
+              <div className="mb-1 ml-1.5 flex flex-wrap items-end gap-x-[1.125rem]">
+                <h2
+                  id={`year-${year}`}
+                  className={`hand text-[2.625rem] ${index % 2 === 0 ? "-rotate-3" : "rotate-2"}`}
+                >
+                  {year}
+                </h2>
+                {index === years.length - 1 && years.length > 1 && (
+                  <HandNote className="pb-2">{postsPage.firstYearNote}</HandNote>
+                )}
+              </div>
+              <PostList
+                posts={posts}
+                alt={index % 2 === 1}
+                caption={postsPage.countLabel(posts.length)}
+              />
             </section>
           ))}
         </div>

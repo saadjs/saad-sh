@@ -121,14 +121,14 @@ export function TableOfContents({ contentRef }: TableOfContentsProps) {
   if (items.length < 2) return null;
 
   const list = (
-    <ul className="space-y-1 border-l border-border">
+    <ul className="space-y-1 border-l-[1.4px] border-dashed border-border">
       {items.map((item) => (
         <li key={item.id}>
           <a
             href={`#${encodeURIComponent(item.id)}`}
             onClick={(event) => handleClick(event, item.id)}
             aria-current={activeId === item.id ? "location" : undefined}
-            className={`-ml-px block border-l-2 py-1 text-sm leading-snug transition-colors ${
+            className={`-ml-[1.4px] block border-l-2 py-1.5 text-[0.9375rem] leading-snug transition-colors ${
               item.depth > 0 ? "pl-7" : "pl-4"
             } ${
               activeId === item.id
@@ -149,11 +149,11 @@ export function TableOfContents({ contentRef }: TableOfContentsProps) {
         <p className="mb-3 font-mono text-xs text-muted">{siteConfig.postPage.tocLabel}</p>
         {list}
       </nav>
-      <details className="toc-inline">
-        <summary className="cursor-pointer font-mono text-[0.8125rem] text-muted marker:text-faint">
+      <details className="toc-inline sketch-box px-5 py-3">
+        <summary className="cursor-pointer py-1.5 font-mono text-[0.8125rem] text-muted marker:text-faint">
           {siteConfig.postPage.tocLabel}
         </summary>
-        <div className="mt-3">{list}</div>
+        <div className="mt-2 mb-2">{list}</div>
       </details>
     </>
   );

@@ -7,6 +7,8 @@ import { TableOfContents } from "#/components/TableOfContents";
 import { ShareMenu } from "#/components/ShareMenu";
 import { getAdjacentPosts, getRenderedPost } from "#/lib/posts";
 import { PostBody } from "#/components/PostBody";
+import { NewsletterSignup } from "#/components/NewsletterSignup";
+import { HandNote } from "#/components/Sketch";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl, ogImagePath } from "#/lib/utils";
 
@@ -64,6 +66,7 @@ export const Route = createFileRoute("/posts/$slug")({
 
 function BlogPostPage() {
   const { older, newer, post, hast } = Route.useLoaderData();
+  const { features } = Route.useRouteContext();
   const contentRef = useRef<HTMLDivElement>(null);
   const { metadata } = post;
   const postPath = `${siteConfig.routes.posts}/${post.slug}`;
@@ -115,18 +118,35 @@ function BlogPostPage() {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replaceAll("<", "\\u003c") }}
         />
         <PostHeader metadata={metadata}>
-          <ShareMenu
-            key={post.slug}
-            slug={post.slug}
-            markdownUrl={absoluteUrl(`${postPath}.md`, siteConfig.url)}
-          />
+          <div className="flex flex-wrap items-center gap-x-3.5 gap-y-2">
+            <ShareMenu
+              key={post.slug}
+              slug={post.slug}
+              markdownUrl={absoluteUrl(`${postPath}.md`, siteConfig.url)}
+            />
+            <HandNote arrow="left">{siteConfig.postPage.shareNote}</HandNote>
+          </div>
         </PostHeader>
         <TableOfContents key={post.slug} contentRef={contentRef} />
-        <div ref={contentRef}>
+        <div ref={contentRef} className="post-body">
           <PostBody hast={hast} />
         </div>
       </article>
       <PostPager older={older} newer={newer} />
+      {features.newsletter && (
+        <section aria-labelledby="post-newsletter" className="sketch-box sketch-box-alt mt-12 p-6">
+          <h2
+            id="post-newsletter"
+            className="text-2xl leading-tight font-semibold tracking-[-0.03em]"
+          >
+            {siteConfig.newsletter.heading}
+          </h2>
+          <p className="mt-1.5 mb-4 text-[0.9375rem] leading-relaxed text-muted">
+            {siteConfig.newsletter.description}
+          </p>
+          <NewsletterSignup />
+        </section>
+      )}
     </>
   );
 }

@@ -1,26 +1,32 @@
 import { createFileRoute } from "@tanstack/react-router";
+import type { ReactNode } from "react";
 import { siteConfig } from "#/site.config";
 import { ContentLink } from "#/components/ContentLink";
+import { HandNote, MarkedTitle } from "#/components/Sketch";
 import Content from "#/content/pages/about.mdx";
 import { absoluteUrl, ogImagePath } from "#/lib/utils";
 
 const { author, aboutPage } = siteConfig;
 
 function AuthorLinks() {
-  const linkClass = "touch-target text-accent underline-offset-4 hover:underline";
   return (
-    <div className="mt-6 flex flex-wrap gap-x-5 gap-y-2 text-[0.8125rem]">
-      <a href={`mailto:${author.email}`} className={linkClass}>
-        Email <span aria-hidden="true">↗</span>
+    <div className="mt-[1.125rem] flex flex-wrap items-center gap-x-4 gap-y-3.5">
+      <a href={`mailto:${author.email}`} className="sketch-btn sketch-btn-marker px-5">
+        Email
       </a>
-      <a href={author.github} target="_blank" rel="noreferrer" className={linkClass}>
-        GitHub <span aria-hidden="true">↗</span>
+      <a href={author.github} target="_blank" rel="noreferrer" className="sketch-btn px-5">
+        GitHub
       </a>
-      <a href={author.linkedin} target="_blank" rel="noreferrer" className={linkClass}>
-        LinkedIn <span aria-hidden="true">↗</span>
+      <a href={author.linkedin} target="_blank" rel="noreferrer" className="sketch-btn px-5">
+        LinkedIn
       </a>
+      <HandNote arrow="left">{aboutPage.contactNote}</HandNote>
     </div>
   );
+}
+
+function SayHello({ children }: { children: ReactNode }) {
+  return <section className="sketch-box mt-11 px-[1.375rem] py-6">{children}</section>;
 }
 
 export const Route = createFileRoute("/about")({
@@ -44,20 +50,19 @@ export const Route = createFileRoute("/about")({
 function AboutPage() {
   return (
     <div>
-      <h1 className="page-title mb-[1.125rem]">{aboutPage.heading}</h1>
-      <div className="max-w-[31.875rem]">
+      <MarkedTitle text={aboutPage.heading} />
+      <div className="mt-11">
         <Content
           components={{
             AuthorLinks,
-            a: ({ className, ...props }) => (
-              <ContentLink
-                {...props}
-                className={`text-foreground decoration-border hover:decoration-accent ${className ?? ""}`}
-              />
-            ),
-            p: ({ children }) => <p className="mt-[1.375rem] first:mt-0">{children}</p>,
+            SayHello,
+            a: ContentLink,
+            p: ({ children }) => <p className="mt-5 max-w-[37.5rem] first:mt-0">{children}</p>,
             h2: ({ children, ...props }) => (
-              <h2 {...props} className="mt-9 mb-3 text-[1.0625rem] font-medium tracking-tight">
+              <h2
+                {...props}
+                className="mb-1.5 text-[1.75rem] leading-tight font-semibold tracking-[-0.03em]"
+              >
                 {children}
               </h2>
             ),

@@ -1,4 +1,4 @@
-import { HeadContent, Link, Scripts, createRootRoute } from "@tanstack/react-router";
+import { HeadContent, Link, ScriptOnce, Scripts, createRootRoute } from "@tanstack/react-router";
 import { TanStackRouterDevtoolsPanel } from "@tanstack/react-router-devtools";
 import { TanStackDevtools } from "@tanstack/react-devtools";
 
@@ -8,6 +8,8 @@ import { SearchCommandClient } from "#/components/SearchCommandClient";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl, ogImagePath } from "#/lib/utils";
 import { logoAccent } from "#/lib/logo";
+import { themeInitScript } from "#/lib/theme";
+import { HandNote } from "#/components/Sketch";
 
 import { getFeatures } from "#/lib/features";
 
@@ -46,7 +48,7 @@ export const Route = createRootRoute({
     ],
     links: [
       { rel: "stylesheet", href: appCss },
-      ...["DMSans", "IBMPlexMono"].map((font) => ({
+      ...["DMSans", "IBMPlexMono", "Caveat"].map((font) => ({
         rel: "preload",
         href: `/fonts/${font}.woff2`,
         as: "font",
@@ -70,14 +72,12 @@ function NotFound() {
   return (
     <div className="flex flex-1 items-center justify-center py-24">
       <section className="text-center">
-        <p className="text-sm text-faint">404</p>
-        <h1 className="mt-3 text-3xl font-semibold tracking-tight text-foreground">
-          Page not found
-        </h1>
-        <p className="mt-3 text-muted">
+        <HandNote className="text-[2.625rem]">404</HandNote>
+        <h1 className="page-title mt-3">Page not found</h1>
+        <p className="mt-4 text-muted">
           The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
-        <Link to="/" className="mt-6 inline-block text-accent hover:underline">
+        <Link to="/" className="pen-link mt-6 inline-flex min-h-11 items-center">
           Back to home
         </Link>
       </section>
@@ -87,7 +87,7 @@ function NotFound() {
 
 function SiteShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-[39.625rem] px-5 pt-7 pb-12 sm:px-8 sm:pt-11">
+    <div className="mx-auto w-full max-w-[49rem] px-4 pt-5 pb-12 text-[1.0625rem] sm:px-8 sm:pt-11">
       <Header />
       <main className="min-w-0">{children}</main>
       <Footer />
@@ -98,8 +98,10 @@ function SiteShell({ children }: { children: React.ReactNode }) {
 
 function RootDocument({ children }: { children: React.ReactNode }) {
   return (
-    <html lang={siteConfig.language}>
+    // The head script sets data-theme before React hydrates.
+    <html lang={siteConfig.language} suppressHydrationWarning>
       <head>
+        <ScriptOnce>{themeInitScript}</ScriptOnce>
         <HeadContent />
       </head>
       <body className="antialiased">

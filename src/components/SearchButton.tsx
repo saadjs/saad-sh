@@ -19,7 +19,7 @@ export function SearchButton() {
     <button
       type="button"
       onClick={() => window.dispatchEvent(new Event("search:open"))}
-      className="touch-target text-[0.8125rem] text-muted underline-offset-4 transition-colors hover:text-foreground hover:underline"
+      className="inline-flex min-h-11 items-center transition-colors hover:text-accent"
       aria-label="Open search"
       title={`Search (${hint})`}
     >

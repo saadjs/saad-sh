@@ -165,11 +165,7 @@ export const Route = createFileRoute("/newsletter/confirm")({
 });
 
 function Eyebrow() {
-  return (
-    <p className="text-xs font-medium uppercase tracking-[0.2em] text-muted">
-      {siteConfig.newsletter.eyebrow}
-    </p>
-  );
+  return <p className="font-mono text-[0.8125rem] text-muted">{siteConfig.newsletter.eyebrow}</p>;
 }
 
 function StatusPanel({
@@ -184,7 +180,7 @@ function StatusPanel({
   return (
     <div className="space-y-4">
       <Eyebrow />
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">{heading}</h1>
+      <h1 className="page-title text-[clamp(2rem,6vw,3rem)]">{heading}</h1>
       <p className="max-w-lg text-muted leading-relaxed">{message}</p>
       {children}
     </div>
@@ -278,7 +274,7 @@ function ConfirmPage() {
           type="button"
           onClick={() => void confirm()}
           disabled={isConfirming}
-          className="inline-flex shrink-0 items-center justify-center rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+          className="sketch-btn sketch-btn-marker shrink-0"
         >
           {isConfirming ? confirmPage.confirmingLabel : confirmPage.confirmButtonLabel}
         </button>

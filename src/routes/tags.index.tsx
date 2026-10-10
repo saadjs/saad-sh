@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getAllTags } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
+import { HandNote, MarkedTitle } from "#/components/Sketch";
 import { absoluteUrl } from "#/lib/utils";
 
 const loadTags = createServerFn({ method: "GET" }).handler(async () => {
@@ -33,27 +34,27 @@ function TagsPage() {
 
   return (
     <div>
-      <header className="flex items-baseline justify-between gap-4">
-        <h1 className="page-title">{siteConfig.tagsPage.heading}</h1>
-        <p className="font-mono text-[0.8125rem] text-muted">
+      <header className="flex flex-wrap items-end gap-x-5 gap-y-2">
+        <MarkedTitle text={siteConfig.tagsPage.heading} />
+        <HandNote arrow="down-left" tilt="-rotate-[4deg]" className="pb-2 text-[1.625rem]">
           {siteConfig.tagsPage.tagCountLabel(tags.length)}
-        </p>
+        </HandNote>
       </header>
       {tags.length === 0 ? (
         <p className="mt-16 text-muted">{siteConfig.tagsPage.emptyMessage}</p>
       ) : (
-        <ul className="mt-10">
+        <ul className="sketch-box mt-10 px-5 py-1.5">
           {tags.map(([slug, tag]) => (
-            <li key={slug}>
+            <li key={slug} className="border-b-[1.4px] border-dashed border-border last:border-b-0">
               <Link
                 to="/tags/$tag"
                 params={{ tag: slug }}
-                className="group flex items-baseline justify-between gap-8 py-2"
+                className="group flex min-h-11 items-baseline justify-between gap-8 py-2.5"
               >
-                <span className="text-[0.9375rem] leading-6 text-foreground transition-colors group-hover:text-accent">
+                <span className="font-medium text-foreground transition-colors group-hover:text-accent">
                   {tag.label}
                 </span>
-                <span className="shrink-0 font-mono text-[0.8125rem] leading-6 text-muted tabular-nums">
+                <span className="shrink-0 font-mono text-[0.8125rem] text-muted tabular-nums">
                   {siteConfig.tagsPage.countLabel(tag.count)}
                 </span>
               </Link>

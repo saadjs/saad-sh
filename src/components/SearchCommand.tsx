@@ -272,8 +272,8 @@ export function SearchCommand({ open, onClose }: { open: boolean; onClose: () =>
       }}
       className="fixed inset-0 m-0 h-dvh max-h-none w-full max-w-none bg-transparent px-4 py-6 font-sans text-foreground backdrop:bg-foreground/20 open:flex open:items-start open:justify-center sm:py-[12vh]"
     >
-      <div className="flex max-h-full w-full max-w-[35.625rem] flex-col overflow-hidden rounded-md border border-border bg-background shadow-xl shadow-black/10">
-        <div className="flex shrink-0 items-center gap-3 border-b border-border px-5 py-4 focus-within:border-accent sm:px-6">
+      <div className="flex max-h-full w-full max-w-[35.625rem] flex-col sketch-box overflow-hidden">
+        <div className="flex shrink-0 items-center gap-3 border-b-[1.4px] border-dashed border-border px-5 py-4 focus-within:border-accent sm:px-6">
           <span className="size-2 shrink-0 bg-accent" aria-hidden="true" />
           <input
             ref={inputRef}

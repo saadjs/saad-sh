@@ -1,15 +1,14 @@
 import { Link, useRouteContext } from "@tanstack/react-router";
 import { siteConfig } from "#/site.config";
 
-const linkClass =
-  "touch-target underline-offset-4 transition-colors hover:text-foreground hover:underline";
+const linkClass = "inline-flex min-h-11 items-center transition-colors hover:text-accent";
 
 export function Footer() {
   const { features } = useRouteContext({ from: "__root__" });
   return (
-    <footer className="mt-16 flex flex-wrap items-center justify-between gap-x-6 gap-y-3 text-xs text-muted">
+    <footer className="sketch-rule mt-16 flex flex-wrap items-center justify-between gap-x-6 pt-3 text-sm text-muted">
       <p>{siteConfig.footer.description}</p>
-      <div className="flex flex-wrap gap-x-5 gap-y-2">
+      <div className="flex flex-wrap gap-x-[1.375rem]">
         {features.newsletter && (
           <Link to="/newsletter" className={linkClass}>
             Newsletter

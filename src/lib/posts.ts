@@ -67,8 +67,7 @@ export async function getRenderedPost(slug: string): Promise<{ post: Post; hast:
   return rendered.get(slug)!;
 }
 
-export async function getAllTags(): Promise<Map<string, { label: string; count: number }>> {
-  const posts = await getAllPosts();
+export function countTags(posts: Post[]): Map<string, { label: string; count: number }> {
   const tagCounts = new Map<string, { label: string; count: number }>();
 
   for (const post of posts) {
@@ -85,6 +84,10 @@ export async function getAllTags(): Promise<Map<string, { label: string; count: 
   }
 
   return tagCounts;
+}
+
+export async function getAllTags(): Promise<Map<string, { label: string; count: number }>> {
+  return countTags(await getAllPosts());
 }
 
 export async function getAdjacentPosts(

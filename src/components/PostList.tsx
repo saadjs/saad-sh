@@ -4,50 +4,43 @@ import type { Post } from "#/lib/types";
 
 interface PostListProps {
   posts: Post[];
-  showYear?: boolean;
+  // Swaps the corner wobble so stacked boxes don't look stamped from one mould.
+  alt?: boolean;
+  caption?: string;
 }
 
-const shortDate = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "2-digit",
-  timeZone: "UTC",
-});
-const dateWithYear = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "2-digit",
-  year: "numeric",
-  timeZone: "UTC",
-});
-
-export function PostList({ posts, showYear = false }: PostListProps) {
+export function PostList({ posts, alt = false, caption }: PostListProps) {
   return (
-    <ul>
-      {posts.map((post) => {
-        const date = new Date(post.metadata.date);
-        const label = Number.isNaN(date.getTime())
-          ? post.metadata.date
-          : (showYear ? dateWithYear : shortDate).format(date);
-        return (
-          <li key={post.slug}>
+    <div className={`sketch-box px-5 py-1.5 ${alt ? "sketch-box-alt" : ""}`.trim()}>
+      <ul>
+        {posts.map((post) => (
+          <li
+            key={post.slug}
+            className="border-b-[1.4px] border-dashed border-border last:border-b-0"
+          >
             <Link
               to="/posts/$slug"
               params={{ slug: post.slug }}
-              className={`group grid items-baseline gap-x-4 py-[0.8125rem] sm:gap-x-5 ${showYear ? "grid-cols-[6.5rem_minmax(0,1fr)]" : "grid-cols-[3.5rem_minmax(0,1fr)]"}`}
+              className="group flex flex-wrap items-baseline gap-x-5 gap-y-0.5 py-[0.8125rem]"
             >
               <time
                 dateTime={post.metadata.date}
-                aria-label={formatDate(post.metadata.date)}
-                className="whitespace-nowrap font-mono text-xs leading-6 text-muted tabular-nums"
+                className="font-mono text-[0.8125rem] whitespace-nowrap text-muted tabular-nums"
               >
-                {label}
+                {formatDate(post.metadata.date)}
               </time>
-              <span className="text-[0.9375rem] leading-6 text-foreground underline-offset-4 transition-colors group-hover:text-accent group-hover:underline">
+              <span className="min-w-0 flex-[1_1_20rem] font-medium transition-colors group-hover:text-accent">
                 {post.metadata.title}
               </span>
             </Link>
           </li>
-        );
-      })}
-    </ul>
+        ))}
+      </ul>
+      {caption && (
+        <p className="border-t-[1.4px] border-dashed border-border pt-2 pb-1.5 font-mono text-xs text-muted">
+          {caption}
+        </p>
+      )}
+    </div>
   );
 }

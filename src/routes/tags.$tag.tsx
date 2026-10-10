@@ -1,6 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { PostList } from "#/components/PostList";
+import { HandNote, Marker } from "#/components/Sketch";
 import { getAllTags, getPostsByTag } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
@@ -45,14 +46,21 @@ function TagPage() {
 
   return (
     <div>
-      <header className="flex items-baseline justify-between gap-4">
-        <h1 className="page-title">Posts tagged &ldquo;{label}&rdquo;</h1>
-        <p className="font-mono text-[0.8125rem] text-muted">
-          {siteConfig.postsPage.countLabel(posts.length)}
-        </p>
+      <header>
+        <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
+          <h1 className="page-title">
+            <span className="mb-2 block font-mono text-[0.8125rem] leading-normal font-normal tracking-normal text-muted">
+              Posts tagged{" "}
+            </span>
+            <Marker>{label}</Marker>
+          </h1>
+          <HandNote arrow="down-left" tilt="-rotate-[4deg]" className="pb-2 text-[1.625rem]">
+            {siteConfig.postsPage.countLabel(posts.length)}
+          </HandNote>
+        </div>
       </header>
       <div className="mt-10">
-        <PostList posts={posts} showYear />
+        <PostList posts={posts} />
       </div>
     </div>
   );

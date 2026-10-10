@@ -65,6 +65,10 @@ export const siteConfig = {
     postsCountLabel: (count: number) => `${count} published`,
     postsLimit: 5,
     allPostsLabel: "More writing",
+    greetingNote: "hi!",
+    projectsNote: "the fun stuff",
+    postsNote: "newest on top",
+    morePostsNote: (count: number) => `${count} more in the drawer`,
   },
   postsPage: {
     title: "Posts",
@@ -73,6 +77,9 @@ export const siteConfig = {
     intro: "Notes, experiments, and things I learned along the way.",
     emptyMessage: "No posts yet.",
     countLabel: (count: number) => `${count} ${count === 1 ? "post" : "posts"}`,
+    allTagsLabel: "all tags",
+    topTagsLimit: 6,
+    firstYearNote: "where it started",
   },
   tagsPage: {
     title: "Tags",
@@ -88,6 +95,7 @@ export const siteConfig = {
     heading: "A little about me.",
     description: "Learn more about Saad Bash.",
     kicker: "About the author",
+    contactNote: "start with the yellow one",
   },
   projectsPage: {
     title: "Projects",
@@ -95,12 +103,16 @@ export const siteConfig = {
     heading: "Things I’ve built.",
     eyebrow: "Side projects",
     intro: "Small tools, side projects, and ongoing experiments.",
+    countNote: (count: number) => `${count} of the many`,
   },
   postPage: {
     tagsLabel: "Filed under",
     olderLabel: "Older",
     newerLabel: "Newer",
     tocLabel: "On this page",
+    shareNote: "or hand it to an AI",
+    newestNote: "this one is the newest",
+    oldestNote: "the very first one",
   },
   tagPage: {
     title: (tag: string) => `Posts tagged "${tag}"`,

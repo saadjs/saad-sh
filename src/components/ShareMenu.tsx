@@ -69,15 +69,11 @@ export function ShareMenu({ slug, markdownUrl }: ShareMenuProps) {
   );
 
   const itemClass =
-    "flex w-full items-center gap-3 px-3 py-2 text-left text-sm text-muted transition-colors hover:bg-border/50 hover:text-foreground";
+    "flex min-h-11 w-full items-center gap-3 px-4 text-left text-[0.9375rem] text-foreground transition-colors hover:bg-[var(--code-bg)] hover:text-accent";
 
   return (
-    <div ref={menuRef} className="relative ml-auto inline-flex items-center">
-      <button
-        type="button"
-        onClick={handleCopy}
-        className="inline-flex items-center gap-1.5 py-1 transition-colors hover:text-foreground"
-      >
+    <div ref={menuRef} className="relative inline-flex items-center gap-2 font-sans">
+      <button type="button" onClick={handleCopy} className="sketch-btn">
         {copied ? (
           <CheckIcon className="h-3.5 w-3.5 text-green-500" />
         ) : (
@@ -92,7 +88,7 @@ export function ShareMenu({ slug, markdownUrl }: ShareMenuProps) {
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
-        className="ml-1 inline-flex items-center p-1 transition-colors hover:text-foreground"
+        className="sketch-btn px-3.5"
       >
         <ChevronDownIcon className="h-3 w-3" />
       </button>
@@ -100,7 +96,7 @@ export function ShareMenu({ slug, markdownUrl }: ShareMenuProps) {
       {status === "error" && (
         <p
           role="alert"
-          className="absolute top-full right-0 mt-2 w-64 font-sans text-sm text-red-500"
+          className="absolute top-full left-0 mt-2 w-64 font-sans text-sm text-red-500"
         >
           Could not copy. Try again or use View as Markdown.
         </p>
@@ -108,7 +104,7 @@ export function ShareMenu({ slug, markdownUrl }: ShareMenuProps) {
       {open && (
         <div
           id={menuId}
-          className="absolute top-full right-0 z-50 mt-2 w-52 overflow-hidden rounded-md border border-border bg-background py-1 font-sans shadow-sm"
+          className="sketch-box sketch-box-alt absolute top-full left-0 z-50 mt-3 w-56 overflow-hidden py-1 font-sans"
         >
           <button
             type="button"

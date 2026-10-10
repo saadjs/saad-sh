@@ -7,7 +7,7 @@ interface TagListProps {
 
 export function TagList({ tags }: TagListProps) {
   return (
-    <div className="flex flex-wrap gap-x-2.5">
+    <div className="flex flex-wrap gap-x-4">
       {tags.map((tag) => {
         const slug = slugifyTag(tag);
         if (!slug) return null;
@@ -16,7 +16,7 @@ export function TagList({ tags }: TagListProps) {
             key={tag}
             to="/tags/$tag"
             params={{ tag: slug }}
-            className="transition-colors hover:text-foreground"
+            className="pen-link inline-flex min-h-11 items-center text-foreground"
           >
             {tag.toLowerCase()}
           </Link>

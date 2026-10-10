@@ -36,7 +36,10 @@ describe("Cloudflare Worker", () => {
 
     expect(response.status).toBe(200);
     expect(response.headers.get("content-type")).toContain("text/html");
-    await expect(response.text()).resolves.toContain("All writing.");
+    // The heading is split around its highlighter span, so match the intro copy.
+    await expect(response.text()).resolves.toContain(
+      "Notes, experiments, and things I learned along the way.",
+    );
   });
 
   it("serves llms.txt with markdown links for every post", async () => {
