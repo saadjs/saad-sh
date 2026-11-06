@@ -104,8 +104,12 @@ export const projects: Project[] = [
         href: "https://saadjs.github.io/in-days-docs/features.html",
       },
       {
-        label: "TestFlight Beta",
-        href: "https://testflight.apple.com/join/tYK39N6c",
+        label: "MCP",
+        href: "https://saadjs.github.io/in-days-docs/mcp.html",
+      },
+      {
+        label: "App Store",
+        href: "https://apps.apple.com/us/app/indays/id6754492547",
       },
     ],
   },
