@@ -44,7 +44,7 @@ export function ThemeToggle() {
       onClick={toggleTheme}
       aria-label={label}
       title={label}
-      className="-mr-2.5 inline-flex size-11 items-center justify-center transition-colors hover:text-accent"
+      className="theme-toggle inline-flex size-11 items-center justify-center"
     >
       <svg {...iconProps} className="size-5 dark:hidden">
         <path d="M20.5 14.2A8.5 8.5 0 0 1 9.7 3.6a8.6 8.6 0 1 0 10.8 10.6z" />

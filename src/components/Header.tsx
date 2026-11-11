@@ -1,51 +1,59 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { siteConfig } from "#/site.config";
 import { logoAccent } from "#/lib/logo";
+import { useStyle } from "#/styles/use-style";
 import { LogoMark } from "./LogoMark";
 import { SearchButton } from "./SearchButton";
-import { PenCircle } from "./Sketch";
+import { StyleSwitcher } from "./StyleSwitcher";
 import { ThemeToggle } from "./ThemeToggle";
+
+const dot = siteConfig.name.lastIndexOf(".");
+const brandName = dot === -1 ? siteConfig.name : siteConfig.name.slice(0, dot);
+const brandSuffix = dot === -1 ? "" : siteConfig.name.slice(dot);
 
 export function Header() {
   const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const style = useStyle();
+  // A style may rename the nav items (Arcade calls posts "Quests").
+  const labels: Record<string, string | undefined> = {
+    [siteConfig.routes.posts]: style.nav?.posts,
+    [siteConfig.routes.projects]: style.nav?.projects,
+    [siteConfig.routes.about]: style.nav?.about,
+  };
 
   return (
-    <header className="mb-11">
-      <nav
-        aria-label="Main navigation"
-        className="flex flex-wrap items-center justify-between gap-x-7 gap-y-2"
+    <header className="site-header">
+      <Link
+        to="/"
+        aria-label={`${siteConfig.name} home`}
+        className="site-brand"
+        // The logo colour has one source (logo.ts); CSS can still override the mark.
+        style={{ "--logo-accent": logoAccent } as React.CSSProperties}
       >
-        <Link
-          to="/"
-          aria-label={`${siteConfig.name} home`}
-          className="flex min-h-11 shrink-0 items-center gap-3 font-mono text-lg tracking-[-0.04em] text-foreground"
-        >
-          <LogoMark className="size-[1.375rem]" style={{ color: logoAccent }} />
-          {siteConfig.name}
-        </Link>
-        <div className="flex flex-wrap items-center gap-x-[1.625rem] text-[0.9375rem]">
-          {siteConfig.nav.map((item) => {
-            const active =
-              pathname === item.href ||
-              pathname.startsWith(`${item.href}/`) ||
-              (item.href === siteConfig.routes.posts &&
-                pathname.startsWith(siteConfig.routes.tags));
-            return (
-              <Link
-                key={item.href}
-                to={item.href}
-                aria-current={active ? "page" : undefined}
-                className="relative inline-flex min-h-11 items-center transition-colors hover:text-accent"
-              >
-                {item.label}
-                {active && <PenCircle />}
-              </Link>
-            );
-          })}
-          <SearchButton />
-          <ThemeToggle />
-        </div>
+        <LogoMark className="site-brand-mark" />
+        <span>
+          {brandName}
+          <span className="site-brand-suffix">{brandSuffix}</span>
+        </span>
+      </Link>
+      <nav aria-label="Main navigation" className="site-nav">
+        {siteConfig.nav.map((item) => {
+          const active =
+            pathname === item.href ||
+            pathname.startsWith(`${item.href}/`) ||
+            (item.href === siteConfig.routes.posts && pathname.startsWith(siteConfig.routes.tags));
+          return (
+            <Link key={item.href} to={item.href} aria-current={active ? "page" : undefined}>
+              {labels[item.href] ?? item.label}
+            </Link>
+          );
+        })}
       </nav>
+      <div className="site-tools">
+        <SearchButton />
+        <StyleSwitcher />
+        {style.themes === "both" && <ThemeToggle />}
+      </div>
     </header>
   );
 }

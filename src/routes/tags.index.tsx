@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { getAllTags } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
-import { HandNote, MarkedTitle } from "#/components/Sketch";
+import { PageHead } from "#/components/PageHead";
 import { absoluteUrl } from "#/lib/utils";
 
 const loadTags = createServerFn({ method: "GET" }).handler(async () => {
@@ -31,32 +31,20 @@ export const Route = createFileRoute("/tags/")({
 
 function TagsPage() {
   const { tags } = Route.useLoaderData();
+  const { tagsPage } = siteConfig;
 
   return (
-    <div>
-      <header className="flex flex-wrap items-end gap-x-5 gap-y-2">
-        <MarkedTitle text={siteConfig.tagsPage.heading} />
-        <HandNote arrow="down-left" tilt="-rotate-[4deg]" className="pb-2 text-[1.625rem]">
-          {siteConfig.tagsPage.tagCountLabel(tags.length)}
-        </HandNote>
-      </header>
+    <div className="page">
+      <PageHead title={tagsPage.heading} eyebrow={tagsPage.tagCountLabel(tags.length)} />
       {tags.length === 0 ? (
-        <p className="mt-16 text-muted">{siteConfig.tagsPage.emptyMessage}</p>
+        <p className="text-muted">{tagsPage.emptyMessage}</p>
       ) : (
-        <ul className="sketch-box mt-10 px-5 py-1.5">
+        <ul className="post-list">
           {tags.map(([slug, tag]) => (
-            <li key={slug} className="border-b-[1.4px] border-dashed border-border last:border-b-0">
-              <Link
-                to="/tags/$tag"
-                params={{ tag: slug }}
-                className="group flex min-h-11 items-baseline justify-between gap-8 py-2.5"
-              >
-                <span className="font-medium text-foreground transition-colors group-hover:text-accent">
-                  {tag.label}
-                </span>
-                <span className="shrink-0 font-mono text-[0.8125rem] text-muted tabular-nums">
-                  {siteConfig.tagsPage.countLabel(tag.count)}
-                </span>
+            <li key={slug}>
+              <Link to="/tags/$tag" params={{ tag: slug }} className="post-row justify-between">
+                <span className="post-row-title">{tag.label}</span>
+                <span className="eyebrow tabular-nums">{tagsPage.countLabel(tag.count)}</span>
               </Link>
             </li>
           ))}

@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import type { ReactNode } from "react";
 import { siteConfig } from "#/site.config";
 import { ContentLink } from "#/components/ContentLink";
-import { HandNote, MarkedTitle } from "#/components/Sketch";
+import { PageHead } from "#/components/PageHead";
 import Content from "#/content/pages/about.mdx";
 import { absoluteUrl, ogImagePath } from "#/lib/utils";
 
@@ -10,23 +10,22 @@ const { author, aboutPage } = siteConfig;
 
 function AuthorLinks() {
   return (
-    <div className="mt-[1.125rem] flex flex-wrap items-center gap-x-4 gap-y-3.5">
-      <a href={`mailto:${author.email}`} className="sketch-btn sketch-btn-marker px-5">
+    <div className="flex flex-wrap items-center gap-3">
+      <a href={`mailto:${author.email}`} className="ui-btn ui-btn-primary">
         Email
       </a>
-      <a href={author.github} target="_blank" rel="noreferrer" className="sketch-btn px-5">
+      <a href={author.github} target="_blank" rel="noreferrer" className="ui-btn">
         GitHub
       </a>
-      <a href={author.linkedin} target="_blank" rel="noreferrer" className="sketch-btn px-5">
+      <a href={author.linkedin} target="_blank" rel="noreferrer" className="ui-btn">
         LinkedIn
       </a>
-      <HandNote arrow="left">{aboutPage.contactNote}</HandNote>
     </div>
   );
 }
 
 function SayHello({ children }: { children: ReactNode }) {
-  return <section className="sketch-box mt-11 px-[1.375rem] py-6">{children}</section>;
+  return <section className="say-hello ui-panel mt-10 px-6 py-6">{children}</section>;
 }
 
 export const Route = createFileRoute("/about")({
@@ -49,25 +48,10 @@ export const Route = createFileRoute("/about")({
 
 function AboutPage() {
   return (
-    <div>
-      <MarkedTitle text={aboutPage.heading} />
-      <div className="mt-11">
-        <Content
-          components={{
-            AuthorLinks,
-            SayHello,
-            a: ContentLink,
-            p: ({ children }) => <p className="mt-5 max-w-[37.5rem] first:mt-0">{children}</p>,
-            h2: ({ children, ...props }) => (
-              <h2
-                {...props}
-                className="mb-1.5 text-[1.75rem] leading-tight font-semibold tracking-[-0.03em]"
-              >
-                {children}
-              </h2>
-            ),
-          }}
-        />
+    <div className="page about-page">
+      <PageHead title={aboutPage.heading} />
+      <div className="post-body">
+        <Content components={{ AuthorLinks, SayHello, a: ContentLink }} />
       </div>
     </div>
   );

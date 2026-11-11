@@ -1,0 +1,969 @@
+/*
+ * Shared stylesheet, loaded with every style.
+ *
+ * It defines the token names and a plain default look for every shared class,
+ * built only from those tokens. A style's own style.css sets the tokens and
+ * overrides whichever classes it wants. See src/styles/README.md.
+ */
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+/* Fallback tokens. Every style overrides these in its own :root block. */
+:root {
+  color-scheme: light;
+  --background: #ffffff;
+  --surface: #ffffff;
+  --foreground: #18181b;
+  --muted: #5f5f68;
+  --faint: #a1a1aa;
+  --border: #e4e4e7;
+  --accent: #c2410c;
+  --accent-fg: #ffffff;
+  --selection: color-mix(in srgb, var(--accent) 25%, transparent);
+  --radius: 6px;
+
+  --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-heading: var(--font-body);
+  --font-code: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Widths: the whole shell, an ordinary page, and running text. */
+  --site-width: 49rem;
+  --page-width: 100%;
+  --measure: 42rem;
+  --prose-size: 1.0625rem;
+
+  /* Code colours follow the palette unless a style says otherwise. */
+  --code-bg: color-mix(in srgb, var(--foreground) 6%, var(--background));
+  --code-fg: var(--foreground);
+  --code-muted: var(--muted);
+  --code-caret: var(--foreground);
+  --code-selection: var(--selection);
+  --code-keyword: var(--foreground);
+  --code-string: var(--accent);
+  --code-number: var(--accent);
+  --code-function: var(--foreground);
+  --code-operator: var(--muted);
+  --code-punctuation: var(--muted);
+  --code-property: var(--foreground);
+  --code-tag: var(--foreground);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-fg: var(--accent-fg);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-heading);
+  --font-mono: var(--font-code);
+}
+
+html {
+  scrollbar-gutter: stable;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-body);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+::selection {
+  background: var(--selection);
+}
+
+/* Layered so a style can restyle the focus ring from its own components layer. */
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* ---------- Shell ---------- */
+  /* A full-height column, so the footer sits at the bottom on short pages. */
+  .site {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: var(--site-width);
+    min-height: 100vh;
+    margin-inline: auto;
+    padding: 1.25rem 1rem 3rem;
+  }
+
+  .site-main {
+    flex: 1;
+  }
+
+  .site-header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem 1.75rem;
+    margin-bottom: 2.75rem;
+  }
+
+  .site-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-height: 2.75rem;
+    font-family: var(--font-code);
+    font-weight: 500;
+  }
+
+  .site-brand-mark {
+    width: 1.25rem;
+    height: 1.25rem;
+    flex: none;
+    color: var(--logo-accent, var(--accent));
+  }
+
+  /* The ".sh" keeps the logo colour; a style can recolour it for contrast. */
+  .site-brand-suffix {
+    color: var(--accent);
+  }
+
+  .site-nav,
+  .site-tools {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 1.5rem;
+    font-size: 0.9375rem;
+  }
+
+  .site-nav a,
+  .site-tools > button,
+  .style-switcher > button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--muted);
+    transition: color 150ms ease;
+  }
+
+  .site-nav a:hover,
+  .site-tools button:hover,
+  .site-nav a[aria-current="page"] {
+    color: var(--foreground);
+  }
+
+  .site-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0 1.5rem;
+    margin-top: 4rem;
+    padding-top: 0.75rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.875rem;
+    color: var(--muted);
+  }
+
+  .site-footer nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.375rem;
+  }
+
+  .site-footer a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+
+  .site-footer a:hover {
+    color: var(--foreground);
+  }
+
+  /* ---------- Pages ---------- */
+  .page {
+    width: 100%;
+    max-width: var(--page-width);
+  }
+
+  .page-head {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .page-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 6vw, 2.75rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  .page-intro {
+    max-width: var(--measure);
+    font-size: 1.125rem;
+    color: var(--muted);
+  }
+
+  .eyebrow {
+    font-family: var(--font-code);
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  .section-title {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.2;
+  }
+
+  /* ---------- Small parts ---------- */
+  .ui-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  /* Anything that floats over the page: menus and the search dialog. Kept apart
+     from .ui-panel so a style can flatten its panels without making menus
+     see-through. It must stay opaque. */
+  .ui-popover {
+    background: var(--surface);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
+  }
+
+  /* A row inside a popover menu. */
+  .ui-menu-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0 1rem;
+    color: var(--foreground);
+    font-size: 0.9375rem;
+    text-align: left;
+  }
+
+  .ui-menu-item:hover {
+    background: color-mix(in srgb, var(--foreground) 9%, var(--surface));
+  }
+
+  .ui-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2.75rem;
+    padding: 0 1rem;
+    background: var(--surface);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    cursor: pointer;
+  }
+
+  .ui-btn:hover:not(:disabled) {
+    border-color: var(--foreground);
+  }
+
+  .ui-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .ui-btn-primary {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+  }
+
+  .ui-input {
+    min-height: 2.875rem;
+    width: 100%;
+    padding: 0 0.875rem;
+    background: var(--surface);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 1rem;
+  }
+
+  .ui-link {
+    text-decoration: underline;
+    text-decoration-color: color-mix(in srgb, currentColor 40%, transparent);
+    text-underline-offset: 4px;
+    transition: color 150ms ease;
+  }
+
+  .ui-link:hover {
+    color: var(--accent);
+  }
+
+  .ui-rule {
+    border-top: 1px solid var(--border);
+  }
+
+  .ui-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    min-height: 2.75rem;
+    font-family: var(--font-code);
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  .ui-chip:hover {
+    color: var(--foreground);
+  }
+
+  /* ---------- Post lists ---------- */
+  .post-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--border);
+  }
+
+  .post-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 1.25rem;
+    min-height: 2.75rem;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .post-row-date {
+    flex: none;
+    width: 6rem;
+    font-family: var(--font-code);
+    font-size: 0.8125rem;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .post-row-main {
+    flex: 1 1 18rem;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  .post-row-title {
+    font-weight: 500;
+    transition: color 150ms ease;
+  }
+
+  .post-row:hover .post-row-title {
+    color: var(--accent);
+  }
+
+  /* Off by default; a style turns these on with `display`. */
+  .post-row-desc,
+  .post-row-tag {
+    display: none;
+    font-size: 0.9375rem;
+    color: var(--muted);
+  }
+
+  .post-row-tag {
+    font-family: var(--font-code);
+    font-size: 0.8125rem;
+  }
+
+  .year-group + .year-group {
+    margin-top: 2.5rem;
+  }
+
+  .year-title {
+    margin-bottom: 0.5rem;
+    font-family: var(--font-code);
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  /* ---------- Post page ---------- */
+  .post-page {
+    max-width: var(--measure);
+  }
+
+  .post-header {
+    display: flex;
+    flex-direction: column;
+    gap: 0.875rem;
+    margin-bottom: 2rem;
+  }
+
+  .post-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 1rem;
+    font-family: var(--font-code);
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  .post-title {
+    font-family: var(--font-heading);
+    font-size: clamp(2rem, 5.5vw, 2.75rem);
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+  }
+
+  .post-desc {
+    font-size: 1.125rem;
+    line-height: 1.5;
+    color: var(--muted);
+  }
+
+  /* The table of contents renders twice: a side rail and a collapsed box.
+     Styles with room for a rail show `.toc-rail` and hide `.toc-inline`. */
+  .toc-rail {
+    display: none;
+  }
+
+  .toc-inline {
+    margin-bottom: 2rem;
+    padding: 0.5rem 1.25rem;
+  }
+
+  .toc-inline > summary {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    cursor: pointer;
+  }
+
+  .toc-label {
+    font-family: var(--font-code);
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  .toc-list {
+    border-left: 1px solid var(--border);
+  }
+
+  .toc-list a {
+    display: block;
+    margin-left: -1px;
+    padding: 0.375rem 0 0.375rem 1rem;
+    border-left: 2px solid transparent;
+    font-size: 0.9375rem;
+    line-height: 1.35;
+    color: var(--muted);
+  }
+
+  .toc-list a[data-depth="1"] {
+    padding-left: 1.75rem;
+  }
+
+  .toc-list a:hover {
+    color: var(--foreground);
+  }
+
+  .toc-list a[aria-current="location"] {
+    border-left-color: var(--accent);
+    color: var(--foreground);
+  }
+
+  .post-pager {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 1rem 2rem;
+    max-width: var(--measure);
+    margin-top: 4rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--border);
+    line-height: 1.4;
+  }
+
+  .post-pager a {
+    display: flex;
+    flex: 1 1 14rem;
+    flex-direction: column;
+    gap: 0.25rem;
+    max-width: 20rem;
+  }
+
+  .post-pager a[data-dir="newer"] {
+    margin-left: auto;
+    text-align: right;
+  }
+
+  .post-pager-label {
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .post-pager-title {
+    font-weight: 500;
+  }
+
+  .post-pager a:hover .post-pager-title {
+    color: var(--accent);
+  }
+
+  /* ---------- Running text (posts and the about page) ---------- */
+  .post-body {
+    font-size: var(--prose-size);
+    line-height: 1.7;
+  }
+
+  .post-body > * + * {
+    margin-top: 1.25rem;
+  }
+
+  /* A heading that opens a block needs no gap above it. */
+  .post-body > :first-child,
+  .say-hello > :first-child {
+    margin-top: 0;
+  }
+
+  .post-body :is(h1, h2, h3) {
+    font-family: var(--font-heading);
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    scroll-margin-top: 6rem;
+    text-wrap: balance;
+  }
+
+  .post-body h1 {
+    margin-top: 3rem;
+    font-size: 1.875em;
+  }
+
+  .post-body h2 {
+    margin-top: 3rem;
+    font-size: 1.5em;
+  }
+
+  .post-body h3 {
+    margin-top: 2.25rem;
+    font-size: 1.2em;
+  }
+
+  .post-body :is(ul, ol) {
+    padding-left: 1.4rem;
+  }
+
+  .post-body ul {
+    list-style: disc;
+  }
+
+  .post-body ol {
+    list-style: decimal;
+  }
+
+  .post-body li + li {
+    margin-top: 0.5rem;
+  }
+
+  .post-body li::marker {
+    color: var(--muted);
+  }
+
+  .post-body blockquote {
+    padding-left: 1.25rem;
+    border-left: 2px solid var(--accent);
+    color: var(--muted);
+    font-style: italic;
+  }
+
+  .post-body :not(pre) > code {
+    padding: 0.125rem 0.375rem;
+    background: var(--code-bg);
+    border-radius: 0.3rem;
+    font-family: var(--font-code);
+    font-size: 0.88em;
+    /* Long identifiers must not push the page wider than a phone. break-word
+       (not anywhere) so table columns do not shrink and split short names. */
+    overflow-wrap: break-word;
+  }
+
+  .post-body strong {
+    font-weight: 600;
+  }
+
+  .post-body hr {
+    margin-block: 2.5rem;
+    border: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .post-body img {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .post-body .table-wrap {
+    overflow-x: auto;
+  }
+
+  /* Names in table cells stay whole; a wide table scrolls inside its wrapper. */
+  .post-body :is(td, th) > code {
+    white-space: nowrap;
+  }
+
+  .post-body table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 0.9375rem;
+    line-height: 1.4;
+  }
+
+  .post-body :is(th, td) {
+    padding: 0.75rem 1rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .post-body tr:last-child td {
+    border-bottom: 0;
+  }
+
+  .post-body th {
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .code-block {
+    overflow: hidden;
+  }
+
+  .code-block-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0 0.5rem 0 1.125rem;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .code-block-bar button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0 0.625rem;
+    color: var(--foreground);
+  }
+
+  .code-block-bar button:hover,
+  .code-block-bar button[aria-pressed="true"] {
+    color: var(--accent);
+  }
+
+  .code-block pre {
+    overflow-x: auto;
+    padding: 1rem 1.125rem;
+    background: var(--code-bg);
+    color: var(--code-fg);
+  }
+
+  /* ---------- Projects ---------- */
+  .project-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
+    gap: 1rem;
+  }
+
+  .project-grid > li {
+    display: flex;
+    scroll-margin-top: 6rem;
+  }
+
+  .project-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 1.25rem 1.25rem 0.5rem;
+  }
+
+  .project-name {
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: 600;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
+  }
+
+  .project-desc {
+    flex: 1;
+    font-size: 0.9375rem;
+  }
+
+  .project-tags {
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .project-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.125rem;
+    font-size: 0.9375rem;
+  }
+
+  .project-links a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+  }
+
+  /* ---------- Style menu ---------- */
+  /* The anchor is a class, not a utility, so a style can re-anchor the menu. */
+  .style-switcher {
+    position: relative;
+  }
+
+  .style-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    z-index: 50;
+    width: min(20rem, calc(100vw - 2rem));
+    max-height: min(32rem, 70vh);
+    margin-top: 0.5rem;
+    padding: 0.375rem;
+    overflow-y: auto;
+    /* The menu keeps a plain, readable look in every style. */
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 0.9375rem;
+    line-height: 1.35;
+    letter-spacing: normal;
+    text-transform: none;
+  }
+
+  /* Below desktop widths a header can wrap and leave the trigger anywhere, so
+     the menu becomes a sheet pinned to the bottom corner of the screen: always
+     fully visible, whatever the header does. */
+  @media (max-width: 56rem) {
+    .style-menu {
+      position: fixed;
+      inset: auto 1rem 1rem auto;
+      width: min(20rem, calc(100vw - 2rem));
+      max-height: min(32rem, calc(100dvh - 6rem));
+      margin: 0;
+    }
+  }
+
+  .style-menu button {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    width: 100%;
+    min-height: 2.75rem;
+    padding: 0.375rem 0.625rem;
+    border-radius: calc(var(--radius) * 0.75);
+    color: var(--foreground);
+    text-align: left;
+  }
+
+  /* Mixed from the menu's own colours, so it stays readable whatever a style
+     does with --code-bg. */
+  .style-menu button:hover,
+  .style-menu button[aria-current="true"] {
+    background: color-mix(in srgb, var(--foreground) 9%, var(--surface));
+  }
+
+  .style-menu-swatch {
+    display: inline-flex;
+    flex: none;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+  }
+
+  .style-menu-swatch > span {
+    width: 0.75rem;
+    height: 1.25rem;
+  }
+
+  .style-menu-blurb {
+    display: block;
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+}
+
+@media (pointer: coarse) {
+  .touch-target {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 2.75rem;
+  }
+}
+
+/* ---------- Syntax highlighting ---------- */
+pre[class*="language-"] {
+  color: var(--code-fg);
+}
+
+code[class*="language-"],
+pre[class*="language-"] {
+  font-family: var(--font-code);
+  font-size: 0.8125rem;
+  line-height: 1.75;
+  text-shadow: none;
+}
+
+pre[class*="language-"] code {
+  padding: 0;
+  background: transparent;
+}
+
+pre[class*="language-"]::selection,
+pre[class*="language-"] *::selection,
+code[class*="language-"]::selection,
+code[class*="language-"] *::selection {
+  background: var(--code-selection);
+}
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: var(--code-muted);
+}
+
+.token.comment {
+  font-style: italic;
+}
+
+.token.punctuation {
+  color: var(--code-punctuation);
+}
+
+.token.namespace {
+  opacity: 0.75;
+}
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: var(--code-property);
+}
+
+.token.boolean,
+.token.number {
+  color: var(--code-number);
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: var(--code-string);
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: var(--code-operator);
+  background: transparent;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: var(--code-keyword);
+}
+
+.token.function,
+.token.class-name {
+  color: var(--code-function);
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: var(--code-caret);
+}
+
+.token.important,
+.token.bold {
+  font-weight: 600;
+}
+
+.token.italic {
+  font-style: italic;
+}
+
+.token.entity {
+  cursor: help;
+}
+
+.heading-anchor {
+  color: inherit;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  margin-left: 0.5rem;
+  vertical-align: middle;
+}
+
+.heading-anchor::after {
+  content: "#";
+  opacity: 0;
+  color: currentColor;
+  font-weight: 400;
+  transition: opacity 150ms ease;
+}
+
+.heading-anchor .icon {
+  display: none;
+}
+
+.heading-anchor:focus-visible::after,
+.heading-anchor:hover::after,
+:is(h1, h2, h3, h4, h5, h6):hover > .heading-anchor::after {
+  opacity: 0.5;
+}
+
+.heading-anchor:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 4px;
+}

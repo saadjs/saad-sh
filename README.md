@@ -39,6 +39,8 @@ Builds. Builds validate post filenames, frontmatter, and Markdown.
 - Static pages: `src/content/pages/`
 - Site copy and metadata: `src/site.config.ts`
 - Projects: `src/lib/projects.ts`
+- Site styles (the switchable looks): `src/styles/`, see
+  [src/styles/README.md](src/styles/README.md). Add one with `pnpm style:new <id>`.
 - Shared social card: run `pnpm og`, then review and commit `public/og/site.png`.
 
 ## Checks

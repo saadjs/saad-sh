@@ -4,8 +4,9 @@ export const themeStorageKey = "theme";
 const darkQuery = "(prefers-color-scheme: dark)";
 
 // Runs in <head> before first paint so the page never flashes the wrong theme.
-// A saved choice wins; otherwise the page follows the system and keeps following it.
-export const themeInitScript = `(function(){var m=matchMedia(${JSON.stringify(darkQuery)});function a(){var s=null;try{s=localStorage.getItem(${JSON.stringify(themeStorageKey)})}catch(e){}document.documentElement.dataset.theme=s==="light"||s==="dark"?s:m.matches?"dark":"light"}a();m.addEventListener("change",a)})()`;
+// A style with one fixed look sets data-theme-lock on <html> and that wins.
+// Otherwise a saved choice wins, then the system, which the page keeps following.
+export const themeInitScript = `(function(){var d=document.documentElement,m=matchMedia(${JSON.stringify(darkQuery)});function a(){var l=d.dataset.themeLock,s=null;try{s=localStorage.getItem(${JSON.stringify(themeStorageKey)})}catch(e){}d.dataset.theme=l==="light"||l==="dark"?l:s==="light"||s==="dark"?s:m.matches?"dark":"light"}a();m.addEventListener("change",a)})()`;
 
 export function toggleTheme(): Theme {
   const root = document.documentElement;

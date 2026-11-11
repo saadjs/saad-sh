@@ -9,15 +9,18 @@ import { siteConfig } from "#/site.config";
 import { absoluteUrl, ogImagePath } from "#/lib/utils";
 import { logoAccent } from "#/lib/logo";
 import { themeInitScript } from "#/lib/theme";
-import { HandNote } from "#/components/Sketch";
+import { getSiteContext } from "#/lib/site-context";
+import { getStyle } from "#/styles";
+import { useStyle } from "#/styles/use-style";
 
-import { getFeatures } from "#/lib/features";
-
-import appCss from "#/styles.css?url";
+import baseCss from "#/styles/base.css?url";
 
 export const Route = createRootRoute({
-  beforeLoad: async () => ({ features: await getFeatures() }),
-  head: () => ({
+  beforeLoad: ({ location }) => {
+    const preview = (location.search as Record<string, unknown>).style;
+    return getSiteContext(typeof preview === "string" ? preview : undefined);
+  },
+  head: ({ match }) => ({
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
@@ -47,8 +50,10 @@ export const Route = createRootRoute({
       { name: "twitter:image", content: absoluteUrl(ogImagePath(), siteConfig.url) },
     ],
     links: [
-      { rel: "stylesheet", href: appCss },
-      ...["DMSans", "IBMPlexMono", "Caveat"].map((font) => ({
+      // Only the active style's stylesheet and fonts are ever requested.
+      { rel: "stylesheet", href: baseCss },
+      { rel: "stylesheet", href: getStyle(match.context.styleId).css },
+      ...getStyle(match.context.styleId).fonts.map((font) => ({
         rel: "preload",
         href: `/fonts/${font}.woff2`,
         as: "font",
@@ -72,12 +77,12 @@ function NotFound() {
   return (
     <div className="flex flex-1 items-center justify-center py-24">
       <section className="text-center">
-        <HandNote className="text-[2.625rem]">404</HandNote>
+        <p className="eyebrow">404</p>
         <h1 className="page-title mt-3">Page not found</h1>
         <p className="mt-4 text-muted">
           The page you&apos;re looking for doesn&apos;t exist or has been moved.
         </p>
-        <Link to="/" className="pen-link mt-6 inline-flex min-h-11 items-center">
+        <Link to="/" className="ui-link mt-6 inline-flex min-h-11 items-center">
           Back to home
         </Link>
       </section>
@@ -87,9 +92,9 @@ function NotFound() {
 
 function SiteShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="mx-auto w-full max-w-[49rem] px-4 pt-5 pb-12 text-[1.0625rem] sm:px-8 sm:pt-11">
+    <div className="site">
       <Header />
-      <main className="min-w-0">{children}</main>
+      <main className="site-main min-w-0">{children}</main>
       <Footer />
       <SearchCommandClient />
     </div>
@@ -97,9 +102,16 @@ function SiteShell({ children }: { children: React.ReactNode }) {
 }
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+  const style = useStyle();
   return (
-    // The head script sets data-theme before React hydrates.
-    <html lang={siteConfig.language} suppressHydrationWarning>
+    // data-style picks the look. The head script sets data-theme before React
+    // hydrates; data-theme-lock pins it for styles that have a single look.
+    <html
+      lang={siteConfig.language}
+      data-style={style.id}
+      data-theme-lock={style.themes === "both" ? undefined : style.themes}
+      suppressHydrationWarning
+    >
       <head>
         <ScriptOnce>{themeInitScript}</ScriptOnce>
         <HeadContent />

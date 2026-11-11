@@ -10,6 +10,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "og": "tsx scripts/generate-og-images.ts",
+    "style:new": "tsx scripts/new-style.ts",
     "build": "tsx scripts/validate-posts.ts && wrangler types --check && vite build && tsc --noEmit",
     "cf-typegen": "wrangler types",
     "preview": "vite preview",

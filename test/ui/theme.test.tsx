@@ -26,6 +26,7 @@ describe("theme", () => {
   beforeEach(() => {
     stubStorage();
     delete document.documentElement.dataset.theme;
+    delete document.documentElement.dataset.themeLock;
   });
 
   afterEach(() => {
@@ -52,6 +53,14 @@ describe("theme", () => {
   it("ignores a saved value that is not a theme", () => {
     setSystemTheme(true);
     localStorage.setItem(themeStorageKey, "sepia");
+    runInitScript();
+    expect(document.documentElement.dataset.theme).toBe("dark");
+  });
+
+  it("lets a style with one fixed look override the system and saved theme", () => {
+    setSystemTheme(false);
+    localStorage.setItem(themeStorageKey, "light");
+    document.documentElement.dataset.themeLock = "dark";
     runInitScript();
     expect(document.documentElement.dataset.theme).toBe("dark");
   });

@@ -16,7 +16,7 @@ export function TagList({ tags }: TagListProps) {
             key={tag}
             to="/tags/$tag"
             params={{ tag: slug }}
-            className="pen-link inline-flex min-h-11 items-center text-foreground"
+            className="ui-link inline-flex min-h-11 items-center"
           >
             {tag.toLowerCase()}
           </Link>

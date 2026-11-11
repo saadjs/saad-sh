@@ -211,14 +211,10 @@ function NewsletterSignupForm() {
           onFocus={ensureWidget}
           placeholder={newsletter.emailPlaceholder}
           autoComplete="email"
-          className="min-h-[2.875rem] w-full rounded-[10px_8px_11px_7px/8px_11px_7px_10px] border-[1.6px] border-foreground bg-surface px-3.5 text-base text-foreground placeholder:text-faint focus:border-accent focus:outline-none"
+          className="ui-input"
         />
         <div ref={containerRef} />
-        <button
-          type="submit"
-          disabled={!canSubmit}
-          className="sketch-btn sketch-btn-marker self-start"
-        >
+        <button type="submit" disabled={!canSubmit} className="ui-btn ui-btn-primary self-start">
           {isSubmitting ? newsletter.submittingLabel : newsletter.buttonLabel}
         </button>
       </div>

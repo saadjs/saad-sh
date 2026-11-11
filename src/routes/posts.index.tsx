@@ -1,7 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PostList } from "#/components/PostList";
-import { HandNote, MarkedTitle } from "#/components/Sketch";
+import { PageHead } from "#/components/PageHead";
 import { countTags, getAllPosts } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
@@ -48,56 +48,34 @@ function PostsPage() {
   const { postsPage } = siteConfig;
 
   return (
-    <div>
-      <header>
-        <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
-          <MarkedTitle text={postsPage.heading} />
-          <HandNote arrow="down-left" tilt="-rotate-[4deg]" className="pb-2 text-[1.625rem]">
-            {postsPage.countLabel(total)}
-          </HandNote>
-        </div>
-        <p className="mt-3.5 max-w-[32.5rem]">{postsPage.intro}</p>
-        <div className="mt-2 flex flex-wrap items-center gap-x-[1.125rem] font-mono text-[0.8125rem] text-muted">
+    <div className="page">
+      <PageHead
+        title={postsPage.heading}
+        eyebrow={postsPage.countLabel(total)}
+        intro={postsPage.intro}
+      >
+        <div className="flex flex-wrap items-center gap-x-[1.125rem]">
           {topTags.map(([slug, tag]) => (
-            <Link
-              key={slug}
-              to="/tags/$tag"
-              params={{ tag: slug }}
-              className="inline-flex min-h-11 items-center transition-colors hover:text-accent"
-            >
-              {tag.label} {tag.count}
+            <Link key={slug} to="/tags/$tag" params={{ tag: slug }} className="ui-chip">
+              {tag.label} <span>{tag.count}</span>
             </Link>
           ))}
-          <Link to="/tags" className="pen-link inline-flex min-h-11 items-center text-foreground">
+          <Link to="/tags" className="ui-link inline-flex min-h-11 items-center text-[0.9375rem]">
             {postsPage.allTagsLabel} →
           </Link>
         </div>
-      </header>
+      </PageHead>
       {total === 0 ? (
-        <p className="mt-16 text-muted">{postsPage.emptyMessage}</p>
+        <p className="text-muted">{postsPage.emptyMessage}</p>
       ) : (
-        <div className="mt-9 flex flex-col gap-11">
-          {years.map(([year, posts], index) => (
-            <section key={year} aria-labelledby={`year-${year}`}>
-              <div className="mb-1 ml-1.5 flex flex-wrap items-end gap-x-[1.125rem]">
-                <h2
-                  id={`year-${year}`}
-                  className={`hand text-[2.625rem] ${index % 2 === 0 ? "-rotate-3" : "rotate-2"}`}
-                >
-                  {year}
-                </h2>
-                {index === years.length - 1 && years.length > 1 && (
-                  <HandNote className="pb-2">{postsPage.firstYearNote}</HandNote>
-                )}
-              </div>
-              <PostList
-                posts={posts}
-                alt={index % 2 === 1}
-                caption={postsPage.countLabel(posts.length)}
-              />
-            </section>
-          ))}
-        </div>
+        years.map(([year, posts]) => (
+          <section key={year} aria-labelledby={`year-${year}`} className="year-group">
+            <h2 id={`year-${year}`} className="year-title">
+              {year}
+            </h2>
+            <PostList posts={posts} />
+          </section>
+        ))
       )}
     </div>
   );

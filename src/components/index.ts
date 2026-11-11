@@ -4,6 +4,8 @@ export { Footer } from "./Footer";
 export { PostList } from "./PostList";
 export { PostPager } from "./PostPager";
 export { PostHeader } from "./PostHeader";
+export { PageHead } from "./PageHead";
+export { StyleSwitcher } from "./StyleSwitcher";
 export { TagList } from "./TagList";
 export { SearchCommand } from "./SearchCommand";
 export { SearchButton } from "./SearchButton";

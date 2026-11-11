@@ -1,0 +1,222 @@
+/* Ledger: mono labels in a left column, everything else in aligned rows. */
+@font-face {
+  font-family: "IBM Plex Sans";
+  src: url("/fonts/IBMPlexSans.woff2") format("woff2");
+  font-weight: 100 700;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/IBMPlexMono.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/IBMPlexMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+:root {
+  --background: #fafafa;
+  --surface: #ffffff;
+  --foreground: #18181b;
+  --muted: #5f5f68;
+  --faint: #a1a1aa;
+  --border: #e4e4e7;
+  --accent: #c2410c;
+  --accent-fg: #ffffff;
+  --radius: 4px;
+  --font-body: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-code: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --site-width: 65rem;
+  --measure: 42.5rem;
+  --label: 10rem;
+  --code-bg: #f0f0f2;
+}
+
+:root[data-theme="dark"] {
+  --background: #111113;
+  --surface: #18181b;
+  --foreground: #ededef;
+  --muted: #a1a1aa;
+  --faint: #5f5f68;
+  --border: #2a2a2f;
+  --accent: #fb923c;
+  --accent-fg: #18181b;
+  --code-bg: #1f1f23;
+}
+
+@layer components {
+  .site {
+    padding-top: 0;
+  }
+
+  .site-header {
+    padding-block: 0.875rem;
+    border-bottom: 1px solid var(--foreground);
+    font-family: var(--font-code);
+    font-size: 0.875rem;
+  }
+
+  .site-nav,
+  .site-tools {
+    font-size: 0.875rem;
+    text-transform: lowercase;
+  }
+
+  .site-nav a[aria-current="page"] {
+    text-decoration: underline;
+    text-underline-offset: 5px;
+  }
+
+  /* On narrow screens anchor the style menu to the header, not the Style
+     button, so it cannot run off the left edge. */
+  .say-hello > :first-child {
+    margin-top: 0;
+  }
+
+  .site-footer {
+    font-family: var(--font-code);
+    font-size: 0.8125rem;
+  }
+
+  .page-title {
+    font-size: 1.875rem;
+  }
+
+  /* Label column on the left once there is room. */
+  .ledger-row {
+    display: grid;
+    gap: 0.5rem;
+    padding-block: 2.5rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ledger-intro {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .ledger-name {
+    flex: none;
+    width: 6rem;
+    font-weight: 600;
+  }
+
+  .post-row-tag {
+    display: inline;
+  }
+
+  .year-title {
+    color: var(--foreground);
+  }
+
+  .project-grid {
+    grid-template-columns: 1fr;
+    gap: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  .project-card {
+    padding: 0.875rem 0 0.25rem;
+    background: transparent;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+  }
+
+  .project-name {
+    font-size: 1rem;
+  }
+
+  .project-links {
+    font-family: var(--font-code);
+    font-size: 0.8125rem;
+    text-transform: lowercase;
+  }
+
+  @media (min-width: 60rem) {
+    .post-body td:first-child code {
+      white-space: nowrap;
+    }
+
+    .ledger-row,
+    .page-head {
+      grid-template-columns: var(--label) minmax(0, 1fr);
+      column-gap: 2.5rem;
+    }
+
+    .page-head {
+      display: grid;
+      row-gap: 0.75rem;
+    }
+
+    .page-head > * {
+      grid-column: 2;
+    }
+
+    .page-head > .eyebrow {
+      grid-column: 1;
+      grid-row: 1;
+      padding-top: 0.5rem;
+    }
+
+    .page > :not(.page-head, .post-header) {
+      margin-left: calc(var(--label) + 2.5rem);
+    }
+
+    .project-card {
+      display: grid;
+      grid-template-columns: 10rem minmax(0, 1fr) minmax(0, 13rem);
+      align-items: baseline;
+      column-gap: 1.25rem;
+    }
+
+    .project-card .project-tags {
+      grid-column: 2;
+    }
+
+    .project-card .project-links {
+      grid-column: 3;
+      grid-row: 1 / span 2;
+      justify-content: flex-end;
+    }
+
+    /* Post: contents in the label column, text beside it. */
+    .post-page {
+      display: grid;
+      grid-template-columns: var(--label) minmax(0, var(--measure));
+      column-gap: 2.5rem;
+      max-width: none;
+    }
+
+    .post-page > * {
+      grid-column: 2;
+      margin-left: 0 !important;
+    }
+
+    .post-page > .toc-rail {
+      display: block;
+      grid-column: 1;
+      grid-row: 2 / span 2;
+      align-self: start;
+      position: sticky;
+      top: 1.5rem;
+      max-height: calc(100vh - 3rem);
+      overflow-y: auto;
+    }
+
+    .post-page > .toc-inline {
+      display: none;
+    }
+
+    .post-pager {
+      margin-left: calc(var(--label) + 2.5rem);
+    }
+  }
+}

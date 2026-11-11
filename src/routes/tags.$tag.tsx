@@ -1,7 +1,7 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { createServerFn } from "@tanstack/react-start";
 import { PostList } from "#/components/PostList";
-import { HandNote, Marker } from "#/components/Sketch";
+import { PageHead } from "#/components/PageHead";
 import { getAllTags, getPostsByTag } from "#/lib/posts";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
@@ -45,23 +45,12 @@ function TagPage() {
   const { label, posts } = Route.useLoaderData();
 
   return (
-    <div>
-      <header>
-        <div className="flex flex-wrap items-end gap-x-5 gap-y-2">
-          <h1 className="page-title">
-            <span className="mb-2 block font-mono text-[0.8125rem] leading-normal font-normal tracking-normal text-muted">
-              Posts tagged{" "}
-            </span>
-            <Marker>{label}</Marker>
-          </h1>
-          <HandNote arrow="down-left" tilt="-rotate-[4deg]" className="pb-2 text-[1.625rem]">
-            {siteConfig.postsPage.countLabel(posts.length)}
-          </HandNote>
-        </div>
-      </header>
-      <div className="mt-10">
-        <PostList posts={posts} />
-      </div>
+    <div className="page">
+      <PageHead
+        title={label}
+        eyebrow={`${siteConfig.tagPage.eyebrow} · ${siteConfig.postsPage.countLabel(posts.length)}`}
+      />
+      <PostList posts={posts} />
     </div>
   );
 }

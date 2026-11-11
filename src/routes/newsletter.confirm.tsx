@@ -274,7 +274,7 @@ function ConfirmPage() {
           type="button"
           onClick={() => void confirm()}
           disabled={isConfirming}
-          className="sketch-btn sketch-btn-marker shrink-0"
+          className="ui-btn ui-btn-primary shrink-0"
         >
           {isConfirming ? confirmPage.confirmingLabel : confirmPage.confirmButtonLabel}
         </button>

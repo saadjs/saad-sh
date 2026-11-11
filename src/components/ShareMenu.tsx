@@ -68,12 +68,11 @@ export function ShareMenu({ slug, markdownUrl }: ShareMenuProps) {
     [markdownUrl],
   );
 
-  const itemClass =
-    "flex min-h-11 w-full items-center gap-3 px-4 text-left text-[0.9375rem] text-foreground transition-colors hover:bg-[var(--code-bg)] hover:text-accent";
+  const itemClass = "ui-menu-item";
 
   return (
     <div ref={menuRef} className="relative inline-flex items-center gap-2 font-sans">
-      <button type="button" onClick={handleCopy} className="sketch-btn">
+      <button type="button" onClick={handleCopy} className="ui-btn">
         {copied ? (
           <CheckIcon className="h-3.5 w-3.5 text-green-500" />
         ) : (
@@ -88,7 +87,7 @@ export function ShareMenu({ slug, markdownUrl }: ShareMenuProps) {
         aria-expanded={open}
         aria-controls={menuId}
         onClick={() => setOpen((v) => !v)}
-        className="sketch-btn px-3.5"
+        className="ui-btn px-3.5"
       >
         <ChevronDownIcon className="h-3 w-3" />
       </button>
@@ -104,7 +103,7 @@ export function ShareMenu({ slug, markdownUrl }: ShareMenuProps) {
       {open && (
         <div
           id={menuId}
-          className="sketch-box sketch-box-alt absolute top-full left-0 z-50 mt-3 w-56 overflow-hidden py-1 font-sans"
+          className="ui-popover absolute top-full left-0 z-50 mt-3 w-56 overflow-hidden py-1 font-sans"
         >
           <button
             type="button"

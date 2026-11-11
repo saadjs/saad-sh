@@ -1,6 +1,6 @@
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { NewsletterSignup } from "#/components/NewsletterSignup";
-import { MarkedTitle } from "#/components/Sketch";
+import { PageHead } from "#/components/PageHead";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl } from "#/lib/utils";
 
@@ -25,12 +25,9 @@ export const Route = createFileRoute("/newsletter/")({
 
 function NewsletterPage() {
   return (
-    <div className="space-y-4">
-      <MarkedTitle text={newsletter.heading} />
-      <p className="max-w-lg pt-2 leading-relaxed">{newsletter.description}</p>
-      <div className="pt-1">
-        <NewsletterSignup />
-      </div>
+    <div className="page">
+      <PageHead title={newsletter.heading} intro={newsletter.description} />
+      <NewsletterSignup />
     </div>
   );
 }
