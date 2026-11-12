@@ -86,6 +86,19 @@ Put overrides inside `@layer components { … }` so Tailwind utilities still win
   `.toc-label`, `.toc-list`, `.post-body`, `.code-block`, `.code-block-bar`
   (its buttons are styled through `.code-block-bar button`),
   `.post-pager`, `.post-pager-label`, `.post-pager-title`
+- Post demos (interactive `<post-demo name="…">` embeds, see
+  `src/components/PostDemo.tsx`): `.post-demo` (the frame; also sets
+  `--demo-code`, `--demo-model`, `--demo-agent`, `--demo-human`, the colours of
+  the step-kind markers), `.demo-kind[data-kind]`, `.demo-kind-icon[data-kind]`
+  (line icons in tags and diagram nodes), `.demo-json` (Prism `.token` spans), `.demo-io`,
+  `.demo-toggle`, `.demo-event[data-status]`, `.demo-meter`, `.demo-tab`.
+  Diagrams are hand-drawn SVG `.demo-flow` (rough.js, Excalifont via
+  `--font-sketch`, set on `.post-demo`): nodes `.demo-flow-node[data-kind][data-state]`
+  built from `.demo-sketch-base`, `.demo-sketch-hachure` and `.demo-sketch-line`;
+  edges `.demo-sketch-edge[data-taken|data-back]` holding `.demo-flow-edge` and
+  `.demo-flow-arrowhead`,
+  `.demo-flow-badge`; `.demo-flow-wrap` holds a wide and a tall layout and
+  shows one by width
 - Projects: `.projects-page`, `.project-grid`, `.project-card`, `.project-name`,
   `.project-desc`, `.project-tags`, `.project-links`
 - Style menu: `.style-menu` (keeps a plain look in every style; leave it alone

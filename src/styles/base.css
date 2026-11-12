@@ -83,6 +83,14 @@ body {
   background: var(--selection);
 }
 
+/* Hand-drawn lettering for post demo diagrams. Only downloaded on pages that
+   render one. */
+@font-face {
+  font-family: "Excalifont";
+  src: url("/fonts/Excalifont.woff2") format("woff2");
+  font-display: swap;
+}
+
 /* Layered so a style can restyle the focus ring from its own components layer. */
 @layer base {
   :focus-visible {
@@ -819,6 +827,690 @@ body {
     display: block;
     font-size: 0.8125rem;
     color: var(--muted);
+  }
+  /* ---------- Interactive post demos (<post-demo>) ----------
+     Every colour comes from the palette tokens so each style gets a readable
+     default. Step kinds are told apart by label text first and colour second. */
+  .post-demo {
+    /* Diagram lettering. A style can swap it for its own face. */
+    --font-sketch: "Excalifont", var(--font-body);
+    --demo-code: var(--muted);
+    --demo-model: var(--accent);
+    --demo-agent: var(--accent);
+    --demo-human: var(--foreground);
+    margin-inline: 0;
+    padding: 1rem;
+    background: var(--surface);
+    color: var(--foreground);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    font-size: 0.9375rem;
+    line-height: 1.5;
+  }
+
+  .post-body .post-demo :is(ul, ol) {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .post-body .post-demo li {
+    margin: 0;
+    padding: 0;
+  }
+
+  .post-body .post-demo li::before,
+  .post-body .post-demo li::marker {
+    content: none;
+  }
+
+  /* Spacing comes from grid gaps, so a style's paragraph margins cannot
+     collapse or double it. */
+  .post-body .post-demo p {
+    margin: 0;
+  }
+
+  .post-demo,
+  .demo-detail,
+  .demo-pattern {
+    display: grid;
+    gap: 0.875rem;
+    align-content: start;
+  }
+
+  /* Wide JSON scrolls inside its block instead of widening the page. */
+  .post-demo > *,
+  .demo-detail > *,
+  .demo-pattern > * {
+    min-width: 0;
+  }
+
+  .post-demo-fallback {
+    color: var(--muted);
+  }
+
+  .demo-head {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .demo-title {
+    font-family: var(--font-heading);
+    font-size: 1.0625rem;
+    font-weight: 600;
+  }
+
+  .demo-intro,
+  .demo-footnote,
+  .demo-toggle-hint,
+  .demo-progress {
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  .demo-kind {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0 0.375rem;
+    border: 1px solid var(--demo-code);
+    border-left-width: 4px;
+    border-radius: calc(var(--radius) / 2);
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: var(--foreground);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+
+  .demo-kind-icon {
+    flex: none;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    color: var(--demo-code);
+    overflow: visible;
+  }
+
+  .demo-kind .demo-kind-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+
+  .demo-kind-icon[data-kind="model"] {
+    color: var(--demo-model);
+  }
+
+  .demo-kind-icon[data-kind="agent"] {
+    color: var(--demo-agent);
+  }
+
+  .demo-kind-icon[data-kind="human"] {
+    color: var(--demo-human);
+  }
+
+  .demo-kind[data-kind="model"] {
+    border-color: var(--demo-model);
+  }
+
+  .demo-kind[data-kind="agent"] {
+    border-color: var(--demo-agent);
+    border-style: dashed;
+    border-left-style: solid;
+  }
+
+  .demo-kind[data-kind="human"] {
+    border-color: var(--demo-human);
+  }
+
+  .demo-legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+
+  @media (min-width: 40rem) {
+    .demo-split {
+      grid-template-columns: 13rem 1fr;
+    }
+  }
+
+  .demo-detail {
+    min-width: 0;
+  }
+
+  .demo-detail-title {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+  }
+
+  .demo-detail-summary {
+    font-weight: 500;
+  }
+
+  .demo-badge {
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--muted);
+  }
+
+  .demo-json-label {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  /* Wrap instead of scrolling: a horizontal bar on a few short lines looks
+     broken, and a vertical one hides the output the reader came to see. */
+  .demo-json pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow: visible;
+    padding: 0.75rem;
+    background: var(--code-bg);
+    color: var(--code-fg);
+    border-radius: var(--radius);
+    font-family: var(--font-code);
+    font-size: 0.8125rem;
+    line-height: 1.45;
+  }
+
+  .post-body .demo-json pre code {
+    padding: 0;
+    background: none;
+    font-size: inherit;
+  }
+
+  .demo-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .demo-toggles {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  @media (min-width: 40rem) {
+    .demo-toggles {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .demo-toggle {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: start;
+    gap: 0 0.625rem;
+    font-weight: 500;
+    min-height: 2.75rem;
+    padding: 0.5rem 0.625rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    cursor: pointer;
+  }
+
+  .demo-toggle:has(input:checked) {
+    border-color: var(--accent);
+  }
+
+  .demo-toggle input {
+    flex: none;
+    width: 1.125rem;
+    height: 1.125rem;
+    margin-top: 0.125rem;
+    accent-color: var(--accent);
+  }
+
+  .demo-toggle-hint {
+    grid-column: 2;
+    font-weight: 400;
+  }
+
+  .demo-trace-time {
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    color: var(--muted);
+    padding-top: 0.125rem;
+  }
+
+  .demo-trace-step {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.375rem;
+    font-weight: 500;
+  }
+
+  .demo-trace-text {
+    grid-column: 2 / -1;
+    color: var(--muted);
+  }
+
+  .demo-event:is(
+    [data-status="retry"],
+    [data-status="flagged"],
+    [data-status="crash"],
+    [data-status="fallback"],
+    [data-status="failed"]
+  ) {
+    border-left-color: var(--accent);
+  }
+
+  .demo-stats,
+  .demo-pros,
+  .demo-meters {
+    margin: 0;
+  }
+
+  .demo-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(7.5rem, 1fr));
+    gap: 0.75rem;
+  }
+
+  .demo-stats dt,
+  .demo-meter dt,
+  .demo-pros dt {
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .demo-stats dd,
+  .demo-pros dd,
+  .demo-meter dd {
+    margin: 0;
+  }
+
+  .demo-stats dd {
+    font-weight: 600;
+  }
+
+  .demo-pros {
+    display: grid;
+    gap: 0.625rem;
+  }
+
+  .demo-dial {
+    display: grid;
+    gap: 0.25rem;
+  }
+
+  .demo-range {
+    width: 100%;
+    min-height: 2.75rem;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+
+  .demo-dial-ends {
+    display: flex;
+    justify-content: space-between;
+    color: var(--muted);
+    font-size: 0.8125rem;
+  }
+
+  .demo-meters {
+    display: grid;
+    gap: 0.5rem;
+  }
+
+  .demo-meter {
+    display: grid;
+    grid-template-columns: minmax(8rem, 11rem) 1fr;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .demo-meter dd {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .demo-meter-track {
+    flex: 1;
+    height: 0.5rem;
+    background: var(--code-bg);
+    border-radius: 999px;
+    overflow: hidden;
+  }
+
+  .demo-meter-fill {
+    display: block;
+    height: 100%;
+    background: var(--accent);
+    transition: width 200ms ease;
+  }
+
+  .demo-meter-value {
+    font-family: var(--font-code);
+    font-size: 0.75rem;
+    color: var(--muted);
+  }
+
+  .demo-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .demo-tab {
+    min-height: 2.75rem;
+    padding: 0 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    color: var(--foreground);
+    font-size: 0.875rem;
+    cursor: pointer;
+  }
+
+  .demo-tab:hover {
+    border-color: var(--foreground);
+  }
+
+  .demo-tab[aria-pressed="true"] {
+    background: var(--accent);
+    color: var(--accent-fg);
+    border-color: var(--accent);
+  }
+
+  .demo-flow {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-height: 18rem;
+  }
+
+  /* Diagrams are hand-drawn (sketch.tsx): each node is a plain base shape
+     that hides lines behind it, a hachure tint in its kind's colour, and a
+     wobbly outline. Kinds differ by outline colour, dash and icon. */
+  .demo-flow {
+    --demo-line: var(--demo-code);
+  }
+
+  .demo-flow-node[data-kind="model"] {
+    --demo-line: var(--demo-model);
+  }
+
+  .demo-flow-node[data-kind="agent"] {
+    --demo-line: var(--demo-agent);
+  }
+
+  .demo-flow-node[data-kind="human"] {
+    --demo-line: var(--demo-human);
+  }
+
+  .demo-flow-node[data-kind="io"] {
+    --demo-line: var(--muted);
+  }
+
+  .demo-sketch-base {
+    fill: var(--background);
+    stroke: none;
+  }
+
+  .demo-sketch-hachure {
+    fill: none;
+    stroke: color-mix(in srgb, var(--demo-line) 22%, var(--background));
+    stroke-width: 1;
+  }
+
+  .demo-sketch-line {
+    fill: none;
+    stroke: var(--demo-line);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .demo-flow-node:is([data-kind="model"], [data-kind="human"]) .demo-sketch-line {
+    stroke-width: 1.8;
+  }
+
+  .demo-flow-node[data-kind="agent"] .demo-sketch-line {
+    stroke-width: 1.8;
+    stroke-dasharray: 7 5;
+  }
+
+  .demo-flow-node[data-kind="io"] .demo-sketch-line {
+    stroke-dasharray: 4 5;
+  }
+
+  .demo-flow-node text {
+    fill: var(--foreground);
+    font-family: var(--font-sketch);
+    font-size: 15px;
+  }
+
+  .demo-flow-edge,
+  .demo-flow-arrowhead {
+    fill: none;
+    stroke: var(--muted);
+    stroke-width: 1.5;
+    stroke-linecap: round;
+  }
+
+  .demo-flow-edge {
+    stroke-dasharray: 5 5;
+    animation: demo-flow 900ms linear infinite;
+  }
+
+  .demo-sketch-edge[data-back] :is(.demo-flow-edge, .demo-flow-arrowhead) {
+    stroke: var(--accent);
+  }
+
+  .demo-flow-edge-label {
+    fill: var(--muted);
+    font-family: var(--font-sketch);
+    font-size: 14px;
+  }
+
+  /* The invoice diagram (InvoiceFlow): a wide and a tall layout, one shown. */
+  .demo-flow-wrap .demo-flow-tall {
+    display: none;
+  }
+
+  @media (max-width: 36rem) {
+    .demo-flow-wrap .demo-flow-wide {
+      display: none;
+    }
+
+    .demo-flow-wrap .demo-flow-tall {
+      display: block;
+      max-width: 24rem;
+      max-height: none;
+      margin-inline: auto;
+    }
+  }
+
+  .demo-flow-wrap .demo-flow-wide {
+    max-height: none;
+  }
+
+  .demo-flow-wrap .demo-flow-edge {
+    stroke: var(--border);
+    stroke-dasharray: none;
+    animation: none;
+  }
+
+  .demo-flow-wrap .demo-sketch-edge[data-taken] :is(.demo-flow-edge, .demo-flow-arrowhead),
+  .demo-hub :is(.demo-flow-edge, .demo-flow-arrowhead) {
+    stroke: var(--accent);
+    stroke-width: 2;
+  }
+
+  .demo-flow-wrap .demo-sketch-edge[data-taken] .demo-flow-edge,
+  .demo-hub .demo-flow-edge {
+    stroke-dasharray: 5 5;
+    animation: demo-flow 900ms linear infinite;
+  }
+
+  .demo-sketch-base,
+  .demo-sketch-hachure {
+    transition:
+      fill 200ms ease,
+      stroke 200ms ease;
+  }
+
+  .demo-flow-node[data-state="done"] .demo-sketch-base {
+    fill: color-mix(in srgb, var(--accent) 10%, var(--background));
+  }
+
+  .demo-flow-node[data-state="active"] .demo-sketch-base {
+    fill: color-mix(in srgb, var(--accent) 16%, var(--background));
+  }
+
+  .demo-flow-node[data-state="active"] .demo-sketch-hachure {
+    stroke: color-mix(in srgb, var(--accent) 35%, var(--background));
+  }
+
+  .demo-flow-node[data-state="active"] .demo-sketch-line {
+    stroke-width: 2.6;
+  }
+
+  .demo-flow-node[data-state="skipped"] {
+    opacity: 0.4;
+  }
+
+  .demo-flow-node[data-selected] .demo-sketch-line {
+    stroke: var(--foreground);
+    stroke-width: 2.6;
+  }
+
+  .demo-flow-node .demo-flow-name {
+    font-size: 14px;
+  }
+
+  .demo-flow-node .demo-flow-kind {
+    fill: var(--muted);
+    font-family: var(--font-code);
+    font-size: 11px;
+  }
+
+  /* A halo in the panel colour keeps labels readable where they cross a line. */
+  .demo-flow-badge,
+  .demo-flow-wrap .demo-flow-edge-label {
+    paint-order: stroke;
+    stroke: var(--surface);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+  }
+
+  .demo-flow-badge {
+    fill: var(--accent);
+    font-family: var(--font-sketch);
+    font-size: 13px;
+  }
+
+  /* The button is taller than its box (padding-block comes from the layout's
+     hitPad) so it stays a 44px touch target; the ring marks the box itself. */
+  .demo-flow-hit {
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    height: 100%;
+    padding-inline: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+  }
+
+  .demo-flow-hit-ring {
+    display: block;
+    height: 100%;
+    border-radius: 7px;
+  }
+
+  .demo-flow-hit:focus-visible {
+    outline: none;
+  }
+
+  .demo-flow-hit:focus-visible .demo-flow-hit-ring {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+  }
+
+  .demo-flow-packet {
+    fill: var(--accent);
+    stroke: var(--background);
+    stroke-width: 2;
+  }
+
+  .demo-hub .demo-flow-node[data-kind="code"] .demo-flow-kind {
+    fill: var(--foreground);
+    font-size: 12px;
+  }
+
+  .demo-hub {
+    max-width: 26rem;
+    max-height: none;
+    margin-inline: auto;
+  }
+
+  .demo-io {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 40rem) {
+    .demo-io {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .demo-io > * {
+    min-width: 0;
+  }
+
+  .demo-event {
+    display: grid;
+    grid-template-columns: 4.5rem 1fr;
+    gap: 0.125rem 0.75rem;
+    min-height: 4.5rem;
+    padding: 0.625rem 0.75rem;
+    border: 1px solid var(--border);
+    border-left-width: 4px;
+    border-radius: var(--radius);
+  }
+
+  @keyframes demo-flow {
+    to {
+      stroke-dashoffset: -10;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    /* !important: the taken-edge and hub rules turn the animation back on
+       with more specific selectors, and a style may add its own. */
+    .demo-flow-edge {
+      animation: none !important;
+    }
+
+    .demo-meter-fill {
+      transition: none;
+    }
   }
 }
 
