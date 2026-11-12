@@ -778,19 +778,6 @@ body {
     text-transform: none;
   }
 
-  /* Below desktop widths a header can wrap and leave the trigger anywhere, so
-     the menu becomes a sheet pinned to the bottom corner of the screen: always
-     fully visible, whatever the header does. */
-  @media (max-width: 56rem) {
-    .style-menu {
-      position: fixed;
-      inset: auto 1rem 1rem auto;
-      width: min(20rem, calc(100vw - 2rem));
-      max-height: min(32rem, calc(100dvh - 6rem));
-      margin: 0;
-    }
-  }
-
   .style-menu button {
     display: flex;
     align-items: center;
