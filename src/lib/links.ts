@@ -35,3 +35,12 @@ export function getLinkNavigationProps({ href, rel, target }: AnchorNavigationPr
     target: resolvedTarget,
   };
 }
+
+/**
+ * Whether a same-site link has to load the page from the server instead of
+ * navigating in the browser. The server picks the site style, so a `?style=`
+ * preview link only takes effect on a full load.
+ */
+export function needsDocumentLoad(url: URL): boolean {
+  return url.searchParams.has("style");
+}

@@ -96,7 +96,9 @@ Put overrides inside `@layer components { … }` so Tailwind utilities still win
   `--demo-code`, `--demo-model`, `--demo-agent`, `--demo-human`, the colours of
   the step-kind markers), `.demo-kind[data-kind]`, `.demo-kind-icon[data-kind]`
   (line icons in tags and diagram nodes), `.demo-json` (Prism `.token` spans), `.demo-io`,
-  `.demo-toggle`, `.demo-event[data-status]`, `.demo-meter`, `.demo-tab`.
+  `.demo-toggle`, `.demo-event[data-status]`, `.demo-meter`, `.demo-tab`,
+  `.demo-range` (a slider), `.demo-size` (a slider with its name beside it), `.demo-font-sheet` (editable text in the
+  "Saad Print" handwriting face).
   Diagrams are hand-drawn SVG `.demo-flow` (rough.js, Excalifont via
   `--font-sketch`, set on `.post-demo`): nodes `.demo-flow-node[data-kind][data-state]`
   built from `.demo-sketch-base`, `.demo-sketch-hachure` and `.demo-sketch-line`;

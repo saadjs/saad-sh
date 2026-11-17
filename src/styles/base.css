@@ -91,6 +91,13 @@ body {
   font-display: swap;
 }
 
+/* The handwriting font from the font-making post, for its type tester. */
+@font-face {
+  font-family: "Saad Print";
+  src: url("/fonts/SaadPrint.woff2") format("woff2");
+  font-display: swap;
+}
+
 /* Layered so a style can restyle the focus ring from its own components layer. */
 @layer base {
   :focus-visible {
@@ -1167,6 +1174,32 @@ body {
   .demo-toggle-hint {
     grid-column: 2;
     font-weight: 400;
+  }
+
+  /* A slider with its name beside it. The slider itself is a .demo-range. */
+  .demo-size {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--muted);
+    font-size: 0.875rem;
+  }
+
+  /* Editable text set in the handwriting font. The demo sets its font size. */
+  .demo-font-sheet {
+    display: block;
+    width: 100%;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font-family: "Saad Print", var(--font-body);
+    line-height: 1.25;
+    overflow-wrap: anywhere;
+    resize: none;
+    overflow: hidden;
+    field-sizing: content;
   }
 
   .demo-trace-time {

@@ -11,6 +11,7 @@ import { dusk } from "./dusk";
 import { arcade } from "./arcade";
 import { mixtape } from "./mixtape";
 import { garden } from "./garden";
+import { notebook } from "./notebook";
 
 export const styleConfig = {
   /** The style new visitors get: a style id, or "random" for a random enabled one. */
@@ -33,6 +34,7 @@ const allStyles: StyleDefinition[] = [
   arcade,
   mixtape,
   garden,
+  notebook,
 ];
 
 const enabled = allStyles.filter((style) => !styleConfig.disabled.includes(style.id));

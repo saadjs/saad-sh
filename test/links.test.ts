@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { getLinkNavigationProps, isExternalHttpHref } from "#/lib/links";
+import { getLinkNavigationProps, isExternalHttpHref, needsDocumentLoad } from "#/lib/links";
 
 describe("link navigation props", () => {
   it("opens external HTTP links in a new tab", () => {
@@ -30,5 +30,13 @@ describe("link navigation props", () => {
       rel: "noopener noreferrer",
       target: "_blank",
     });
+  });
+});
+
+describe("style preview links", () => {
+  it("load the page so the server can apply the style", () => {
+    expect(needsDocumentLoad(new URL("https://saad.sh/posts/example?style=notebook"))).toBe(true);
+    expect(needsDocumentLoad(new URL("https://saad.sh/posts/example?q=style"))).toBe(false);
+    expect(needsDocumentLoad(new URL("https://saad.sh/posts/example"))).toBe(false);
   });
 });

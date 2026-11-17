@@ -1,0 +1,1072 @@
+/* Notebook: a ruled page written in Saad Print, the site author's own
+   handwriting. Running text sits on the rules; anything that is not
+   handwriting (code, pictures, demos) is a card laid on the page. */
+@font-face {
+  font-family: "Saad Print";
+  src: url("/fonts/SaadPrint.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+  /* The letters are small on their em square (x-height 0.37em). Scaled up so
+     every size the shared stylesheet asks for reads like ordinary type. */
+  size-adjust: 132%;
+}
+
+/* Accents and symbols the handwriting lacks come from a hand-drawn face
+   instead of the system's. The range keeps it from loading until one is used. */
+@font-face {
+  font-family: "Notebook Extras";
+  src: url("/fonts/Excalifont.woff2") format("woff2");
+  font-display: swap;
+  unicode-range: U+00A1-024F, U+2022, U+20AC, U+2122;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/IBMPlexMono.woff2") format("woff2");
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/IBMPlexMono-Italic.woff2") format("woff2");
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "IBM Plex Mono";
+  src: url("/fonts/IBMPlexMono-Medium.woff2") format("woff2");
+  font-weight: 500;
+  font-display: swap;
+}
+
+/* Per-element knobs for text on the rules: its size as a multiple of the
+   writing size, and how many lines it skips first. The size is not inherited,
+   so a heading's never leaks into what it contains; the skipped lines are, so
+   a part placed inside the block (a date, a quote bar) can step over them. */
+@property --k {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 1;
+}
+
+@property --gap {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
+}
+
+/* Lines left empty after the block. */
+@property --after {
+  syntax: "<number>";
+  inherits: false;
+  initial-value: 0;
+}
+
+:root {
+  --background: #fbf9f2;
+  --surface: #fffefa;
+  --foreground: #1d1e26;
+  --muted: #5b5f6b;
+  --faint: #a6a9b3;
+  --border: #cbd8ec;
+  --accent: #1f45c2;
+  --accent-fg: #fffefa;
+  --radius: 3px;
+  --selection: var(--marker);
+
+  /* Pens besides the ink: red for marks, a highlighter for emphasis. */
+  --pen: #c2362e;
+  --marker: #ffed9c;
+  --note: #fff3b3;
+  --line: #cbd8ec;
+  --margin-line: #eba9a6;
+
+  --font-body: "Saad Print", "Notebook Extras", system-ui, sans-serif;
+  --font-code: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* The page: a margin column on the left, then the writing. */
+  --margin: 1.25rem;
+  --gutter: 0.875rem;
+  --site-width: 56rem;
+  --measure: 40rem;
+
+  /* The rules. Every block of handwriting has a line height of one rule and
+     draws the lines under its own baselines, so text always sits on them. */
+  --rule: 1.75rem;
+  --fs: 1.0625rem;
+  --date-size: 0.875rem;
+  --prose-size: var(--fs);
+  /* How far below the middle of a line box the baseline falls, in ems. */
+  --drop: 0.255;
+  --y: round(calc(var(--rule) / 2 + var(--drop) * 1em + 2px), 1px);
+  --rules: repeating-linear-gradient(
+    to bottom,
+    transparent 0 var(--y),
+    var(--line) var(--y) calc(var(--y) + 1px),
+    transparent calc(var(--y) + 1px) var(--rule)
+  );
+  /* The same lines for a box that holds no writing of its own, whatever its
+     font size: it carries on the lines of the text above it. */
+  --y-card: round(calc(var(--rule) / 2 + var(--drop) * var(--fs) + 2px), 1px);
+  --rules-card: repeating-linear-gradient(
+    to bottom,
+    transparent 0 var(--y-card),
+    var(--line) var(--y-card) calc(var(--y-card) + 1px),
+    transparent calc(var(--y-card) + 1px) var(--rule)
+  );
+  /* Together one whole line, so a card that snaps to whole lines leaves the
+     text after it on the same lines as the text before it. */
+  --card-above: calc(var(--rule) / 2);
+  --card-below: calc(var(--rule) / 2);
+  --card-edge: color-mix(in srgb, var(--foreground) 16%, var(--surface));
+  --card-lift: 0 1px 2px rgb(0 0 0 / 0.05), 0 8px 18px -12px rgb(0 0 0 / 0.22);
+  --card-shadow: 0 0 0 1px var(--card-edge), var(--card-lift);
+
+  --code-bg: var(--surface);
+
+  /* Pen strokes, used as masks so they take any ink colour. */
+  --stroke-underline: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 8' preserveAspectRatio='none'%3E%3Cpath d='M1 5.2C17 2.6 31 5.8 49 4s33-2.6 50 .4' fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+  --stroke-circle: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 40' preserveAspectRatio='none'%3E%3Cpath d='M9 23C6 11 29 3.500 54 4s41 7 39 17.500S72 37 46 36 8.500 31 9.500 21C10.500 13 25 6.500 46 5' fill='none' stroke='%23000' stroke-width='1.6' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E");
+}
+
+:root[data-theme="dark"] {
+  --background: #191a1f;
+  --surface: #22242b;
+  --foreground: #e8e5db;
+  --muted: #a4a7b2;
+  --faint: #5d606b;
+  --border: #2f3546;
+  --accent: #9db7ff;
+  --accent-fg: #14151a;
+
+  --pen: #ff8f82;
+  --marker: #6b5a12;
+  --note: #3b3620;
+  --line: #2b3142;
+  --margin-line: #6d3b40;
+}
+
+@media (min-width: 40rem) {
+  :root {
+    --rule: 2rem;
+    --fs: 1.1875rem;
+    --date-size: 0.9375rem;
+  }
+}
+
+/* Wide enough for a real margin, with room for a date in it. */
+@media (min-width: 56rem) {
+  :root {
+    --margin: 8.25rem;
+    --gutter: 1.75rem;
+  }
+}
+
+/* One weight, no italic: never let the browser fake either. The font's word
+   space is wider than the gaps in the handwriting it was traced from, so it is
+   closed up here. Tracking stays untouched everywhere: any letter-spacing
+   switches off the contextual alternates that vary repeated letters. */
+body {
+  font-size: 1.0625rem;
+  font-synthesis: none;
+  word-spacing: -0.22em;
+}
+
+/* Typeset text keeps its own spacing. */
+:is(pre, code, kbd, samp, .font-mono, .code-block-bar, .style-menu, .post-row-tag),
+:is(.demo-kind, .demo-badge, .demo-json-label, .demo-trace-time, .demo-meter-value, .demo-flow),
+.demo-pros dt {
+  word-spacing: normal;
+}
+
+@layer components {
+  /* ---------- The page ---------- */
+  .site {
+    position: relative;
+    padding: 0.75rem 1.25rem 3rem calc(var(--margin) + var(--gutter));
+  }
+
+  /* The margin line, the full height of the page. */
+  .site::before {
+    content: "";
+    position: absolute;
+    inset-block: 0;
+    left: var(--margin);
+    z-index: -1;
+    width: 4px;
+    border-inline: 1px solid var(--margin-line);
+  }
+
+  .site-header {
+    column-gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .site-brand {
+    font-family: var(--font-body);
+    font-size: 1.375rem;
+    font-weight: 400;
+  }
+
+  .site-brand-suffix {
+    color: var(--pen);
+  }
+
+  .site-nav {
+    gap: 0;
+    font-size: 1rem;
+  }
+
+  .site-nav a {
+    position: relative;
+    padding-inline: 0.625rem;
+    color: var(--foreground);
+  }
+
+  .site-nav a:hover {
+    color: var(--accent);
+  }
+
+  /* The current page is circled in red pen. */
+  .site-nav a[aria-current="page"]::after {
+    content: "";
+    position: absolute;
+    inset: 0.3125rem 0;
+    background: var(--pen);
+    mask: var(--stroke-circle) center / 100% 100% no-repeat;
+    pointer-events: none;
+  }
+
+  /* Stays on the right if a narrow page pushes it to a second row. */
+  .site-tools {
+    gap: 0 1rem;
+    margin-left: auto;
+    font-size: 0.875rem;
+  }
+
+  /* The foot of the page is written on its lines too, and the lines run on
+     to the bottom edge. On a short page it is the footer that stretches, not
+     the content above it, so the lines carry straight on from the last one. */
+  .site-main {
+    flex: none;
+  }
+
+  .site-footer {
+    flex: 1 0 auto;
+    align-content: flex-start;
+    align-items: flex-start;
+    margin-top: 0;
+    padding-top: calc(2 * var(--rule));
+    border-top: 0;
+    border-image: var(--rules-card) fill 0 / 0 / 0 100vw 100vh;
+    font-size: var(--fs);
+    line-height: var(--rule);
+  }
+
+  .site-footer a {
+    position: relative;
+    min-height: 0;
+  }
+
+  .site-footer a::after,
+  .page-head .ui-chip::after,
+  .page-head > div .ui-link::after {
+    content: "";
+    position: absolute;
+    inset: -0.375rem -0.25rem;
+  }
+
+  .site-tabbar a {
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  @media (max-width: 40rem) {
+    .site-header {
+      margin-bottom: 1rem;
+    }
+
+    .site-brand {
+      font-size: 1.25rem;
+    }
+
+    .site-tools {
+      gap: 0 0.75rem;
+      font-size: 0.8125rem;
+    }
+  }
+
+  /* ---------- Text on the rules ---------- */
+  .page-intro,
+  .post-desc,
+  .home .section-title,
+  .year-title,
+  .post-row,
+  .project-name,
+  .project-desc,
+  .project-tags,
+  .project-links,
+  .notebook-line,
+  .post-body > :is(p, ul, ol, dl, blockquote, h1, h2, h3, h4, h5, h6, hr) {
+    /* A larger hand keeps to the same lines: it is nudged up by the extra
+       depth of its baseline, and the nudge is given back underneath. */
+    --shift: calc(var(--drop) * (var(--k) - 1) * var(--fs));
+    margin-block: 0;
+    padding-top: calc(var(--gap) * var(--rule) - var(--shift));
+    padding-bottom: calc(var(--after) * var(--rule) + var(--shift));
+    /* Drawn as a border image so the lines run off both edges of the page. */
+    border-image: var(--rules) fill 0 / 0 / 0 100vw;
+    font-family: var(--font-body);
+    font-size: calc(var(--k) * var(--fs));
+    font-weight: 400;
+    line-height: var(--rule);
+    letter-spacing: 0;
+  }
+
+  /* Headings on a rule: a larger hand, underlined along the rule in red. */
+  .home .section-title,
+  .year-title,
+  .project-name,
+  .post-body > :is(h1, h2, h3) {
+    --k: 1.35;
+    --gap: 2;
+    color: var(--foreground);
+    text-decoration: underline 2px var(--pen);
+    text-decoration-skip-ink: none;
+    text-underline-offset: 3px;
+    text-wrap: balance;
+  }
+
+  .post-body > h3 {
+    --k: 1.15;
+  }
+
+  /* A heading over a list, and the link that closes one, each leave an empty
+     line beneath them. The link's line doubles as the gap before the next
+     heading. */
+  .home .section-title,
+  .year-title,
+  .notebook-more {
+    --after: 1;
+  }
+
+  .notebook-more {
+    --gap: 1;
+  }
+
+  .home section:has(.notebook-more) + section .section-title,
+  .year-group + .year-group .year-title {
+    --gap: 1;
+  }
+
+  /* Headings off the rules (inside panels) still drop the faked weight. */
+  .section-title {
+    font-weight: 400;
+  }
+
+  .post-body > :is(h4, h5, h6) {
+    --gap: 1;
+    text-decoration: underline 1.5px var(--muted);
+    text-underline-offset: 3px;
+  }
+
+  .post-body > * + :is(p, ul, ol, dl, blockquote),
+  .page-intro,
+  .notebook-links {
+    --gap: 1;
+  }
+
+  .post-body > :is(h1, h2, h3, h4, h5, h6) + :is(p, ul, ol, dl, blockquote) {
+    --gap: 0;
+  }
+
+  /* What a block contains has skipped nothing itself. */
+  .post-body > :is(ul, ol, dl, blockquote) > * {
+    --gap: 0;
+  }
+
+  /* Text that opens right under a page heading leaves a line for its stroke. */
+  .page-head + .post-body > :is(p, ul, ol, dl, blockquote):first-child {
+    --gap: 1;
+  }
+
+  /* ---------- Pages ---------- */
+  .page-head {
+    gap: 0;
+    margin-bottom: 0;
+  }
+
+  .eyebrow,
+  .post-meta,
+  .toc-label,
+  .ui-chip {
+    font-family: var(--font-body);
+    font-size: 1rem;
+  }
+
+  .page-title,
+  .post-title {
+    font-size: clamp(1.75rem, 5.5vw, 2.5rem);
+    font-weight: 400;
+    line-height: 1.3;
+    letter-spacing: 0;
+  }
+
+  /* A page heading gets one quick stroke of the red pen under it. */
+  .page-title {
+    align-self: flex-start;
+    width: fit-content;
+    max-width: 100%;
+  }
+
+  .page-title::after {
+    content: "";
+    display: block;
+    height: 0.5rem;
+    margin-top: -0.125rem;
+    background: var(--pen);
+    mask: var(--stroke-underline) center / 100% 100% no-repeat;
+  }
+
+  .page-intro {
+    max-width: var(--measure);
+    color: var(--foreground);
+  }
+
+  .about-portrait {
+    border-radius: 2px;
+    border: 0.375rem solid var(--surface);
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.12),
+      0 8px 18px -10px rgb(0 0 0 / 0.3);
+    rotate: -2deg;
+  }
+
+  /* ---------- Small parts ---------- */
+  .ui-panel,
+  .ui-popover {
+    border-color: var(--card-edge);
+  }
+
+  .ui-panel {
+    box-shadow: var(--card-lift);
+  }
+
+  .ui-menu-item,
+  .ui-btn,
+  .ui-input,
+  .toc-list a {
+    font-size: 1.0625rem;
+    font-weight: 400;
+  }
+
+  /* Boxes drawn by hand: no two corners alike. */
+  .ui-btn {
+    background: transparent;
+    border: 1.5px solid var(--foreground);
+    border-radius: 14px 5px 12px 6px / 6px 12px 5px 14px;
+  }
+
+  .ui-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .ui-btn-primary,
+  .ui-btn-primary:hover:not(:disabled) {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: var(--accent-fg);
+  }
+
+  /* A field is a line to write on. */
+  .ui-input {
+    padding-inline: 0.125rem;
+    background: transparent;
+    border: 0;
+    border-bottom: 1.5px solid var(--foreground);
+    border-radius: 0;
+  }
+
+  .ui-link {
+    color: var(--accent);
+    text-decoration-color: currentColor;
+    text-decoration-thickness: 1px;
+  }
+
+  .ui-link:hover {
+    color: var(--pen);
+  }
+
+  .notebook-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 1.5rem;
+  }
+
+  /* Links that sit on a rule keep its height; the tap area still reaches 44px. */
+  .notebook-line a,
+  .project-links a {
+    position: relative;
+    display: inline-block;
+    min-height: 0;
+  }
+
+  .notebook-line a::after,
+  .project-links a::after {
+    content: "";
+    position: absolute;
+    inset: -0.375rem -0.25rem;
+  }
+
+  .notebook-arrow {
+    display: inline-block;
+    width: 1.75rem;
+    height: 0.75rem;
+    margin-left: 0.5rem;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ---------- Post lists ---------- */
+  .post-list {
+    border-top: 0;
+  }
+
+  /* An entry: the title in ink, the description under it in pencil, and the
+     date out in the margin once the page is wide enough to have one. */
+  .post-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 1rem;
+    min-height: 0;
+    padding-inline: 0;
+    border-bottom: 0;
+  }
+
+  .post-row-main {
+    display: contents;
+  }
+
+  /* A line is skipped between one entry and the next, and under a page
+     heading's stroke when a list opens the page. */
+  .post-list > li + li > .post-row,
+  .page-head + .post-list > li > .post-row {
+    --gap: 1;
+  }
+
+  .post-row-title {
+    grid-column: 1;
+    font-weight: 400;
+  }
+
+  .post-row-desc {
+    display: -webkit-box;
+    grid-column: 1 / -1;
+    overflow: hidden;
+    font-size: inherit;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+
+  /* On the title's line, at its right; nudged down so the smaller figures
+     share the title's baseline. */
+  .post-row-date {
+    position: relative;
+    top: calc(var(--drop) * (var(--fs) - var(--date-size)));
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    font-family: var(--font-body);
+    font-size: var(--date-size);
+    white-space: nowrap;
+  }
+
+  .year-group + .year-group {
+    margin-top: 0;
+  }
+
+  .year-title {
+    margin-bottom: 0;
+  }
+
+  @media (min-width: 56rem) {
+    /* Placed by hand: left on the grid, its containing block would be an
+       empty grid cell and not the row. */
+    .post-row-date {
+      position: absolute;
+      grid-area: auto;
+      /* Beside the title, below the line the entry skipped. */
+      top: calc(var(--gap) * var(--rule) + var(--drop) * (var(--fs) - var(--date-size)));
+      right: calc(100% + var(--gutter) + 0.625rem);
+    }
+  }
+
+  /* ---------- Post page ---------- */
+  .post-header {
+    gap: 0;
+    margin-bottom: 0;
+  }
+
+  .post-title {
+    margin-block: 0.25rem 0.5rem;
+  }
+
+  /* On the inner box: an underline does not reach into an inline-block. */
+  .post-title-text {
+    text-decoration: underline 2px var(--pen);
+    text-decoration-skip-ink: none;
+    text-underline-offset: 0.2em;
+  }
+
+  .post-desc {
+    color: var(--muted);
+  }
+
+  /* The buttons take exactly three lines, so the page stays ruled behind
+     them and whatever follows starts on a line. */
+  .post-actions {
+    margin-top: 0;
+    padding-block: calc((3 * var(--rule) - 2.75rem) / 2);
+    border-image: var(--rules-card) fill 0 / 0 / 0 100vw;
+  }
+
+  /* The contents are a sticky note on the page. The page's lines run behind
+     it and through the gap under it, however tall it opens. */
+  .toc-inline {
+    position: relative;
+    max-width: 24rem;
+    margin-bottom: var(--rule);
+    background: var(--note);
+    border: 0;
+    border-radius: 1px;
+    box-shadow:
+      0 1px 1px rgb(0 0 0 / 0.1),
+      0 10px 14px -10px rgb(0 0 0 / 0.35);
+  }
+
+  .toc-inline::before {
+    content: "";
+    position: absolute;
+    inset: 0 0 calc(-1 * var(--rule));
+    z-index: -1;
+    border-image: var(--rules-card) fill 0 / 0 / 0 100vw;
+    pointer-events: none;
+  }
+
+  .toc-label {
+    color: var(--foreground);
+  }
+
+  .toc-list {
+    border-left: 0;
+  }
+
+  .toc-list a {
+    padding-left: 0;
+    border-left: 0;
+    color: var(--foreground);
+  }
+
+  .toc-list a:hover,
+  .toc-list a[aria-current="location"] {
+    color: var(--accent);
+  }
+
+  .post-pager {
+    margin-top: 0;
+    padding-top: calc(2 * var(--rule));
+    border-top: 0;
+    border-image: var(--rules-card) fill 0 / 0 / 0 100vw;
+    line-height: var(--rule);
+  }
+
+  .post-pager a {
+    gap: 0;
+  }
+
+  .post-pager :is(.post-pager-label, .post-pager-title) {
+    font-size: var(--fs);
+  }
+
+  /* The row of tags under a page heading sits on a line of its own. */
+  .page-head > div:has(.ui-chip) {
+    border-image: var(--rules-card) fill 0 / 0 / 0 100vw;
+    line-height: var(--rule);
+  }
+
+  .page-head .ui-chip {
+    position: relative;
+    min-height: 0;
+    font-size: var(--fs);
+  }
+
+  /* A panel laid on the page (say hello, the newsletter box): one line clear
+     above it, the page's lines behind it. */
+  .page > .ui-panel:not(.toc-inline) {
+    position: relative;
+  }
+
+  .page > .ui-panel:not(.toc-inline)::before {
+    content: "";
+    position: absolute;
+    inset: calc(-1 * var(--rule)) 0 0;
+    z-index: -1;
+    border-image: var(--rules-card) fill 0 / 0 / 0 100vw;
+    pointer-events: none;
+  }
+
+  /* ---------- Running text ---------- */
+  .post-body :is(h1, h2, h3) {
+    font-weight: 400;
+    letter-spacing: 0;
+  }
+
+  .post-body li + li {
+    margin-top: 0;
+  }
+
+  .post-body :is(ul, ol) {
+    padding-left: 1.75rem;
+  }
+
+  .post-body ul {
+    list-style: "– ";
+  }
+
+  .post-body li::marker {
+    color: var(--pen);
+  }
+
+  .post-body blockquote {
+    position: relative;
+    padding-left: 1.25rem;
+    border-left: 0;
+    color: var(--muted);
+  }
+
+  /* The quote bar, drawn beside the lines of the quote and not its blank one. */
+  .post-body blockquote::before {
+    content: "";
+    position: absolute;
+    top: calc(var(--gap) * var(--rule) + 0.375rem);
+    bottom: 0.125rem;
+    left: 0;
+    width: 2px;
+    background: var(--pen);
+    border-radius: 2px;
+  }
+
+  .post-body blockquote > * + * {
+    margin-top: var(--rule);
+  }
+
+  /* No bold and no italic in this hand: important words are highlighted,
+     stressed ones underlined. */
+  .post-body strong {
+    padding-inline: 0.125em;
+    margin-inline: -0.125em;
+    background: linear-gradient(transparent 34%, var(--marker) 34% 73%, transparent 73%);
+    font-weight: 400;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
+  .post-body em {
+    text-decoration: underline 1px currentColor;
+    text-underline-offset: 3px;
+  }
+
+  .post-body a {
+    text-decoration-thickness: 1px;
+    text-underline-offset: 3px;
+  }
+
+  /* Typed words inside a written line must not make the line taller. */
+  .post-body :not(pre) > code {
+    padding: 0.0625rem 0.3125rem;
+    background: color-mix(in srgb, var(--foreground) 8%, transparent);
+    font-size: 0.8em;
+    line-height: 0;
+  }
+
+  /* A divider is a blank line with a squiggle on it. */
+  .post-body > hr {
+    height: calc(2 * var(--rule));
+    margin-block: 0;
+    padding: 0;
+    border-top: 0;
+    background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 12'%3E%3Cpath d='M2 6c6-5 10 5 16 0s10 5 16 0 10 5 16 0 10 5 16 0 10 5 16 0 10 5 16 0 10 5 16 0' fill='none' stroke='%238b8e98' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E")
+      center / 7.5rem 0.75rem no-repeat;
+  }
+
+  /* Everything that is not handwriting lies on the page as a card. The page
+     stays ruled around it: the card draws the lines of the text above through
+     its own margins and out to both edges, and its opaque parts cover them.
+     Those margins are the gap, so the text after a card skips no line. */
+  .post-body
+    > :not(p, ul, ol, dl, blockquote, h1, h2, h3, h4, h5, h6, hr)
+    + :is(p, ul, ol, dl, blockquote) {
+    --gap: 0;
+  }
+
+  /* A border image replaces the border, so these cards are edged by a shadow. */
+  .post-body > :is(.code-block, .table-wrap) {
+    border: 0;
+    border-image: var(--rules-card) fill 0 / 0 / var(--card-above) 100vw var(--card-below);
+    box-shadow: var(--card-shadow);
+  }
+
+  .post-body > .table-wrap > table,
+  .code-block-bar {
+    background: var(--surface);
+  }
+
+  /* Any other card (a demo, a figure with its caption) shows the page between
+     its parts, so its lines are drawn on a layer behind it. */
+  .post-body
+    > :not(p, ul, ol, dl, blockquote, h1, h2, h3, h4, h5, h6, hr, .code-block, .table-wrap) {
+    position: relative;
+  }
+
+  .post-body
+    > :not(
+      p,
+      ul,
+      ol,
+      dl,
+      blockquote,
+      h1,
+      h2,
+      h3,
+      h4,
+      h5,
+      h6,
+      hr,
+      .code-block,
+      .table-wrap
+    )::before {
+    content: "";
+    position: absolute;
+    inset: calc(-1 * var(--card-above)) 0 calc(-1 * var(--card-below));
+    z-index: -1;
+    border-image: var(--rules-card) fill 0 / 0 / 0 100vw;
+    pointer-events: none;
+  }
+
+  .post-body table {
+    font-size: 1.0625rem;
+  }
+
+  .post-body th {
+    font-family: var(--font-body);
+    font-size: 1rem;
+  }
+
+  .post-body :is(th, td) {
+    border-bottom-color: var(--line);
+  }
+
+  .code-block {
+    background: var(--surface);
+    border-radius: var(--radius);
+  }
+
+  .code-block-bar {
+    border-bottom-color: color-mix(in srgb, var(--foreground) 10%, var(--surface));
+  }
+
+  .post-body img {
+    border: 0.375rem solid var(--surface);
+    border-radius: 2px;
+    box-shadow:
+      0 1px 2px rgb(0 0 0 / 0.12),
+      0 10px 22px -12px rgb(0 0 0 / 0.3);
+  }
+
+  /* ---------- Projects ---------- */
+  .project-grid {
+    grid-template-columns: minmax(0, var(--measure));
+    gap: 0;
+  }
+
+  .project-card {
+    gap: 0;
+    padding: 0;
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .project-tags {
+    color: var(--muted);
+  }
+
+  .project-links {
+    gap: 0 1.5rem;
+  }
+
+  /* The project a link pointed at is the one run over with the highlighter. */
+  .project-grid > li[data-current] .project-name {
+    text-decoration-color: var(--accent);
+    background: linear-gradient(transparent 55%, var(--marker) 55% 92%, transparent 92%);
+  }
+}
+
+/* The "#" beside a heading is styled outside the layers in base.css, so this
+   is too. Left as it is, it sits off the baseline and makes the heading's line
+   taller than a rule. */
+.post-body .heading-anchor {
+  display: inline;
+  vertical-align: baseline;
+}
+
+/* ---------- One sheet ---------- */
+/* Below its heading the whole page is ruled, with no break in the lines.
+   Utility classes on the shared markup outrank the components layer, so the
+   few spacings that must fall on the lines are set out here. */
+.page > .ui-panel:not(.toc-inline) {
+  margin-top: var(--rule);
+}
+
+.page-head > div .ui-link {
+  position: relative;
+  min-height: 0;
+  font-size: var(--fs);
+}
+
+/* A card's margins are the two halves of one line, whatever spacing utility
+   the markup gave it and wherever it stands in the text. */
+.post-body > :not(p, ul, ol, dl, blockquote, h1, h2, h3, h4, h5, h6, hr) {
+  margin-block: var(--card-above) var(--card-below);
+}
+
+/* A picture alone in a paragraph is a block, so the paragraph is as tall as
+   the picture and can snap like any card. */
+.post-body > p:has(> img:only-child) > img {
+  display: block;
+}
+
+/* Where the browser can round an automatic height, every box that is not
+   lines of writing is rounded up to whole lines. The lines then run through
+   the page unbroken; elsewhere they restart once, under the box. */
+@supports (block-size: calc-size(auto, size)) {
+  .post-body > :not(p, ul, ol, dl, blockquote, h1, h2, h3, h4, h5, h6, hr),
+  .post-body > p:has(> img:only-child),
+  .page > .ui-panel,
+  .page-head > div:has(.ui-chip) {
+    block-size: calc-size(auto, round(up, size, var(--rule)));
+  }
+}
+
+/* ---------- Turning the page ---------- */
+/* Going to another page turns the leaf the way an e-reader does: a curl
+   travels from the right edge to the binding on the left. Right of it lies the
+   next page; left of it, the old one; the curl itself is the back of the paper
+   rolling over, lit along its middle and shadowed at both sides. These pseudo-
+   elements are styled outside the layers in base.css, so this is too; reduced
+   motion is switched off there for every style. */
+@property --curl {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 0px;
+}
+
+::view-transition-old(root) {
+  z-index: 1;
+  animation: notebook-cut 700ms cubic-bezier(0.4, 0, 0.25, 1) both;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+@keyframes notebook-cut {
+  from {
+    clip-path: inset(0 0 0 0);
+  }
+
+  to {
+    clip-path: inset(0 100% 0 0);
+  }
+}
+
+/* The curl needs a box of its own above the page. An empty element is named
+   so the browser gives it one, and it exists only while a turn is running. */
+:root:active-view-transition body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  view-transition-name: notebook-leaf;
+}
+
+::view-transition-old(notebook-leaf),
+::view-transition-new(notebook-leaf) {
+  display: none;
+}
+
+/* Painted from the box's right edge leftwards: the shadow on the next page,
+   the roll of paper, the shadow on the old page. The box slides left so the
+   roll's right side is where the old page is cut. */
+::view-transition-group(notebook-leaf) {
+  --back: color-mix(in srgb, var(--background) 95%, var(--foreground));
+  --cast: calc(var(--curl) * 0.45);
+  background: linear-gradient(
+    to left,
+    transparent 0,
+    rgb(0 0 0 / 0.2) var(--cast),
+    color-mix(in srgb, var(--back) 70%, var(--foreground)) var(--cast),
+    var(--back) calc(var(--cast) + var(--curl) * 0.18),
+    var(--surface) calc(var(--cast) + var(--curl) * 0.5),
+    var(--back) calc(var(--cast) + var(--curl) * 0.85),
+    color-mix(in srgb, var(--back) 84%, var(--foreground)) calc(var(--cast) + var(--curl)),
+    rgb(0 0 0 / 0.22) calc(var(--cast) + var(--curl)),
+    transparent calc(var(--cast) * 2.6 + var(--curl))
+  );
+  animation:
+    notebook-travel 700ms cubic-bezier(0.4, 0, 0.25, 1) both,
+    notebook-curl 700ms ease-in-out both;
+}
+
+/* Starts just past the right edge and ends just past the left one. */
+@keyframes notebook-travel {
+  from {
+    translate: var(--cast) 0;
+  }
+
+  to {
+    translate: calc(var(--cast) - 100%) 0;
+  }
+}
+
+/* The roll swells as the leaf lifts and flattens as it lands. */
+@keyframes notebook-curl {
+  0%,
+  100% {
+    --curl: 0px;
+  }
+
+  45% {
+    --curl: clamp(4rem, 16vw, 11rem);
+  }
+}
+
+/* A title cannot travel on its own while the page it is written on turns. The
+   name is set inline by the shared markup, hence the !important. */
+.post-row-title,
+.post-title-text {
+  view-transition-name: none !important;
+}

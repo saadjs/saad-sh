@@ -19,6 +19,7 @@ const demos: Record<string, Loader> = {
   "agent-failures": () => import("./demos/agent-workflow/FailureDemo"),
   "agent-dial": () => import("./demos/agent-workflow/DialDemo"),
   "agent-patterns": () => import("./demos/agent-workflow/PatternsDemo"),
+  "handwriting-font": () => import("./demos/handwriting-font/FontTesterDemo"),
 };
 
 export const demoNames = Object.keys(demos);

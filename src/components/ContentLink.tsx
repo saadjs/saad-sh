@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { ComponentProps } from "react";
-import { getLinkNavigationProps } from "#/lib/links";
+import { getLinkNavigationProps, needsDocumentLoad } from "#/lib/links";
 import { siteConfig } from "#/site.config";
 
 const origin = new URL(siteConfig.url).origin;
@@ -53,6 +53,7 @@ export function ContentLink({
         to={url.pathname}
         search={Object.fromEntries(url.searchParams)}
         hash={hash}
+        reloadDocument={needsDocumentLoad(url)}
         className={classes}
       >
         {children}
