@@ -200,6 +200,90 @@ body {
     color: var(--foreground);
   }
 
+  /* The phone tab bar. Hidden here; the "Phone shell" block at the end of this
+     file turns it on for narrow screens. */
+  .site-tabbar {
+    display: none;
+    position: fixed;
+    inset: auto 0 0;
+    /* Above the page, below any header that raises itself: the style menu
+       opens from the header and must be able to cover the bar. */
+    z-index: 15;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(0, 1fr);
+    padding: 0.375rem max(0.5rem, env(safe-area-inset-right))
+      calc(0.375rem + env(safe-area-inset-bottom)) max(0.5rem, env(safe-area-inset-left));
+    background: color-mix(in srgb, var(--background) 86%, transparent);
+    border-top: 1px solid var(--border);
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    backdrop-filter: blur(18px) saturate(1.5);
+    font-family: var(--font-ui, var(--font-body));
+    transition: translate 260ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  /* Never slid away while a keyboard user is on one of its links. */
+  .site-tabbar[data-hidden="true"]:not(:has(:focus-visible)) {
+    translate: 0 110%;
+  }
+
+  .site-tabbar a {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.125rem;
+    min-height: 3rem;
+    color: var(--muted);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    letter-spacing: 0.01em;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .site-tabbar-icon {
+    display: grid;
+    place-items: center;
+    width: 3.5rem;
+    height: 1.75rem;
+    /* A pill in rounded styles, a block in square ones. */
+    border-radius: calc(var(--radius) * 3);
+    transition:
+      background-color 200ms ease,
+      scale 200ms ease;
+  }
+
+  .site-tabbar-icon svg {
+    width: 1.375rem;
+    height: 1.375rem;
+  }
+
+  .site-tabbar-label {
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .site-tabbar a[aria-current="page"] {
+    color: var(--foreground);
+  }
+
+  .site-tabbar a[aria-current="page"] .site-tabbar-icon {
+    background: color-mix(in srgb, var(--accent) 18%, transparent);
+  }
+
+  .site-tabbar a:active .site-tabbar-icon {
+    scale: 0.92;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .site-tabbar,
+    .site-tabbar-icon {
+      transition: none;
+    }
+  }
+
   /* ---------- Pages ---------- */
   .page {
     width: 100%;
@@ -226,6 +310,15 @@ body {
     max-width: var(--measure);
     font-size: 1.125rem;
     color: var(--muted);
+  }
+
+  /* The author's portrait above the About page heading. */
+  .about-portrait {
+    width: 6rem;
+    height: 6rem;
+    margin-bottom: 0.5rem;
+    border-radius: calc(var(--radius) * 3);
+    object-fit: cover;
   }
 
   .eyebrow {
@@ -720,6 +813,11 @@ body {
     gap: 0.5rem;
     width: 100%;
     padding: 1.25rem 1.25rem 0.5rem;
+  }
+
+  /* The project a link pointed at (`/projects#<slug>`). */
+  .project-grid > li[data-current] .project-card {
+    border-color: var(--accent);
   }
 
   .project-name {
@@ -1645,4 +1743,120 @@ code[class*="language-"] *::selection {
 .heading-anchor:focus-visible {
   outline: 2px solid currentColor;
   outline-offset: 4px;
+}
+
+/* ---------- Motion between pages ---------- */
+@layer components {
+  /* The tab bar holds still while the page beneath it changes. The header is
+     left unnamed on purpose: a name would make it a stacking context and trap
+     the style menu underneath the page. */
+  .site-tabbar {
+    view-transition-name: site-tabbar;
+  }
+
+  /* A box of its own, so the title can travel from a list row to the post page
+     (an inline that wraps over several lines cannot be captured). */
+  .post-title-text {
+    display: inline-block;
+  }
+
+  /* ---------- Reading progress ---------- */
+  /* Driven by the scroll position in CSS alone; browsers without scroll
+     timelines simply do not show it. */
+  .post-progress {
+    display: none;
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 45;
+    height: 3px;
+    background: var(--accent);
+    transform-origin: 0 50%;
+    scale: 0 1;
+    pointer-events: none;
+    view-transition-name: post-progress;
+  }
+
+  @supports (animation-timeline: scroll()) {
+    .post-progress {
+      display: block;
+      animation: post-progress linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+
+  @keyframes post-progress {
+    to {
+      scale: 1 1;
+    }
+  }
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+}
+
+::view-transition-group(*) {
+  animation-duration: 320ms;
+  animation-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+/* A travelling title keeps its own size at each end instead of being
+   stretched from one shape to the other. */
+::view-transition-old(.post-title),
+::view-transition-new(.post-title) {
+  inline-size: auto;
+  block-size: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
+  }
+}
+
+/* ---------- Phone shell ---------- */
+/* On a phone the header keeps the brand and the tools on one row and the page
+   links move to the tab bar at the bottom edge. This is layout behaviour, not
+   a look, so it sits outside the layers and holds in every style. A style
+   dresses `.site-tabbar` like any other shared class. */
+@media (max-width: 40rem) {
+  .site-header .site-nav {
+    display: none;
+  }
+
+  .site-tabbar {
+    display: grid;
+  }
+
+  /* Room for the bar, so the footer can scroll clear of it. */
+  body {
+    padding-bottom: calc(3.75rem + env(safe-area-inset-bottom));
+  }
+
+  .site {
+    min-height: calc(100dvh - 3.75rem - env(safe-area-inset-bottom));
+  }
+}
+
+/* Touch screens have no hover, so a press answers instead. */
+html {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: none) {
+  .post-row:active,
+  .post-pager a:active,
+  .ui-btn:active,
+  .ui-chip:active,
+  .ui-menu-item:active {
+    opacity: 0.6;
+  }
+}
+
+/* Landscape phones: keep content out from under the notch. */
+body {
+  padding-inline: env(safe-area-inset-left) env(safe-area-inset-right);
 }

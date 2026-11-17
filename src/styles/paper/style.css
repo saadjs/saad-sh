@@ -131,15 +131,20 @@ body {
   }
 
   .page-title {
-    font-size: clamp(2.125rem, 6vw, 2.5rem);
-    line-height: 1.12;
-    letter-spacing: -0.015em;
+    font-size: clamp(2.5rem, 7.5vw, 3.5rem);
+    line-height: 1.04;
+    letter-spacing: -0.03em;
   }
 
   .page-intro {
     font-size: 1.375rem;
     line-height: 1.5;
     color: color-mix(in srgb, var(--foreground) 82%, var(--background));
+  }
+
+  .about-portrait {
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px var(--border);
   }
 
   .eyebrow {
@@ -195,21 +200,96 @@ body {
   .paper-home {
     display: flex;
     flex-direction: column;
-    gap: 4rem;
+    gap: 5rem;
   }
 
-  .paper-intro {
+  .paper-hero {
     display: flex;
     flex-direction: column;
-    gap: 0.875rem;
-    max-width: 40rem;
+    align-items: flex-start;
+    gap: 1.125rem;
+    padding-top: 1rem;
+  }
+
+  .paper-avatar {
+    width: 4.5rem;
+    height: 4.5rem;
+    margin-bottom: 0.75rem;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 0 0 1px var(--border);
+  }
+
+  .paper-hero .page-title {
+    font-size: clamp(2.75rem, 9vw, 4.75rem);
+    line-height: 1;
+    letter-spacing: -0.035em;
+  }
+
+  .paper-hero .page-intro {
+    max-width: 37rem;
+    font-size: clamp(1.3125rem, 3.4vw, 1.5625rem);
+    line-height: 1.45;
+  }
+
+  .paper-hero-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 1.5rem;
+    margin-top: 0.75rem;
+    font-family: var(--font-ui);
+    font-size: 0.9375rem;
+    font-weight: 500;
+  }
+
+  .paper-hero-links > a:not(.ui-btn) {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--muted);
+    transition: color 150ms ease;
+  }
+
+  .paper-hero-links > a:not(.ui-btn):hover {
+    color: var(--foreground);
+  }
+
+  .paper-hero-links .ui-btn {
+    margin-right: 0.25rem;
+    padding: 0 1.25rem;
+    border-radius: 999px;
+  }
+
+  /* On a phone the button takes the first line and the links the second. */
+  @media (max-width: 40rem) {
+    .paper-hero-links .ui-btn {
+      /* Without this the margin below squeezes the label onto three lines. */
+      flex: none;
+      margin-right: 100%;
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  /* A section opens with its label over a strong rule, like a page of a paper. */
+  .paper-section-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    min-height: 2.75rem;
+    border-bottom: 2px solid var(--foreground);
+  }
+
+  .paper-section-head .eyebrow {
+    margin-bottom: 0;
+    color: var(--foreground);
   }
 
   .paper-more {
     display: inline-flex;
     align-items: center;
     min-height: 2.75rem;
-    margin-top: 0.5rem;
     font-family: var(--font-ui);
     font-size: 0.9375rem;
     font-weight: 500;
@@ -221,10 +301,204 @@ body {
     text-underline-offset: 4px;
   }
 
-  .paper-project-name {
-    flex: none;
-    width: 6.75rem;
+  /* The newest post, set large above the list. It shares the list's date gutter. */
+  .paper-lead {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.5rem 2rem;
+    padding: 2rem 0 2.25rem;
+  }
+
+  .paper-lead-main {
+    display: flex;
+    flex: 1 1 24rem;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-width: 42rem;
+  }
+
+  .paper-lead-title {
+    width: fit-content;
+    font-size: clamp(2rem, 6vw, 2.875rem);
     font-weight: 600;
+    line-height: 1.06;
+    letter-spacing: -0.025em;
+    text-wrap: balance;
+    transition: color 150ms ease;
+  }
+
+  .paper-lead-desc {
+    font-size: clamp(1.1875rem, 3vw, 1.375rem);
+    line-height: 1.45;
+    color: var(--muted);
+  }
+
+  .paper-lead-cue {
+    display: inline-flex;
+    gap: 0.375rem;
+    margin-top: 0.25rem;
+    font-family: var(--font-ui);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--accent);
+  }
+
+  .paper-lead-cue > span {
+    transition: translate 200ms ease;
+  }
+
+  .paper-lead:hover .paper-lead-title {
+    color: var(--accent);
+  }
+
+  .paper-lead:hover .paper-lead-cue > span {
+    translate: 0.25rem 0;
+  }
+
+  /* Projects as a small grid of cards. */
+  .paper-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+    gap: 1rem;
+    padding-top: 1.5rem;
+  }
+
+  .paper-card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 1.25rem 1.25rem 1rem;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) * 1.5);
+    transition:
+      border-color 200ms ease,
+      box-shadow 200ms ease,
+      translate 200ms ease;
+  }
+
+  .paper-card-name {
+    font-size: 1.375rem;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    transition: color 150ms ease;
+  }
+
+  .paper-card-desc {
+    display: -webkit-box;
+    overflow: hidden;
+    font-size: 1.0625rem;
+    line-height: 1.5;
+    color: var(--muted);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+  }
+
+  .paper-card-tags {
+    margin-top: auto;
+    padding-top: 0.5rem;
+    font-family: var(--font-ui);
+    font-size: 0.8125rem;
+    color: var(--muted);
+  }
+
+  .paper-card:hover {
+    border-color: color-mix(in srgb, var(--foreground) 40%, var(--border));
+    box-shadow: 0 10px 28px -14px rgb(0 0 0 / 0.28);
+    translate: 0 -2px;
+  }
+
+  .paper-card:hover .paper-card-name {
+    color: var(--accent);
+  }
+
+  /* On a phone the cards sit in one row that swipes sideways, bleeding to the
+     screen edges, so six projects do not push the rest of the page away. */
+  @media (max-width: 40rem) {
+    .paper-cards {
+      display: flex;
+      gap: 0.75rem;
+      margin-inline: -1.5rem;
+      padding-inline: 1.5rem;
+      overflow-x: auto;
+      overscroll-behavior-x: contain;
+      scroll-padding-inline: 1.5rem;
+      scroll-snap-type: x mandatory;
+      scrollbar-width: none;
+    }
+
+    .paper-cards > li {
+      flex: 0 0 min(80%, 19rem);
+      scroll-snap-align: start;
+    }
+
+    .paper-card:hover {
+      box-shadow: none;
+      translate: none;
+    }
+  }
+
+  /* Two small indexes side by side: topics and posts per year. */
+  .paper-index {
+    display: grid;
+    gap: 4rem 3rem;
+  }
+
+  @media (min-width: 44rem) {
+    .paper-index {
+      grid-template-columns: 1fr 1fr;
+    }
+  }
+
+  .paper-topics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 2rem;
+  }
+
+  .paper-index-row {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+    min-height: 2.75rem;
+    border-bottom: 1px solid var(--border);
+    font-family: var(--font-ui);
+    font-size: 0.9375rem;
+    transition: color 150ms ease;
+  }
+
+  .paper-index-row:hover {
+    color: var(--accent);
+  }
+
+  .paper-index-count {
+    /* A fixed width, so every year's bar is drawn on the same scale. */
+    min-width: 2ch;
+    margin-left: auto;
+    text-align: right;
+    color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* The bar's track is the row; its length is that year's share of the busiest. */
+  .paper-year-bar {
+    flex: 1;
+    height: 0.375rem;
+    border-radius: 999px;
+    background: var(--foreground);
+    clip-path: inset(0 calc((1 - var(--share)) * 100%) 0 0 round 999px);
+    opacity: 0.8;
+    transition:
+      background-color 150ms ease,
+      opacity 150ms ease;
+  }
+
+  .paper-index-row:hover .paper-year-bar {
+    background: var(--accent);
+    opacity: 1;
   }
 
   /* ---------- Post lists: date gutter, title, description ---------- */
@@ -265,20 +539,24 @@ body {
     color: var(--muted);
   }
 
-  /* Projects on the home page have no date, so their rows are tighter. */
-  .paper-home .post-row:not(:has(.post-row-date)) {
-    padding: 0.75rem 0;
-  }
-
   .year-group + .year-group {
     margin-top: 3rem;
   }
 
+  /* Same strong rule as the sections of the home page. */
   .year-title {
+    scroll-margin-top: 1.5rem;
+    margin-bottom: 0;
+    padding-bottom: 0.625rem;
+    border-bottom: 2px solid var(--foreground);
     font-size: 0.8125rem;
     font-weight: 600;
     letter-spacing: 0.08em;
     color: var(--foreground);
+  }
+
+  .year-title + .post-list > li:first-child .post-row {
+    border-top: 0;
   }
 
   /* ---------- Post page ---------- */
@@ -330,24 +608,73 @@ body {
     text-transform: uppercase;
   }
 
-  .toc-list {
+  .toc-inline .toc-list {
     border-left: 0;
   }
 
-  .toc-list a {
+  .toc-inline .toc-list a {
     margin-left: 0;
     padding: 0.5rem 0;
     border-left: 0;
     color: var(--accent);
   }
 
-  .toc-list a[data-depth="1"] {
+  .toc-inline .toc-list a[data-depth="1"] {
     padding-left: 1rem;
   }
 
-  .toc-list a:hover,
-  .toc-list a[aria-current="location"] {
+  .toc-inline .toc-list a:hover,
+  .toc-inline .toc-list a[aria-current="location"] {
     color: var(--foreground);
+  }
+
+  /* With room to spare the contents move to a rail beside the text, which
+     then lines up with the brand instead of sitting centred. */
+  @media (min-width: 80rem) {
+    .post-page {
+      display: grid;
+      grid-template-columns: minmax(0, var(--measure)) 13rem;
+      column-gap: 4rem;
+      width: calc(var(--measure) + 17rem);
+      max-width: none;
+      margin-inline: 0;
+    }
+
+    .post-page > * {
+      grid-column: 1;
+    }
+
+    .post-page > .toc-rail {
+      display: block;
+      grid-column: 2;
+      grid-row: 2;
+      align-self: start;
+      position: sticky;
+      top: 2rem;
+      max-height: calc(100vh - 4rem);
+      overflow-y: auto;
+    }
+
+    .post-page > .toc-inline {
+      display: none;
+    }
+
+    .toc-rail .toc-label {
+      margin-bottom: 0.625rem;
+      color: var(--foreground);
+    }
+
+    .toc-rail .toc-list a {
+      display: flex;
+      align-items: center;
+      min-height: 2.75rem;
+      padding: 0.3125rem 0 0.3125rem 0.875rem;
+      font-size: 0.875rem;
+    }
+
+    .toc-rail .toc-list a[data-depth="1"] {
+      padding-left: 1.625rem;
+    }
   }
 
   .post-body {
@@ -484,40 +811,65 @@ body {
     line-height: 1.25;
   }
 
-  /* ---------- Projects: name and stack in a gutter, description and links beside ---------- */
+  /* ---------- Projects: a grid of cards, each with its stack and links ---------- */
   .project-grid {
-    grid-template-columns: 1fr;
-    gap: 0;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 2px solid var(--foreground);
+  }
+
+  .project-grid > li {
+    scroll-margin-top: 2rem;
   }
 
   .project-card {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.25rem 2rem;
-    padding: 1.5rem 0 0.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    height: 100%;
+    padding: 1.5rem 1.5rem 0.75rem;
     background: transparent;
-    border: 0;
-    border-top: 1px solid var(--border);
-    border-radius: 0;
+    border: 1px solid var(--border);
+    border-radius: calc(var(--radius) * 1.5);
+    transition: border-color 200ms ease;
+  }
+
+  .project-card:hover {
+    border-color: color-mix(in srgb, var(--foreground) 40%, var(--border));
+  }
+
+  /* Arriving from a card on the home page marks the project that was picked. */
+  .project-grid > li[data-current] .project-card {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
   }
 
   .project-name {
-    font-size: 1.5rem;
-    letter-spacing: -0.01em;
-  }
-
-  .project-desc {
-    font-size: 1.1875rem;
-    line-height: 1.55;
-    color: color-mix(in srgb, var(--foreground) 85%, var(--background));
+    font-size: 1.625rem;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
   }
 
   .project-tags {
-    font-size: 0.8125rem;
+    order: -1;
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .project-desc {
+    font-size: 1.125rem;
+    line-height: 1.55;
+    color: color-mix(in srgb, var(--foreground) 82%, var(--background));
   }
 
   .project-links {
     gap: 0 1.125rem;
+    margin-top: auto;
+    padding-top: 0.5rem;
     font-weight: 500;
   }
 
@@ -528,34 +880,5 @@ body {
   .project-links a:hover {
     text-decoration: underline;
     text-underline-offset: 4px;
-  }
-
-  @media (min-width: 40rem) {
-    .project-card {
-      grid-template-columns: 10.5rem minmax(0, 37.5rem);
-      grid-template-rows: auto 1fr;
-      align-items: baseline;
-    }
-
-    .project-name {
-      grid-column: 1;
-      grid-row: 1;
-    }
-
-    .project-tags {
-      grid-column: 1;
-      grid-row: 2;
-      align-self: start;
-    }
-
-    .project-desc {
-      grid-column: 2;
-      grid-row: 1;
-    }
-
-    .project-links {
-      grid-column: 2;
-      grid-row: 2;
-    }
   }
 }

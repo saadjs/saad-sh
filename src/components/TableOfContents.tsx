@@ -111,7 +111,14 @@ export function TableOfContents({ contentRef }: TableOfContentsProps) {
         block: "start",
         behavior: prefersReducedMotion() ? "auto" : "smooth",
       });
-      void navigate({ hash: id, replace: true, resetScroll: false, hashScrollIntoView: false });
+      void navigate({
+        hash: id,
+        replace: true,
+        resetScroll: false,
+        hashScrollIntoView: false,
+        // Still the same page: a cross-fade would freeze the scroll above.
+        viewTransition: false,
+      });
       setActiveId(id);
       event.currentTarget.closest("details")?.removeAttribute("open");
     },

@@ -14,6 +14,8 @@ export const siteConfig = {
     linkedin: "https://www.linkedin.com/in/saadbash",
     github: "https://github.com/saadjs",
     avatar: "/static/images/avatar.png",
+    // 192px copy for small portraits; regenerate it if the avatar changes.
+    avatarSmall: "/static/images/avatar-192.jpg",
   },
   github: {
     sourceUrl: "https://github.com/saadjs/saad-sh",
@@ -25,6 +27,10 @@ export const siteConfig = {
   ],
   header: {
     tagline: "",
+  },
+  tabBar: {
+    label: "Tabs",
+    home: "Home",
   },
   routes: {
     home: "/",
@@ -63,6 +69,9 @@ export const siteConfig = {
     postsHeading: "Lately, on the blog",
     projectsHeading: "Things I’ve built",
     aboutLabel: "More about me",
+    readLabel: "Read the post",
+    topicsHeading: "Topics",
+    yearsHeading: "By year",
     postsLimit: 8,
     projectsLimit: 6,
     tagsLimit: 8,
@@ -113,6 +122,7 @@ export const siteConfig = {
     olderLabel: "Older",
     newerLabel: "Newer",
     tocLabel: "On this page",
+    readingTime: (minutes: number) => `${minutes} min read`,
   },
   tagPage: {
     title: (tag: string) => `Posts tagged "${tag}"`,

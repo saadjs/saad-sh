@@ -5,7 +5,8 @@ import { PostHeader } from "#/components/PostHeader";
 import { PostPager } from "#/components/PostPager";
 import { TableOfContents } from "#/components/TableOfContents";
 import { ShareMenu } from "#/components/ShareMenu";
-import { getAdjacentPosts, getRenderedPost } from "#/lib/posts";
+import { getAdjacentPosts, getPostRawContent, getRenderedPost } from "#/lib/posts";
+import { readingMinutes } from "#/lib/reading-time";
 import { PostBody } from "#/components/PostBody";
 import { NewsletterSignup } from "#/components/NewsletterSignup";
 import { siteConfig } from "#/site.config";
@@ -17,7 +18,8 @@ export const loadPostData = createServerFn({ method: "GET" })
     const rendered = await getRenderedPost(slug);
     if (!rendered?.post.metadata.published) return null;
     const { older, newer } = await getAdjacentPosts(slug);
-    return { post: rendered.post, hast: rendered.hast, older, newer };
+    const minutes = readingMinutes(await getPostRawContent(slug));
+    return { post: rendered.post, hast: rendered.hast, older, newer, minutes };
   });
 
 export const Route = createFileRoute("/posts/$slug")({
@@ -64,7 +66,7 @@ export const Route = createFileRoute("/posts/$slug")({
 });
 
 function BlogPostPage() {
-  const { older, newer, post, hast } = Route.useLoaderData();
+  const { older, newer, post, hast, minutes } = Route.useLoaderData();
   const { features } = Route.useRouteContext();
   const contentRef = useRef<HTMLDivElement>(null);
   const { metadata } = post;
@@ -111,12 +113,13 @@ function BlogPostPage() {
 
   return (
     <>
+      <div className="post-progress" aria-hidden="true" />
       <article className="page post-page">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replaceAll("<", "\\u003c") }}
         />
-        <PostHeader metadata={metadata}>
+        <PostHeader slug={post.slug} metadata={metadata} readingMinutes={minutes}>
           <ShareMenu
             key={post.slug}
             slug={post.slug}

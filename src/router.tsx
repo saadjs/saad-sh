@@ -6,6 +6,11 @@ export function getRouter() {
     routeTree,
     scrollRestoration: true,
     defaultPreload: "intent",
+    // Pages cross-fade and a post's title travels from its list row to the
+    // post page. Jumping to a heading on the same page is not a page change,
+    // so it does not fade (the router only asks in browsers with transition
+    // types). Browsers without view transitions navigate as before.
+    defaultViewTransition: { types: ({ pathChanged }) => (pathChanged ? ["page"] : false) },
     trailingSlash: "never",
   });
 }

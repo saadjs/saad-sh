@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { formatDate } from "#/lib/utils";
+import { postTitleTransition } from "#/lib/transitions";
 import type { Post } from "#/lib/types";
 
 // One markup for every style. `.post-row-desc` and `.post-row-tag` are hidden
@@ -14,7 +15,9 @@ export function PostList({ posts }: { posts: Post[] }) {
               {formatDate(post.metadata.date)}
             </time>
             <span className="post-row-main">
-              <span className="post-row-title">{post.metadata.title}</span>
+              <span className="post-row-title" style={postTitleTransition(post.slug)}>
+                {post.metadata.title}
+              </span>
               {post.metadata.description && (
                 <span className="post-row-desc">{post.metadata.description}</span>
               )}

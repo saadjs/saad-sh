@@ -4,6 +4,7 @@ export { siteConfig } from "#/site.config";
 export { formatDate, slugifyTag } from "#/lib/utils";
 export { projectSlug } from "#/lib/projects";
 export { logoAccent } from "#/lib/logo";
+export { postTitleTransition } from "#/lib/transitions";
 export { LogoMark } from "#/components/LogoMark";
 export { PageHead } from "#/components/PageHead";
 export { PostList } from "#/components/PostList";

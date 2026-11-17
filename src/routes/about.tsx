@@ -49,7 +49,19 @@ export const Route = createFileRoute("/about")({
 function AboutPage() {
   return (
     <div className="page about-page">
-      <PageHead title={aboutPage.heading} />
+      <PageHead
+        title={aboutPage.heading}
+        lead={
+          <img
+            className="about-portrait"
+            src={author.avatarSmall}
+            alt=""
+            width={96}
+            height={96}
+            decoding="async"
+          />
+        }
+      />
       <div className="post-body">
         <Content components={{ AuthorLinks, SayHello, a: ContentLink }} />
       </div>

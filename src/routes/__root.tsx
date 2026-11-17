@@ -4,11 +4,13 @@ import { TanStackDevtools } from "@tanstack/react-devtools";
 
 import { Header } from "#/components/Header";
 import { Footer } from "#/components/Footer";
+import { TabBar } from "#/components/TabBar";
+import { ServiceWorker } from "#/components/ServiceWorker";
 import { SearchCommandClient } from "#/components/SearchCommandClient";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl, ogImagePath } from "#/lib/utils";
 import { logoAccent } from "#/lib/logo";
-import { themeInitScript } from "#/lib/theme";
+import { themeColorScript, themeInitScript } from "#/lib/theme";
 import { getSiteContext } from "#/lib/site-context";
 import { getStyle } from "#/styles";
 import { useStyle } from "#/styles/use-style";
@@ -23,8 +25,11 @@ export const Route = createRootRoute({
   head: ({ match }) => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { name: "application-name", content: siteConfig.name },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-title", content: siteConfig.name },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
       { name: "description", content: siteConfig.description },
       { name: "author", content: siteConfig.author.name },
       { name: "creator", content: siteConfig.author.name },
@@ -96,7 +101,9 @@ function SiteShell({ children }: { children: React.ReactNode }) {
       <Header />
       <main className="site-main min-w-0">{children}</main>
       <Footer />
+      <TabBar />
       <SearchCommandClient />
+      <ServiceWorker />
     </div>
   );
 }
@@ -117,6 +124,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
         <HeadContent />
       </head>
       <body className="antialiased">
+        <ScriptOnce>{themeColorScript}</ScriptOnce>
         <SiteShell>{children}</SiteShell>
         <TanStackDevtools
           config={{ position: "bottom-right" }}

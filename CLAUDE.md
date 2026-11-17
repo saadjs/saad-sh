@@ -28,6 +28,7 @@ Run type-check, lint, format and tests before calling work done.
 | **Site styles (looks)**                    | `src/styles/`, start with `src/styles/README.md` |
 | Which styles are on, default, picker       | `src/styles/index.ts`                            |
 | Fonts (self-hosted)                        | `public/fonts/`                                  |
+| Offline reading (service worker), manifest | `public/sw.js`, `public/site.webmanifest`        |
 
 ## The one architectural rule
 
@@ -43,6 +44,14 @@ dress them.**
   on the style id in a component or route.
 - **Changing how something looks in one style:** edit that style's `style.css`.
 - Preview any style with `?style=<id>` on any URL.
+
+## Installed app and offline
+
+The site installs as an app and reads offline. `public/sw.js` only registers
+in production builds (`src/components/ServiceWorker.tsx`), so test it with
+`pnpm build && pnpm preview`, not `pnpm dev`. Pages always come from the
+network when there is one; the cache only answers when there is not. Bump
+`VERSION` in `sw.js` to make every visitor drop what was stored.
 
 ## Conventions
 

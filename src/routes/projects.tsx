@@ -1,4 +1,5 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useRouterState } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { projects, projectSlug, type Project } from "#/lib/projects";
 import { siteConfig } from "#/site.config";
 import { PageHead } from "#/components/PageHead";
@@ -92,6 +93,15 @@ export const Route = createFileRoute("/projects")({
 function ProjectsPage() {
   const { ProjectCard = DefaultProjectCard } = useStyle();
   const { projectsPage } = siteConfig;
+  // The project named in the URL's hash. CSS `:target` cannot do this: it does
+  // not follow navigations made inside the app. Read after mount because the
+  // server never sees the hash.
+  const hash = useRouterState({ select: (s) => s.location.hash });
+  const [current, setCurrent] = useState("");
+  useEffect(() => {
+    // oxlint-disable-next-line react/set-state-in-effect
+    setCurrent(hash);
+  }, [hash]);
 
   return (
     <div className="page projects-page">
@@ -108,7 +118,11 @@ function ProjectsPage() {
       />
       <ul className="project-grid">
         {projects.map((project, index) => (
-          <li key={project.name} id={projectSlug(project.name)}>
+          <li
+            key={project.name}
+            id={projectSlug(project.name)}
+            data-current={current === projectSlug(project.name) ? "" : undefined}
+          >
             <ProjectCard project={project} index={index} />
           </li>
         ))}

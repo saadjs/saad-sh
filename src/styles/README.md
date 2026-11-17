@@ -72,9 +72,13 @@ Put overrides inside `@layer components { … }` so Tailwind utilities still win
 
 - Shell: `.site`, `.site-header`, `.site-brand`, `.site-brand-mark`,
   `.site-brand-suffix`, `.site-nav` (current link has `aria-current="page"`),
-  `.site-tools`, `.site-main`, `.site-footer`
+  `.site-tools`, `.site-main`, `.site-footer`, `.site-tabbar` (the phone tab
+  bar; links hold `.site-tabbar-icon` and `.site-tabbar-label`, the current
+  one has `aria-current="page"`, and `data-hidden="true"` is set while the
+  reader scrolls down)
 - Pages: `.page`, `.page-head`, `.eyebrow`, `.page-title`, `.page-intro`,
-  `.section-title`
+  `.section-title`, `.about-portrait` (the picture above the About
+  heading)
 - Small parts: `.ui-panel` (in-page boxes), `.ui-popover` (floating menus and the
   search dialog; must stay opaque), `.ui-menu-item` (a row in a popover menu), `.ui-btn`, `.ui-btn-primary`, `.ui-input`,
   `.ui-link`, `.ui-chip`, `.ui-rule`
@@ -82,7 +86,8 @@ Put overrides inside `@layer components { … }` so Tailwind utilities still win
   `.post-row-title`, `.post-row-desc` and `.post-row-tag` (both hidden until a
   style sets `display`), `.year-group`, `.year-title`
 - Post page: `.post-page`, `.post-header`, `.post-meta`, `.post-title`,
-  `.post-desc`, `.post-actions`, `.toc-rail` (hidden by default), `.toc-inline`,
+  `.post-title-text`, `.post-reading-time`, `.post-progress` (the reading
+  progress bar along the top edge), `.post-desc`, `.post-actions`, `.toc-rail` (hidden by default), `.toc-inline`,
   `.toc-label`, `.toc-list`, `.post-body`, `.code-block`, `.code-block-bar`
   (its buttons are styled through `.code-block-bar button`),
   `.post-pager`, `.post-pager-label`, `.post-pager-title`
@@ -99,12 +104,32 @@ Put overrides inside `@layer components { … }` so Tailwind utilities still win
   `.demo-flow-arrowhead`,
   `.demo-flow-badge`; `.demo-flow-wrap` holds a wide and a tall layout and
   shows one by width
-- Projects: `.projects-page`, `.project-grid`, `.project-card`, `.project-name`,
+- Projects: `.projects-page`, `.project-grid` (the item named by the URL hash
+  has `data-current`), `.project-card`, `.project-name`,
   `.project-desc`, `.project-tags`, `.project-links`
 - Style menu: `.style-menu` (keeps a plain look in every style; leave it alone
   unless it is unreadable on your palette)
 
 `<html>` carries `data-style="<id>"` and `data-theme="light|dark"`.
+
+### Phones
+
+Below 40rem the header keeps the brand and the tools on one row, and the page
+links move to `.site-tabbar`, fixed to the bottom edge. That switch is layout,
+not a look: it lives outside the layers at the end of [base.css](base.css) and
+holds in every style. Dress the bar like any other shared class; it takes its
+colours from the tokens and its indicator shape from `--radius`. Its labels
+are always the plain ones from `siteConfig.nav`, since renamed ones
+(`nav` in the style definition) can be too long for a tab.
+
+### Motion
+
+Navigating between pages cross-fades, and a post's title travels between its
+list row and the post page (`postTitleTransition` in `src/lib/transitions.ts`,
+which `PostList` and the post header apply). If a style's `Home` shows a post
+title outside `PostList` and wants it to travel too, it needs that helper in
+the kit first. Never name the same post twice on one page: the browser skips
+the whole transition. All of it is off under `prefers-reduced-motion`.
 
 ### Fonts
 

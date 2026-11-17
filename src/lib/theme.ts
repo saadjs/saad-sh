@@ -23,3 +23,9 @@ export function toggleTheme(): Theme {
   }
   return next;
 }
+
+// Keeps the browser chrome (the status bar of an installed app, the toolbar on
+// Android) the colour of the page. Runs at the top of <body>, once the style's
+// CSS has applied, and again whenever the theme flips. The script owns the tag:
+// if React rendered one too, the two would disagree after a navigation.
+export const themeColorScript = `(function(){var d=document,r=d.documentElement,m=d.createElement("meta");m.name="theme-color";d.head.appendChild(m);function s(){var c=getComputedStyle(d.body).backgroundColor;if(!c||c==="transparent"||c==="rgba(0, 0, 0, 0)")c=getComputedStyle(r).backgroundColor;if(c&&c!=="rgba(0, 0, 0, 0)")m.content=c}s();new MutationObserver(s).observe(r,{attributeFilter:["data-theme"]})})()`;

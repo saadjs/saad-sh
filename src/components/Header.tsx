@@ -1,6 +1,7 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { siteConfig } from "#/site.config";
 import { logoAccent } from "#/lib/logo";
+import { isNavActive } from "#/lib/nav";
 import { useStyle } from "#/styles/use-style";
 import { LogoMark } from "./LogoMark";
 import { SearchButton } from "./SearchButton";
@@ -38,10 +39,7 @@ export function Header() {
       </Link>
       <nav aria-label="Main navigation" className="site-nav">
         {siteConfig.nav.map((item) => {
-          const active =
-            pathname === item.href ||
-            pathname.startsWith(`${item.href}/`) ||
-            (item.href === siteConfig.routes.posts && pathname.startsWith(siteConfig.routes.tags));
+          const active = isNavActive(pathname, item.href);
           return (
             <Link key={item.href} to={item.href} aria-current={active ? "page" : undefined}>
               {labels[item.href] ?? item.label}

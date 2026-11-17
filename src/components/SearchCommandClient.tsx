@@ -28,6 +28,15 @@ export function SearchCommandClient() {
         event.preventDefault();
         show();
       }
+      // "/" opens search too, unless the visitor is typing somewhere.
+      const target = event.target;
+      const typing =
+        target instanceof HTMLElement &&
+        (target.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(target.tagName));
+      if (event.key === "/" && !typing && !event.metaKey && !event.ctrlKey && !event.altKey) {
+        event.preventDefault();
+        show();
+      }
       if (event.key === "Escape") close();
     };
     window.addEventListener("search:open", show);

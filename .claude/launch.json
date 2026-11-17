@@ -1,6 +1,12 @@
 {
   "version": "0.0.1",
   "configurations": [
-    { "name": "saad-sh", "runtimeExecutable": "pnpm", "runtimeArgs": ["dev"], "port": 3000 }
+    { "name": "saad-sh", "runtimeExecutable": "pnpm", "runtimeArgs": ["dev"], "port": 3000 },
+    {
+      "name": "saad-sh-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": ["preview", "--port", "4173", "--strictPort"],
+      "port": 4173
+    }
   ]
 }
