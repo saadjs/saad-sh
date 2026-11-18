@@ -109,6 +109,13 @@ Put overrides inside `@layer components { … }` so Tailwind utilities still win
 - Projects: `.projects-page`, `.project-grid` (the item named by the URL hash
   has `data-current`), `.project-card`, `.project-name`,
   `.project-desc`, `.project-tags`, `.project-links`
+- Terminal (the drop-down shell on the `` ` `` key, `src/components/Terminal.tsx`):
+  `.terminal` (the window, also a `.ui-popover`), `.terminal-bar`,
+  `.terminal-title`, `.terminal-close`, `.terminal-screen`,
+  `.terminal-line[data-kind="input|out|muted|error"]`, `.terminal-prompt`,
+  `.terminal-prompt-host` (the `guest@saad.sh` part, dropped on phones),
+  `.terminal-entry` (the row being typed), `.terminal-input`. It is set in
+  `--font-code`. `<html data-terminal-gag="rm">` is on while `rm -rf /` plays.
 - Style menu: `.style-menu` (keeps a plain look in every style; leave it alone
   unless it is unreadable on your palette)
 

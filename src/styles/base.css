@@ -359,6 +359,151 @@ body {
     box-shadow: 0 12px 32px rgb(0 0 0 / 0.18);
   }
 
+  /* ---------- Terminal ---------- */
+  /* The drop-down terminal (the ` key, or the footer link). It sits in a
+     .ui-popover, so it is opaque and takes each style's surface and border. */
+  .terminal {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    max-width: 46rem;
+    height: min(34rem, 100%);
+    overflow: hidden;
+    font-family: var(--font-code);
+    font-size: 0.875rem;
+    line-height: 1.6;
+    animation: terminal-drop 180ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+
+  .terminal-bar {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding-left: 1rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.75rem;
+  }
+
+  .terminal-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .terminal-close {
+    flex-shrink: 0;
+    min-height: 2.75rem;
+    padding-inline: 1rem;
+  }
+
+  .terminal-close:hover {
+    color: var(--foreground);
+  }
+
+  .terminal-screen {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 0.75rem 1rem;
+    cursor: text;
+  }
+
+  .terminal-line {
+    min-height: 1lh;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+  }
+
+  .terminal-line[data-kind="muted"] {
+    color: var(--muted);
+  }
+
+  .terminal-line a {
+    color: var(--accent);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .terminal-prompt {
+    color: var(--accent);
+  }
+
+  .terminal-entry {
+    display: flex;
+    align-items: center;
+    gap: 1ch;
+    min-height: 2.75rem;
+  }
+
+  .terminal-entry .terminal-prompt {
+    flex-shrink: 0;
+    max-width: 60%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .terminal-input {
+    flex: 1;
+    min-width: 0;
+    background: transparent;
+    color: inherit;
+    font: inherit;
+    caret-color: var(--accent);
+    outline: none;
+  }
+
+  /* On a phone the path alone is prompt enough; the rest of the row is for typing. */
+  @media (max-width: 40rem) {
+    .terminal-prompt-host {
+      display: none;
+    }
+  }
+
+  /* Big enough to tap, and 16px so a phone does not zoom in on the prompt. */
+  @media (pointer: coarse) {
+    .terminal {
+      font-size: 1rem;
+    }
+
+    .terminal-line a {
+      display: inline-flex;
+      align-items: center;
+      min-height: 2.75rem;
+    }
+  }
+
+  @keyframes terminal-drop {
+    from {
+      opacity: 0;
+      translate: 0 -1rem;
+    }
+  }
+
+  /* `rm -rf /`: the page goes missing for a moment, then comes back. */
+  html[data-terminal-gag="rm"] :is(.site-header, .site-main, .site-footer) {
+    animation: terminal-rm 2600ms ease both;
+  }
+
+  @keyframes terminal-rm {
+    25%,
+    70% {
+      opacity: 0;
+      filter: blur(8px);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .terminal,
+    html[data-terminal-gag="rm"] :is(.site-header, .site-main, .site-footer) {
+      animation: none;
+    }
+  }
+
   /* A row inside a popover menu. */
   .ui-menu-item {
     display: flex;

@@ -7,6 +7,7 @@ import { Footer } from "#/components/Footer";
 import { TabBar } from "#/components/TabBar";
 import { ServiceWorker } from "#/components/ServiceWorker";
 import { SearchCommandClient } from "#/components/SearchCommandClient";
+import { TerminalClient } from "#/components/TerminalClient";
 import { siteConfig } from "#/site.config";
 import { absoluteUrl, ogImagePath } from "#/lib/utils";
 import { logoAccent } from "#/lib/logo";
@@ -103,6 +104,7 @@ function SiteShell({ children }: { children: React.ReactNode }) {
       <Footer />
       <TabBar />
       <SearchCommandClient />
+      <TerminalClient />
       <ServiceWorker />
     </div>
   );
